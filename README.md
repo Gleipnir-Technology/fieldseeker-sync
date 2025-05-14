@@ -22,3 +22,9 @@ Then run it connecting to the database
 
 ```
 env DATABASE_URL=postgresql://fieldseeker:letmein@localhost:5432 ./fieldseeker-sync-bridge```
+
+Check on the status of migrations
+
+```
+env GOOSE_DRIVER=postgres GOOSE_DBSTRING="user=fieldseeker dbname=fieldseeker password=letmein" goose status
+```
