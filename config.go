@@ -1,4 +1,4 @@
-package main
+package fssync
 
 import (
 	"github.com/spf13/viper"
