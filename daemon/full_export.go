@@ -54,7 +54,9 @@ func downloadAllRecords(fs *fieldseeker.FieldSeeker, layer arcgis.Layer) error {
 		return err
 	}
 	fmt.Printf("Need to get %v records\n", count.Count)
-
+	if count.Count == 0 {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
