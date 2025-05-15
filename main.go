@@ -76,7 +76,7 @@ func downloadAllRecords(fs *fieldseeker.FieldSeeker, layer arcgis.Layer) error {
 			os.Exit(1)
 		}
 
-		err = saveOrUpdateDBRecords(context.Background(), layer.Name, qr)
+		err = saveOrUpdateDBRecords(context.Background(), "FS_"+layer.Name, qr)
 		if err != nil {
 			os.Exit(2)
 		}

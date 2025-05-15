@@ -9,6 +9,7 @@ import (
 func TestUpsertFromQueryResult(t *testing.T) {
 	qr := arcgis.QueryResult{
 		Fields: []arcgis.Field{
+			{Name: "OBJECTID"},
 			{Name: "a"},
 			{Name: "b"},
 			{Name: "c"},

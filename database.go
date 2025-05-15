@@ -72,21 +72,28 @@ func upsertFromQueryResult(table string, qr *arcgis.QueryResult) string {
 	sb.WriteString("INSERT INTO ")
 	sb.WriteString(table)
 	sb.WriteString(" (")
-	sb.WriteString(qr.UniqueIdField.Name)
-	for _, field := range qr.Fields {
-		sb.WriteString(",")
+	for i, field := range qr.Fields {
 		sb.WriteString(field.Name)
+		if i != len(qr.Fields)-1 {
+			sb.WriteString(",")
+		}
 	}
-	sb.WriteString(")\nVALUES (@")
-	sb.WriteString(qr.UniqueIdField.Name)
-	for _, field := range qr.Fields {
-		sb.WriteString(",@")
+	sb.WriteString(")\nVALUES (")
+	for i, field := range qr.Fields {
+		sb.WriteString("@")
 		sb.WriteString(field.Name)
+		if i != len(qr.Fields)-1 {
+			sb.WriteString(",")
+		}
 	}
 	sb.WriteString(")\nON CONFLICT(")
 	sb.WriteString(qr.UniqueIdField.Name)
 	sb.WriteString(")\nDO UPDATE SET\n")
 	for i, field := range qr.Fields {
+		// skip the unique field since we can't set it again
+		if field.Name == qr.UniqueIdField.Name {
+			continue
+		}
 		sb.WriteString(" ")
 		sb.WriteString(field.Name)
 		sb.WriteString(" = EXCLUDED.")
@@ -104,7 +111,11 @@ func saveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 	query := upsertFromQueryResult(table, qr)
 	batch := &pgx.Batch{}
 	for _, f := range qr.Features {
-		batch.Queue(query, f.Attributes)
+		args := pgx.NamedArgs{}
+		for k, v := range f.Attributes {
+			args[k] = v
+		}
+		batch.Queue(query, args)
 	}
 	results := pgInstance.db.SendBatch(ctx, batch)
 	defer results.Close()
