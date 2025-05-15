@@ -73,12 +73,12 @@ func downloadAllRecords(fs *fieldseeker.FieldSeeker, layer arcgis.Layer) error {
 			query)
 		if err != nil {
 			fmt.Printf("Failure: %v", err)
-			os.Exit(1)
+			os.Exit(6)
 		}
 
 		err = fssync.SaveOrUpdateDBRecords(context.Background(), "FS_"+layer.Name, qr)
 		if err != nil {
-			os.Exit(2)
+			os.Exit(7)
 		}
 		os.Exit(0)
 		offset += len(qr.Features)
