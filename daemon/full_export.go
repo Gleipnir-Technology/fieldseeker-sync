@@ -80,7 +80,6 @@ func downloadAllRecords(fs *fieldseeker.FieldSeeker, layer arcgis.Layer) error {
 		if err != nil {
 			os.Exit(7)
 		}
-		os.Exit(0)
 		offset += len(qr.Features)
 		fmt.Printf("Got %v %v records\n", len(qr.Features), layer.Name)
 		if offset > count.Count {
