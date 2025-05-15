@@ -23,19 +23,25 @@ func main() {
 	err = ConnectDB(context.Background(), config.Database.URL)
 	if err != nil {
 		fmt.Println("Failed to initialize connection: ", err)
+		os.Exit(3)
 	}
 
 	ag := arcgis.ArcGIS{
 		config.Arcgis.ServiceRoot,
 		config.Arcgis.TenantID,
 		config.Arcgis.Token}
-	fs := fieldseeker.NewFieldSeeker(&ag, "foo")
-	fs.EnsureHasServiceInfo()
+	fmt.Println("Connecting to FieldSeeker at ", ag)
+	fs := fieldseeker.NewFieldSeeker(&ag, config.Arcgis.FieldSeekerService)
+	err = fs.EnsureHasServiceInfo()
+	if err != nil {
+		fmt.Println("Failed to get FieldSeeker service info:", err)
+		os.Exit(4)
+	}
 	for _, layer := range fs.FeatureServer.Layers {
 		err := downloadAllRecords(fs, layer)
 		if err != nil {
 			fmt.Println("Failed: %v", err)
-			os.Exit(3)
+			os.Exit(5)
 		}
 	}
 }

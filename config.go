@@ -5,9 +5,10 @@ import (
 )
 
 type ConfigArcgis struct {
-	ServiceRoot string
-	TenantID    string
-	Token       string
+	FieldSeekerService string
+	ServiceRoot        string
+	TenantID           string
+	Token              string
 }
 type ConfigDatabase struct {
 	URL string
