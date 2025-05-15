@@ -1,0 +1,10 @@
+repos:
+- repo: local
+  hooks:
+    - id: go-fmt
+      name: 'go fmt'
+      language: system
+      entry: pre-commit/run-go-fmt.sh
+      types: [go]
+
+
