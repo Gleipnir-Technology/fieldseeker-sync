@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -68,21 +69,28 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 
 // Generate a query for upsert from a QueryResult
 func upsertFromQueryResult(table string, qr *arcgis.QueryResult) string {
+	// Make the rows appear in a deterministic order
+	sorted_columns := make([]string, 0, len(qr.Fields))
+	for _, f := range qr.Fields {
+		sorted_columns = append(sorted_columns, f.Name)
+	}
+	sort.Strings(sorted_columns)
+
 	var sb strings.Builder
 	sb.WriteString("INSERT INTO ")
 	sb.WriteString(table)
 	sb.WriteString(" (")
-	for i, field := range qr.Fields {
-		sb.WriteString(field.Name)
-		if i != len(qr.Fields)-1 {
+	for i, field := range sorted_columns {
+		sb.WriteString(field)
+		if i != len(sorted_columns)-1 {
 			sb.WriteString(",")
 		}
 	}
 	sb.WriteString(")\nVALUES (")
-	for i, field := range qr.Fields {
+	for i, field := range sorted_columns {
 		sb.WriteString("@")
-		sb.WriteString(field.Name)
-		if i != len(qr.Fields)-1 {
+		sb.WriteString(field)
+		if i != len(sorted_columns)-1 {
 			sb.WriteString(",")
 		}
 	}
@@ -107,7 +115,7 @@ func upsertFromQueryResult(table string, qr *arcgis.QueryResult) string {
 	return sb.String()
 }
 
-func saveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {
+func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {
 	query := upsertFromQueryResult(table, qr)
 	batch := &pgx.Batch{}
 	for _, f := range qr.Features {
@@ -120,7 +128,7 @@ func saveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 	results := pgInstance.db.SendBatch(ctx, batch)
 	defer results.Close()
 
-	for _, _ = range qr.Features {
+	for _, f := range qr.Features {
 		_, err := results.Exec()
 		if err != nil {
 			/*var pgErr *pgconn.PgError
@@ -131,6 +139,7 @@ func saveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 				fmt.Println("Failed to upsert: ", err)
 			}*/
 			fmt.Println("Error on exec: ", err)
+			fmt.Println("Bad row: ", f)
 		}
 	}
 	return results.Close()
