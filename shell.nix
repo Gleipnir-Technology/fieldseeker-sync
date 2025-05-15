@@ -5,5 +5,6 @@ pkgs.mkShell {
     pkgs.go
     pkgs.goose
     pkgs.pre-commit
+    pkgs.python3
   ];
 }
