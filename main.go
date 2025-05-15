@@ -38,9 +38,12 @@ func main() {
 		os.Exit(4)
 	}
 	for _, layer := range fs.FeatureServer.Layers {
+		if layer.Name != "ServiceRequest" {
+			continue
+		}
 		err := downloadAllRecords(fs, layer)
 		if err != nil {
-			fmt.Println("Failed: %v", err)
+			fmt.Println("Failed: ", err)
 			os.Exit(5)
 		}
 	}
@@ -64,7 +67,7 @@ func downloadAllRecords(fs *fieldseeker.FieldSeeker, layer arcgis.Layer) error {
 		query.ResultOffset = offset
 		query.OutFields = "*"
 		query.Where = "1=1"
-		qr, err := fs.Arcgis.QueryRaw(
+		qr, err := fs.Arcgis.Query(
 			fs.ServiceName,
 			layer.ID,
 			query)
@@ -73,7 +76,7 @@ func downloadAllRecords(fs *fieldseeker.FieldSeeker, layer arcgis.Layer) error {
 			os.Exit(1)
 		}
 
-		err = saveOrUpdateDBRecords(qr)
+		err = saveOrUpdateDBRecords(context.Background(), layer.Name, qr)
 		if err != nil {
 			os.Exit(2)
 		}

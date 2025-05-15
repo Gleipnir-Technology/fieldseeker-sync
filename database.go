@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
-	"os"
+	"strings"
 	"sync"
 
-	//"github.com/Gleipnir-Technology/arcgis-go"
+	"github.com/Gleipnir-Technology/arcgis-go"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -65,33 +66,61 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 	return nil
 }
 
-// func saveOrUpdateDBRecords(qr *arcgis.QueryResult) (error) {
-func saveOrUpdateDBRecords(qr []byte) error {
-	output, err := os.Create("records/service-records.json")
-	if err != nil {
-		return err
+// Generate a query for upsert from a QueryResult
+func upsertFromQueryResult(table string, qr *arcgis.QueryResult) string {
+	var sb strings.Builder
+	sb.WriteString("INSERT INTO ")
+	sb.WriteString(table)
+	sb.WriteString(" (")
+	sb.WriteString(qr.UniqueIdField.Name)
+	for _, field := range qr.Fields {
+		sb.WriteString(",")
+		sb.WriteString(field.Name)
 	}
-	defer output.Close()
-	b, err := output.Write(qr)
-	if err != nil {
-		return err
+	sb.WriteString(")\nVALUES (@")
+	sb.WriteString(qr.UniqueIdField.Name)
+	for _, field := range qr.Fields {
+		sb.WriteString(",@")
+		sb.WriteString(field.Name)
 	}
-	fmt.Printf("Wrote %v bytes\n", b)
-	return nil
+	sb.WriteString(")\nON CONFLICT(")
+	sb.WriteString(qr.UniqueIdField.Name)
+	sb.WriteString(")\nDO UPDATE SET\n")
+	for i, field := range qr.Fields {
+		sb.WriteString(" ")
+		sb.WriteString(field.Name)
+		sb.WriteString(" = EXCLUDED.")
+		sb.WriteString(field.Name)
+		if i != len(qr.Fields)-1 {
+			sb.WriteString(",")
+		}
+		sb.WriteString("\n")
+	}
+	sb.WriteString(";")
+	return sb.String()
 }
 
-/*
-func (pg *postgres) InsertServiceRequest(ctx context.Context, feature ) error {
-	query := `INSERT INTO service_request (address, city, notes_field, notes_tech, target) VALUES (@address, @city, @notes_field, @notes_tech, @target)`
-	args := pgx.NamedArgs{
-		"address": feature.Attributes["REQADDR1"],
-		"city": feature.Attributes["REQCITY"],
-		"notes_field": feature.Attributes["REQFLDNOTES"],
-		"notes_tech": feature.Attributes["REQNOTESFORTECH"],
-		"target": feature.Attributes["REQTARGET"],
+func saveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {
+	query := upsertFromQueryResult(table, qr)
+	batch := &pgx.Batch{}
+	for _, f := range qr.Features {
+		batch.Queue(query, f.Attributes)
 	}
-	_, err := pg.db.Exec(context.Background(), query, args)
-	if err != nil {
-		fmt.Println("Failed insert: %w", err)
+	results := pgInstance.db.SendBatch(ctx, batch)
+	defer results.Close()
+
+	for _, _ = range qr.Features {
+		_, err := results.Exec()
+		if err != nil {
+			/*var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+				fmt.Printf("Object %s already exists\n", f.Attributes["OBJECTID"])
+				continue
+			} else {
+				fmt.Println("Failed to upsert: ", err)
+			}*/
+			fmt.Println("Error on exec: ", err)
+		}
 	}
-}*/
+	return results.Close()
+}
