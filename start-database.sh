@@ -6,4 +6,6 @@ podman run \
 	-p 5432:5432 \
 	--rm \
 	-v ./database:/var/lib/postgresql/data \
-	-d docker.io/postgres:17.5
+	-d \
+	docker.io/postgres:17.5 \
+	postgres -c log_statement=all
