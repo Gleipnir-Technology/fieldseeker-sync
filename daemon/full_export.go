@@ -39,9 +39,6 @@ func main() {
 		os.Exit(4)
 	}
 	for _, layer := range fs.FeatureServer.Layers {
-		if layer.Name != "ServiceRequest" {
-			continue
-		}
 		err := downloadAllRecords(fs, layer)
 		if err != nil {
 			fmt.Println("Failed: ", err)
