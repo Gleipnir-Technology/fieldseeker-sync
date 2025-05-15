@@ -3,6 +3,7 @@ import argparse
 import dataclasses
 import json
 import logging
+from pathlib import Path
 import sys
 from typing import Any, List, Mapping, Optional
 
@@ -13,19 +14,36 @@ class Column:
 
 def main() -> None:
 	parser = argparse.ArgumentParser()
-	parser.add_argument("tablename", help="The name of the table")
-	parser.add_argument("input", help="The JSON file to ingest")
+	parser.add_argument("src", type=Path, help="The directory to pull schema from")
+	parser.add_argument("dest", type=Path, help="The output file to write to")
 	args = parser.parse_args()
 
 	logging.basicConfig(level=logging.DEBUG)
-	with open(args.input, "r") as f:
-		data = json.loads(f.read())
 
-	columns = read_schema(data)
-	sys.stdout.write(f"CREATE TABLE FS_{args.tablename} (\n\t")
-	lines = ",\n\t".join(f"{c.name} {c.type}" for c in sorted(columns, key=lambda c: c.name))
-	print(lines)
-	print(")")
+	# Parse all the schemas
+	schema: Mapping[str, List[Column]] = {}
+	for src in args.src.glob("*.json"):
+		table_name = src.stem
+		print(table_name)
+		with open(src, "r") as f:
+			data = json.loads(f.read())
+		if "fields" not in data:
+			continue
+		columns = read_schema(data)
+		schema[table_name] = columns
+	
+	with open(args.dest, "w") as output:
+		output.write("-- +goose Up\n")
+		# Write out what we parsed
+		for table_name in sorted(schema):
+			columns = schema[table_name]
+			output.write(f"CREATE TABLE FS_{table_name} (\n\t")
+			lines = ",\n\t".join(f"{c.name} {c.type}" for c in sorted(columns, key=lambda c: c.name))
+			output.write(lines)
+			output.write(");\n\n")
+		output.write("-- +goose Down\n")
+		for table_name in sorted(schema):
+			output.write(f"DROP TABLE {table_name};\n")
 
 def read_schema(data: Mapping[str, Any]) -> List[Column]:
 	columns = [
@@ -41,7 +59,7 @@ def read_schema(data: Mapping[str, Any]) -> List[Column]:
 			
 	for field in data["fields"]:
 		if field["name"] == data["uniqueIdField"]["name"]:
-			type_ = column_type(field["type"], "PRIMARY KEY")
+			type_ = "INTEGER PRIMARY KEY"
 		else:
 			type_ = column_type(field["type"])
 		columns.append(Column(
@@ -55,6 +73,8 @@ def column_type(name: str, additional: Optional[str] = None) -> str:
 	result = ""
 	if name == "esriFieldTypeDate":
 		result = "BIGINT"
+	elif name == "esriFieldTypeDouble":
+		result = "INTEGER"
 	elif name == "esriFieldTypeInteger":
 		result = "INTEGER"
 	elif name == "esriFieldTypeSmallInteger":

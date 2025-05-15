@@ -7,10 +7,11 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
+	"gleipnir.technology/fieldseeker-sync-bridge"
 )
 
 func main() {
-	config, err := ReadConfig()
+	config, err := fssync.ReadConfig()
 	if err != nil {
 		fmt.Println("Failed to read config: ", err)
 		os.Exit(1)
@@ -20,7 +21,7 @@ func main() {
 		fmt.Println("You must specify a database URL")
 		os.Exit(2)
 	}
-	err = ConnectDB(context.Background(), config.Database.URL)
+	err = fssync.ConnectDB(context.Background(), config.Database.URL)
 	if err != nil {
 		fmt.Println("Failed to initialize connection: ", err)
 		os.Exit(3)
@@ -76,12 +77,13 @@ func downloadAllRecords(fs *fieldseeker.FieldSeeker, layer arcgis.Layer) error {
 			os.Exit(1)
 		}
 
-		err = saveOrUpdateDBRecords(context.Background(), "FS_"+layer.Name, qr)
+		err = fssync.SaveOrUpdateDBRecords(context.Background(), "FS_"+layer.Name, qr)
 		if err != nil {
 			os.Exit(2)
 		}
 		os.Exit(0)
-		offset += query.ResultRecordCount
+		offset += len(qr.Features)
+		fmt.Printf("Got %v %v records\n", len(qr.Features), layer.Name)
 		if offset > count.Count {
 			break
 		}
