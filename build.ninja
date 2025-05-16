@@ -5,5 +5,6 @@ rule go-compile
   command = go build -o $out $in
   description = Go compilation
 
-build bin/webserver: go-compile cmd/webserver/endpoints.go cmd/webserver/templates.go cmd/webserver/webserver.go
+build bin/export/full_export: go-compile cmd/export/full_export.go
+build bin/webserver: go-compile cmd/webserver/endpoints.go cmd/webserver/templates.go cmd/webserver/webserver.go | cmd/webserver/templates/base.html cmd/webserver/templates/index.html
 
