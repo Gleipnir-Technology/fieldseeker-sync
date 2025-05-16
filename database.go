@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"embed"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -28,6 +29,38 @@ var (
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
+func ConnectDB(ctx context.Context, connection_string string) error {
+	err := doMigrations(connection_string)
+	if err != nil {
+		return err
+	}
+
+	err = nil
+	pgOnce.Do(func() {
+		db, e := pgxpool.New(ctx, connection_string)
+		pgInstance = &postgres{db}
+		err = e
+	})
+	if err != nil {
+		return fmt.Errorf("unable to create connection pool: %w", err)
+	}
+
+	return nil
+}
+
+func ServiceRequestCount() (int, error) {
+	if pgInstance == nil {
+		return 0, errors.New("You must initialize the DB first")
+	}
+
+	var count int
+	err := pgInstance.db.QueryRow(context.Background(), "SELECT COUNT(*) FROM FS_SERVICEREQUEST").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func doMigrations(connection_string string) error {
 	fmt.Println("Connecting to database at", connection_string)
 	db, err := sql.Open("pgx", connection_string)
@@ -45,25 +78,6 @@ func doMigrations(connection_string string) error {
 	if err := goose.Up(db, "migrations"); err != nil {
 		return fmt.Errorf("Failed to run migrations: %w", err)
 	}
-	return nil
-}
-
-func ConnectDB(ctx context.Context, connection_string string) error {
-	err := doMigrations(connection_string)
-	if err != nil {
-		return err
-	}
-
-	err = nil
-	pgOnce.Do(func() {
-		db, e := pgxpool.New(ctx, connection_string)
-		pgInstance = &postgres{db}
-		err = e
-	})
-	if err != nil {
-		return fmt.Errorf("unable to create connection pool: %w", err)
-	}
-
 	return nil
 }
 
