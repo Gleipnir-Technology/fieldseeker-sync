@@ -18,7 +18,10 @@ var target string
 var ctx context.Context
 var cancel context.CancelFunc
 
-func main() {
+func main2() {
+	//InitTerminal()
+	//Loop()
+	os.Exit(0)
 	// Figure out what we are building
 	flag.StringVar(&target, "target", "", "The ninja target to autobuild")
 	flag.Parse()
