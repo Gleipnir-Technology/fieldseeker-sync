@@ -5,7 +5,7 @@ rule go-compile
   command = go build -o $out $in
   description = Go compilation
 
-build bin/autobuild: go-compile cmd/autobuild/command_manager.go cmd/autobuild/main.go | config.go database.go init.go 
-build bin/full_export: go-compile cmd/export/full_export.go | config.go database.go init.go 
-build bin/webserver: go-compile cmd/webserver/endpoints.go cmd/webserver/templates.go cmd/webserver/webserver.go | cmd/webserver/templates/base.html cmd/webserver/templates/index.html config.go database.go init.go 
+build bin/autobuild: go-compile cmd/autobuild/command_manager.go cmd/autobuild/main.go cmd/autobuild/terminal.go | config.go database.go init.go types.go
+build bin/full_export: go-compile cmd/export/full_export.go | config.go database.go init.go types.go
+build bin/webserver: go-compile cmd/webserver/endpoints.go cmd/webserver/templates.go cmd/webserver/webserver.go | cmd/webserver/templates/base.html cmd/webserver/templates/index.html config.go database.go init.go types.go
 
