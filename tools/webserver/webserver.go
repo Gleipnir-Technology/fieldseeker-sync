@@ -29,7 +29,7 @@ func main() {
 		fmt.Println("Failed to initialize fssync: %v", err)
 	}
 
-	fssync.InitializeTemplates()
-	r.Get("/", fssync.HandleIndex)
+	InitializeTemplates()
+	r.Get("/", HandleIndex)
 	http.ListenAndServe(":3000", r)
 }
