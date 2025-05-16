@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -22,6 +23,11 @@ func main() {
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
+
+	err := fssync.Initialize()
+	if err != nil {
+		fmt.Println("Failed to initialize fssync: %v", err)
+	}
 
 	fssync.InitializeTemplates()
 	r.Get("/", fssync.HandleIndex)

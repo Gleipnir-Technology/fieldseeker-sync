@@ -11,35 +11,13 @@ import (
 )
 
 func main() {
-	config, err := fssync.ReadConfig()
+	err := fssync.Initialize()
 	if err != nil {
-		fmt.Println("Failed to read config: ", err)
+		fmt.Println("Failed to initialize: ", err)
 		os.Exit(1)
 	}
-
-	if len(config.Database.URL) == 0 {
-		fmt.Println("You must specify a database URL")
-		os.Exit(2)
-	}
-	err = fssync.ConnectDB(context.Background(), config.Database.URL)
-	if err != nil {
-		fmt.Println("Failed to initialize connection: ", err)
-		os.Exit(3)
-	}
-
-	ag := arcgis.ArcGIS{
-		config.Arcgis.ServiceRoot,
-		config.Arcgis.TenantID,
-		config.Arcgis.Token}
-	fmt.Println("Connecting to FieldSeeker at ", ag)
-	fs := fieldseeker.NewFieldSeeker(&ag, config.Arcgis.FieldSeekerService)
-	err = fs.EnsureHasServiceInfo()
-	if err != nil {
-		fmt.Println("Failed to get FieldSeeker service info:", err)
-		os.Exit(4)
-	}
-	for _, layer := range fs.FeatureServer.Layers {
-		err := downloadAllRecords(fs, layer)
+	for _, layer := range fieldseeker.FeatureServerLayers() {
+		err := downloadAllRecords(layer)
 		if err != nil {
 			fmt.Println("Failed: ", err)
 			os.Exit(5)
@@ -47,9 +25,9 @@ func main() {
 	}
 }
 
-func downloadAllRecords(fs *fieldseeker.FieldSeeker, layer arcgis.Layer) error {
+func downloadAllRecords(layer arcgis.Layer) error {
 	fmt.Printf("%v %v\n", layer.ID, layer.Name)
-	count, err := fs.Arcgis.QueryCount(fs.ServiceName, layer.ID)
+	count, err := fieldseeker.QueryCount(layer.ID)
 	if err != nil {
 		return err
 	}
@@ -63,12 +41,11 @@ func downloadAllRecords(fs *fieldseeker.FieldSeeker, layer arcgis.Layer) error {
 	offset := 0
 	for {
 		query := arcgis.NewQuery()
-		query.ResultRecordCount = fs.FeatureServer.MaxRecordCount
+		query.ResultRecordCount = fieldseeker.MaxRecordCount()
 		query.ResultOffset = offset
 		query.OutFields = "*"
 		query.Where = "1=1"
-		qr, err := fs.Arcgis.Query(
-			fs.ServiceName,
+		qr, err := fieldseeker.DoQuery(
 			layer.ID,
 			query)
 		if err != nil {
