@@ -112,7 +112,7 @@ func recompile() {
 		log.Printf("Error stopping process: %v", err)
 	}
 
-	cmd := exec.Command("go", "build", ".")
+	cmd := exec.Command("ninja")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
