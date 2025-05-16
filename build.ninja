@@ -5,5 +5,5 @@ rule go-compile
   command = go build -o $out $in
   description = Go compilation
 
-build bin/webserver: go-compile tools/webserver/endpoints.go tools/webserver/templates.go tools/webserver/webserver.go
+build bin/webserver: go-compile cmd/webserver/endpoints.go cmd/webserver/templates.go cmd/webserver/webserver.go
 
