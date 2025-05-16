@@ -49,6 +49,39 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 	return nil
 }
 
+func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {
+	query := upsertFromQueryResult(table, qr)
+	batch := &pgx.Batch{}
+	for _, f := range qr.Features {
+		args := pgx.NamedArgs{}
+		for k, v := range f.Attributes {
+			args[k] = v
+		}
+		// specially add geometry since it isn't in the list of attributes
+		args["geometry_x"] = f.Geometry.X
+		args["geometry_y"] = f.Geometry.Y
+		batch.Queue(query, args)
+	}
+	results := pgInstance.db.SendBatch(ctx, batch)
+	defer results.Close()
+
+	for _, f := range qr.Features {
+		_, err := results.Exec()
+		if err != nil {
+			/*var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+				fmt.Printf("Object %s already exists\n", f.Attributes["OBJECTID"])
+				continue
+			} else {
+				fmt.Println("Failed to upsert: ", err)
+			}*/
+			fmt.Println("Error on exec: ", err)
+			fmt.Println("Bad row: ", f)
+		}
+	}
+	return results.Close()
+}
+
 func ServiceRequestCount() (int, error) {
 	if pgInstance == nil {
 		return 0, errors.New("You must initialize the DB first")
@@ -60,6 +93,22 @@ func ServiceRequestCount() (int, error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+func ServiceRequests() ([]ServiceRequest, error) {
+
+	if pgInstance == nil {
+		return make([]ServiceRequest, 0), errors.New("You must initialize the DB first")
+	}
+
+	rows, _ := pgInstance.db.Query(context.Background(), "SELECT (PRIORITY) FROM FS_ServiceRequest")
+	requests, err := pgx.CollectRows(rows, pgx.RowToStructByName[ServiceRequest])
+	if err != nil {
+		fmt.Printf("CollectRows error: %v", err)
+		return make([]ServiceRequest, 0), err
+	}
+
+	return requests, nil
 }
 
 func doMigrations(connection_string string) error {
@@ -126,41 +175,4 @@ func upsertFromQueryResult(table string, qr *arcgis.QueryResult) string {
 	// Specially add the geometry values since they aren't in the fields
 	sb.WriteString(" geometry_x = EXCLUDED.geometry_x,\n geometry_y = EXCLUDED.geometry_y\n;")
 	return sb.String()
-}
-
-func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {
-	query := upsertFromQueryResult(table, qr)
-	batch := &pgx.Batch{}
-	for _, f := range qr.Features {
-		args := pgx.NamedArgs{}
-		for k, v := range f.Attributes {
-			args[k] = v
-		}
-		// specially add geometry since it isn't in the list of attributes
-		args["geometry_x"] = f.Geometry.X
-		args["geometry_y"] = f.Geometry.Y
-		batch.Queue(query, args)
-	}
-	results := pgInstance.db.SendBatch(ctx, batch)
-	defer results.Close()
-
-	for _, f := range qr.Features {
-		_, err := results.Exec()
-		if err != nil {
-			/*var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				fmt.Printf("Object %s already exists\n", f.Attributes["OBJECTID"])
-				continue
-			} else {
-				fmt.Println("Failed to upsert: ", err)
-			}*/
-			fmt.Println("Error on exec: ", err)
-			fmt.Println("Bad row: ", f)
-		}
-	}
-	return results.Close()
-}
-
-func ServiceRequests() ([]ServiceRequest, error) {
-	return make([]ServiceRequest, 0), nil
 }
