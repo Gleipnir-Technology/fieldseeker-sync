@@ -9,6 +9,7 @@ import (
 
 type PageDataIndex struct {
 	ServiceRequestCount int
+	Title               string
 }
 
 func HandleIndex(w http.ResponseWriter, r *http.Request) {
@@ -20,6 +21,7 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 
 	data := PageDataIndex{
 		ServiceRequestCount: count,
+		Title:               "Gateway Sync Test",
 	}
 
 	// Create a buffer to hold the rendered template
