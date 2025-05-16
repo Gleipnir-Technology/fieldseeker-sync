@@ -24,11 +24,24 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 		Title:               "Gateway Sync Test",
 	}
 
+	renderTemplateOrError(w, r, "index.html", data)
+}
+
+func HandleServiceRequest(w http.ResponseWriter, r *http.Request) {
+	requests, err := fssync.ServiceRequests()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	renderTemplateOrError(w, r, "service-requests.html", requests)
+}
+
+func renderTemplateOrError(w http.ResponseWriter, r *http.Request, template string, data any) {
 	// Create a buffer to hold the rendered template
 	var buf bytes.Buffer
 
 	// Execute template into buffer instead of directly to ResponseWriter
-	err = tmpl.ExecuteTemplate(&buf, "base.html", data)
+	err := tmpl.ExecuteTemplate(&buf, template, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

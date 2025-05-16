@@ -31,5 +31,6 @@ func main() {
 
 	InitializeTemplates()
 	r.Get("/", HandleIndex)
+	r.Get("/service-request", HandleServiceRequest)
 	http.ListenAndServe(":3000", r)
 }

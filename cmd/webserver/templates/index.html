@@ -1,10 +1,16 @@
+{{template "base.html" .}}
+
+{{define "title"}}<h1>{{.Title}}</h1>{{end}}
+
 {{define "content"}}
 <div>
-	<h1>Overview</h1>
+	<h1>Overview 3</h1>sp
 	<p>FieldSeeker Sync Bridge</p>
 	<table>
 		<tr><th>Table</th><th>Count</th></tr>
-		<tr><td>ServiceRequest</td><td>{{.ServiceRequestCount}}</td></tr>
+		<tr><td>
+			<a href="/service-request">ServiceRequest</a>
+		</td><td>{{.ServiceRequestCount}}</td></tr>
 	</table>
 </div>
 {{end}}

@@ -159,3 +159,7 @@ func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 	}
 	return results.Close()
 }
+
+func ServiceRequests() ([]ServiceRequest, error) {
+	return make([]ServiceRequest, 0), nil
+}
