@@ -6,6 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"sync"
@@ -62,7 +63,7 @@ func ServiceRequestCount() (int, error) {
 }
 
 func doMigrations(connection_string string) error {
-	fmt.Println("Connecting to database at", connection_string)
+	log.Println("Connecting to database at", connection_string)
 	db, err := sql.Open("pgx", connection_string)
 	if err != nil {
 		return fmt.Errorf("Failed to open database connection: %w", err)

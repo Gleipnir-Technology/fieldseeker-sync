@@ -92,7 +92,7 @@ func main2() {
 		}
 	}()
 
-	fmt.Println("Watching for file changes. Press Ctrl+C to exit.")
+	log.Println("Watching for file changes. Press Ctrl+C to exit.")
 	<-done
 }
 
@@ -109,7 +109,7 @@ func parseInputs(out []byte) []string {
 }
 
 func recompile() {
-	fmt.Println("\nFile change detected. Recompiling...")
+	log.Println("\nFile change detected. Recompiling...")
 	// Stop the current process
 	if err := pm.stopProcess(); err != nil {
 		log.Printf("Error stopping process: %v", err)
@@ -121,11 +121,11 @@ func recompile() {
 
 	err := cmd.Run()
 	if err != nil {
-		fmt.Printf("Compilation failed: %v\n", err)
+		log.Printf("Compilation failed: %v\n", err)
 		return
 	}
 
-	fmt.Println("Compilation successful!")
+	log.Println("Compilation successful!")
 
 	// Cancel the old context and create a new one
 	cancel()
