@@ -6,6 +6,7 @@ pkgs.mkShell {
     pkgs.goose
     pkgs.ninja
     pkgs.pre-commit
+    pkgs.postgresql
     pkgs.python3
   ];
 }
