@@ -20,13 +20,15 @@ func TestUpsertFromQueryResult(t *testing.T) {
 		},
 	}
 	query := upsertFromQueryResult("foo", &qr)
-	if query != `INSERT INTO foo (OBJECTID,a,b,c)
-VALUES (@OBJECTID,@a,@b,@c)
+	if query != `INSERT INTO foo (OBJECTID,a,b,c,geometry_x,geometry_y)
+VALUES (@OBJECTID,@a,@b,@c,@geometry_x,@geometry_y)
 ON CONFLICT(OBJECTID)
 DO UPDATE SET
  a = EXCLUDED.a,
  b = EXCLUDED.b,
- c = EXCLUDED.c
+ c = EXCLUDED.c,
+ geometry_x = EXCLUDED.geometry_x,
+ geometry_y = EXCLUDED.geometry_y
 ;` {
 		t.Errorf("Got wrong query: %v", query)
 	}

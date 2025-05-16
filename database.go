@@ -94,24 +94,24 @@ func upsertFromQueryResult(table string, qr *arcgis.QueryResult) string {
 	sb.WriteString("INSERT INTO ")
 	sb.WriteString(table)
 	sb.WriteString(" (")
-	for i, field := range sorted_columns {
+	for _, field := range sorted_columns {
 		sb.WriteString(field)
-		if i != len(sorted_columns)-1 {
-			sb.WriteString(",")
-		}
+		sb.WriteString(",")
 	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("geometry_x,geometry_y")
 	sb.WriteString(")\nVALUES (")
-	for i, field := range sorted_columns {
+	for _, field := range sorted_columns {
 		sb.WriteString("@")
 		sb.WriteString(field)
-		if i != len(sorted_columns)-1 {
-			sb.WriteString(",")
-		}
+		sb.WriteString(",")
 	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("@geometry_x,@geometry_y")
 	sb.WriteString(")\nON CONFLICT(")
 	sb.WriteString(qr.UniqueIdField.Name)
 	sb.WriteString(")\nDO UPDATE SET\n")
-	for i, field := range qr.Fields {
+	for _, field := range qr.Fields {
 		// skip the unique field since we can't set it again
 		if field.Name == qr.UniqueIdField.Name {
 			continue
@@ -120,12 +120,10 @@ func upsertFromQueryResult(table string, qr *arcgis.QueryResult) string {
 		sb.WriteString(field.Name)
 		sb.WriteString(" = EXCLUDED.")
 		sb.WriteString(field.Name)
-		if i != len(qr.Fields)-1 {
-			sb.WriteString(",")
-		}
-		sb.WriteString("\n")
+		sb.WriteString(",\n")
 	}
-	sb.WriteString(";")
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString(" geometry_x = EXCLUDED.geometry_x,\n geometry_y = EXCLUDED.geometry_y\n;")
 	return sb.String()
 }
 
@@ -137,6 +135,9 @@ func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 		for k, v := range f.Attributes {
 			args[k] = v
 		}
+		// specially add geometry since it isn't in the list of attributes
+		args["geometry_x"] = f.Geometry.X
+		args["geometry_y"] = f.Geometry.Y
 		batch.Queue(query, args)
 	}
 	results := pgInstance.db.SendBatch(ctx, batch)
