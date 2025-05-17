@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -63,7 +62,7 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string)
 	drawText(screen, x1+1, y1+1, x2-1, y2-1, style, text)
 }
 
-func initTerminal() {
+func initTerminal(terminalChannel chan string) {
 	defStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 	boxStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
 	textStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlack)
@@ -109,17 +108,7 @@ func initTerminal() {
 	// return an error.
 	// screen.PostEvent(tcell.NewEventKey(tcell.KeyRune, rune('a'), 0))
 
-	go func() {
-		i := 1
-		for {
-			drawText(screen, 1, 3, 42, 6, textStyle, fmt.Sprintf("%v seconds", i))
-			// Update screen
-			screen.Show()
-			log.Println("iteration", i)
-			time.Sleep(1 * time.Second)
-			i += 1
-		}
-	}()
+	go terminalChannelPump(terminalChannel)
 	// Event loop
 	ox, oy := -1, -1
 	for {
@@ -158,5 +147,15 @@ func initTerminal() {
 				}
 			}
 		}
+	}
+}
+
+func terminalChannelPump(terminalChannel chan string) {
+	textStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlack)
+	message := "Loading..."
+	for {
+		drawText(screen, 1, 3, 42, 6, textStyle, message)
+		screen.Show()
+		message = <-terminalChannel
 	}
 }

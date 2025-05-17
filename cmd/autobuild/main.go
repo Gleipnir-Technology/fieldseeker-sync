@@ -28,10 +28,17 @@ func main() {
 	log.SetOutput(f)
 	log.Println("Started.")
 
-	go initTerminal()
-	//loop()
+	terminalChannel := make(chan string)
+	go initTerminal(terminalChannel)
 	for {
-		time.Sleep(100 * time.Millisecond)
+		i := 1
+		for {
+			terminalChannel <- fmt.Sprintf("iteration %v", i)
+			// Update screen
+			log.Println("iteration", i)
+			time.Sleep(1 * time.Second)
+			i += 1
+		}
 	}
 	os.Exit(0)
 	// Figure out what we are building
