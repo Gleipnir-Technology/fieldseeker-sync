@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -62,7 +63,7 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string)
 	drawText(screen, x1+1, y1+1, x2-1, y2-1, style, text)
 }
 
-func main() {
+func initTerminal() {
 	defStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 	boxStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
 	textStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlack)
@@ -134,7 +135,7 @@ func main() {
 			screen.Sync()
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyEscape || ev.Key() == tcell.KeyCtrlC || ev.Rune() == 'q' || ev.Rune() == 'Q' {
-				return
+				os.Exit(0)
 			} else if ev.Key() == tcell.KeyCtrlL {
 				screen.Sync()
 			} else if ev.Rune() == 'C' || ev.Rune() == 'c' {

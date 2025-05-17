@@ -18,9 +18,21 @@ var target string
 var ctx context.Context
 var cancel context.CancelFunc
 
-func main2() {
-	//InitTerminal()
-	//Loop()
+func main() {
+	// Set logfile output
+	f, err := os.OpenFile("autobuild.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("Error opening log file: %v", err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+	log.Println("Started.")
+
+	go initTerminal()
+	//loop()
+	for {
+		time.Sleep(100 * time.Millisecond)
+	}
 	os.Exit(0)
 	// Figure out what we are building
 	flag.StringVar(&target, "target", "", "The ninja target to autobuild")
