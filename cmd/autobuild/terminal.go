@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -64,7 +63,6 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string)
 
 func initTerminal(terminalChannel chan string) {
 	defStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
-	boxStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
 	textStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlack)
 
 	// Initialize screen
@@ -77,8 +75,8 @@ func initTerminal(terminalChannel chan string) {
 		log.Fatalf("%+v", err)
 	}
 	screen.SetStyle(defStyle)
-	screen.EnableMouse()
-	screen.EnablePaste()
+	//screen.EnableMouse()
+	//screen.EnablePaste()
 	screen.Clear()
 
 	// Draw initial boxes
@@ -110,7 +108,6 @@ func initTerminal(terminalChannel chan string) {
 
 	go terminalChannelPump(terminalChannel)
 	// Event loop
-	ox, oy := -1, -1
 	for {
 		// Update screen
 		screen.Show()
@@ -124,27 +121,12 @@ func initTerminal(terminalChannel chan string) {
 			screen.Sync()
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyEscape || ev.Key() == tcell.KeyCtrlC || ev.Rune() == 'q' || ev.Rune() == 'Q' {
+				screen.Sync()
 				os.Exit(0)
 			} else if ev.Key() == tcell.KeyCtrlL {
 				screen.Sync()
 			} else if ev.Rune() == 'C' || ev.Rune() == 'c' {
 				screen.Clear()
-			}
-		case *tcell.EventMouse:
-			x, y := ev.Position()
-
-			switch ev.Buttons() {
-			case tcell.Button1, tcell.Button2:
-				if ox < 0 {
-					ox, oy = x, y // record location when click started
-				}
-
-			case tcell.ButtonNone:
-				if ox >= 0 {
-					label := fmt.Sprintf("%d,%d to %d,%d", ox, oy, x, y)
-					drawBox(screen, ox, oy, x, y, boxStyle, label)
-					ox, oy = -1, -1
-				}
 			}
 		}
 	}
@@ -154,7 +136,7 @@ func terminalChannelPump(terminalChannel chan string) {
 	textStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlack)
 	message := "Loading..."
 	for {
-		drawText(screen, 1, 3, 42, 6, textStyle, message)
+		drawText(screen, 1, 1, 400, 20, textStyle, message)
 		screen.Show()
 		message = <-terminalChannel
 	}

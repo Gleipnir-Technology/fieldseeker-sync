@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -19,6 +20,13 @@ var ctx context.Context
 var cancel context.CancelFunc
 
 func main() {
+	// Figure out what we are building
+	flag.StringVar(&target, "target", "", "The ninja target to autobuild")
+	flag.Parse()
+	if target == "" {
+		log.Fatal("Must specify a target")
+	}
+
 	// Set logfile output
 	f, err := os.OpenFile("autobuild.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -30,24 +38,8 @@ func main() {
 
 	terminalChannel := make(chan string)
 	go initTerminal(terminalChannel)
-	for {
-		i := 1
-		for {
-			terminalChannel <- fmt.Sprintf("iteration %v", i)
-			// Update screen
-			log.Println("iteration", i)
-			time.Sleep(1 * time.Second)
-			i += 1
-		}
-	}
-	os.Exit(0)
-	// Figure out what we are building
-	flag.StringVar(&target, "target", "", "The ninja target to autobuild")
-	flag.Parse()
-	if target == "" {
-		log.Fatal("Must specify a target")
-	}
 
+	terminalChannel <- fmt.Sprintf("Running 'ninja -t inputs %v'", target)
 	out, err := exec.Command("ninja", "-t", "inputs", target).Output()
 	if err != nil {
 		log.Fatal(err)
@@ -72,6 +64,7 @@ func main() {
 	defer cancel()
 
 	pm = NewProcessManager(target, []string{})
+	go pm.outputProcessor(ctx, terminalChannel)
 	if err := pm.startProcess(ctx); err != nil {
 		log.Fatalf("Failed to start process: %v", err)
 	}
@@ -98,7 +91,7 @@ func main() {
 						debounceTimer.Stop()
 					}
 					debounceTimer = time.AfterFunc(100*time.Millisecond, func() {
-						recompile()
+						recompile(terminalChannel)
 					})
 				}
 			case err, ok := <-watcher.Errors:
@@ -111,7 +104,6 @@ func main() {
 		}
 	}()
 
-	log.Println("Watching for file changes. Press Ctrl+C to exit.")
 	<-done
 }
 
@@ -127,24 +119,26 @@ func parseInputs(out []byte) []string {
 	return results
 }
 
-func recompile() {
-	log.Println("\nFile change detected. Recompiling...")
+func recompile(terminalChannel chan string) {
+	terminalChannel <- "File change detected. Recompiling..."
 	// Stop the current process
 	if err := pm.stopProcess(); err != nil {
 		log.Printf("Error stopping process: %v", err)
 	}
 
+	var stdout, stderr bytes.Buffer
 	cmd := exec.Command("ninja")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("Compilation failed: %v\n", err)
+		terminalChannel <- fmt.Sprintf("ninja compilation failure:\n%v", stderr.String())
+		log.Printf("Compilation failed:\nstdout:\n%v\n\nstderr:\n%v\n", err)
 		return
 	}
 
-	log.Println("Compilation successful!")
+	log.Println("Compilation successful.")
 
 	// Cancel the old context and create a new one
 	cancel()

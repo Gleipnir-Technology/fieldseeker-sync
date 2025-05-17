@@ -3,10 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os/exec"
 	"sync"
 )
+
+// ProcessOutput represents a single output line from the process
+type ProcessOutput struct {
+	Data     string
+	IsStderr bool
+}
 
 type ProcessManager struct {
 	cmd         *exec.Cmd
@@ -14,6 +21,7 @@ type ProcessManager struct {
 	stopChan    chan struct{}
 	processName string
 	processArgs []string
+	outputChan  chan ProcessOutput
 }
 
 func NewProcessManager(processName string, args []string) *ProcessManager {
@@ -21,6 +29,38 @@ func NewProcessManager(processName string, args []string) *ProcessManager {
 		processName: processName,
 		processArgs: args,
 		stopChan:    make(chan struct{}),
+		outputChan:  make(chan ProcessOutput, 100), // Buffered channel to prevent blocking
+	}
+}
+
+func (pm *ProcessManager) handleOutput(reader io.Reader, isStderr bool, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	buffer := make([]byte, 1024)
+	for {
+		n, err := reader.Read(buffer)
+		if n > 0 {
+			output := ProcessOutput{
+				Data:     string(buffer[:n]),
+				IsStderr: isStderr,
+			}
+
+			select {
+			case pm.outputChan <- output:
+				// Output sent successfully
+			case <-pm.stopChan:
+				// Process is being stopped
+				return
+			}
+		}
+		if err != nil {
+			if err != io.EOF {
+				log.Printf("Error reading from %s: %v",
+					map[bool]string{true: "stderr", false: "stdout"}[isStderr],
+					err)
+			}
+			return
+		}
 	}
 }
 
@@ -47,36 +87,23 @@ func (pm *ProcessManager) startProcess(ctx context.Context) error {
 		return fmt.Errorf("failed to start process: %v", err)
 	}
 
-	// Handle stdout in a goroutine
-	go func() {
-		buffer := make([]byte, 1024)
-		for {
-			n, err := stdout.Read(buffer)
-			if n > 0 {
-				fmt.Print(string(buffer[:n]))
-			}
-			if err != nil {
-				break
-			}
-		}
-	}()
+	// Use WaitGroup to track output handling goroutines
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	// Handle stderr in a goroutine
-	go func() {
-		buffer := make([]byte, 1024)
-		for {
-			n, err := stderr.Read(buffer)
-			if n > 0 {
-				fmt.Print(string(buffer[:n]))
-			}
-			if err != nil {
-				break
-			}
-		}
-	}()
+	// Handle stdout
+	go pm.handleOutput(stdout, false, &wg)
+
+	// Handle stderr
+	go pm.handleOutput(stderr, true, &wg)
 
 	// Wait for the process in a goroutine
 	go func() {
+		// Wait for output handlers to complete
+		wg.Wait()
+		// Close output channel when both handlers are done
+		close(pm.outputChan)
+
 		err := pm.cmd.Wait()
 		if err != nil {
 			log.Printf("Process exited with error: %v", err)
@@ -91,8 +118,33 @@ func (pm *ProcessManager) stopProcess() error {
 	pm.processLock.Lock()
 	defer pm.processLock.Unlock()
 
+	// Signal output handlers to stop
+	close(pm.stopChan)
+
 	if pm.cmd != nil && pm.cmd.Process != nil {
 		return pm.cmd.Process.Kill()
 	}
 	return nil
+}
+
+// outputProcessor handles the process output in a separate goroutine
+func (pm *ProcessManager) outputProcessor(ctx context.Context, terminalChannel chan string) {
+	for {
+		select {
+		case output, ok := <-pm.outputChan:
+			if !ok {
+				// Channel closed, exit processor
+				return
+			}
+			if output.IsStderr {
+				//fmt.Fprintf(os.Stderr, "STDERR: %s", output.Data)
+				terminalChannel <- output.Data
+			} else {
+				//fmt.Printf("STDOUT: %s", output.Data)
+				terminalChannel <- output.Data
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
 }
