@@ -13,6 +13,7 @@ import (
 type ProcessOutput struct {
 	Data     string
 	IsStderr bool
+	IsReset  bool
 }
 
 type ProcessManager struct {
@@ -120,6 +121,12 @@ func (pm *ProcessManager) stopProcess() error {
 
 	// Signal output handlers to stop
 	close(pm.stopChan)
+	message := ProcessOutput{
+		Data:     "",
+		IsStderr: false,
+		IsReset:  true,
+	}
+	pm.outputChan <- message
 
 	if pm.cmd != nil && pm.cmd.Process != nil {
 		return pm.cmd.Process.Kill()
@@ -129,6 +136,8 @@ func (pm *ProcessManager) stopProcess() error {
 
 // outputProcessor handles the process output in a separate goroutine
 func (pm *ProcessManager) outputProcessor(ctx context.Context, terminalChannel chan string) {
+	stdout := ""
+	stderr := ""
 	for {
 		select {
 		case output, ok := <-pm.outputChan:
@@ -136,12 +145,17 @@ func (pm *ProcessManager) outputProcessor(ctx context.Context, terminalChannel c
 				// Channel closed, exit processor
 				return
 			}
-			if output.IsStderr {
+			if output.IsReset {
+				stdout = ""
+				stderr = ""
+			} else if output.IsStderr {
 				//fmt.Fprintf(os.Stderr, "STDERR: %s", output.Data)
-				terminalChannel <- output.Data
+				stderr += output.Data
+				terminalChannel <- stderr
 			} else {
 				//fmt.Printf("STDOUT: %s", output.Data)
-				terminalChannel <- output.Data
+				stdout += output.Data
+				terminalChannel <- stdout
 			}
 		case <-ctx.Done():
 			return

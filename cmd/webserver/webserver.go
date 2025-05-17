@@ -26,7 +26,7 @@ func main() {
 
 	err := fssync.Initialize()
 	if err != nil {
-		fmt.Println("Failed to initialize fssync: %v", err)
+		fmt.Println("Failed to init fssync: %v", err)
 	}
 
 	InitializeTemplates()
