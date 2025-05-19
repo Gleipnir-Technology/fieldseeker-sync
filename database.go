@@ -101,8 +101,7 @@ func ServiceRequests() ([]ServiceRequest, error) {
 		return make([]ServiceRequest, 0), errors.New("You must initialize the DB first")
 	}
 
-	//rows, _ := pgInstance.db.Query(context.Background(), "SELECT (PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE) FROM FS_ServiceRequest")
-	rows, _ := pgInstance.db.Query(context.Background(), "SELECT (REQCITY) FROM FS_ServiceRequest")
+	rows, _ := pgInstance.db.Query(context.Background(), "SELECT PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest")
 	requests, err := pgx.CollectRows(rows, pgx.RowToStructByName[ServiceRequest])
 	if err != nil {
 		fmt.Printf("CollectRows error: %v", err)

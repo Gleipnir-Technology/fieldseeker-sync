@@ -4,9 +4,18 @@
 
 {{define "content"}}
 <div>
-<ul>
+<Table>
+	<tr><th>Address</th><th>City</th><th>Zip</th><th>Priority</th><th>Status</th><th>Source</th><th>Target</th></tr>
 {{ range $i, $sr := . }}
-  <li>{{ $sr.City }}</li>
+  <tr>
+		<th>{{ $sr.Address }}</td>
+		<th>{{ $sr.City }}</td>
+		<th>{{ $sr.Zip }}</td>
+		<th>{{ $sr.Priority }}</td>
+		<th>{{ $sr.Status }}</td>
+		<th>{{ $sr.Source }}</td>
+		<th>{{ $sr.Target }}</td>
+	</tr>
 {{ end }}
 </ul>
 </div>
