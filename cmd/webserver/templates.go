@@ -4,6 +4,8 @@ import (
 	"embed"
 	"html/template"
 	"log"
+
+	"gleipnir.technology/fieldseeker-sync-bridge"
 )
 
 //go:embed templates/*
@@ -12,9 +14,15 @@ var tmpl *template.Template
 
 func InitializeTemplates() {
 	var err error
-	tmpl, err = template.ParseFS(templateFiles, "templates/*.html")
+	funcMap := template.FuncMap{
+		"geocode": geocode,
+	}
+	tmpl, err = template.New("root").Funcs(funcMap).ParseFS(templateFiles, "templates/*.html")
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
+func geocode(geo fssync.Geometry) string {
+	return "foo"
 }

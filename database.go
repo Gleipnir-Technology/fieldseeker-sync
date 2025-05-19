@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/Gleipnir-Technology/arcgis-go"
+	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -95,17 +96,18 @@ func ServiceRequestCount() (int, error) {
 	return count, nil
 }
 
-func ServiceRequests() ([]ServiceRequest, error) {
+func ServiceRequests() ([]*ServiceRequest, error) {
 
 	if pgInstance == nil {
-		return make([]ServiceRequest, 0), errors.New("You must initialize the DB first")
+		return make([]*ServiceRequest, 0), errors.New("You must initialize the DB first")
 	}
 
-	rows, _ := pgInstance.db.Query(context.Background(), "SELECT PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest")
-	requests, err := pgx.CollectRows(rows, pgx.RowToStructByName[ServiceRequest])
-	if err != nil {
-		fmt.Printf("CollectRows error: %v", err)
-		return make([]ServiceRequest, 0), err
+	rows, _ := pgInstance.db.Query(context.Background(), "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest")
+	var requests []*ServiceRequest
+
+	if err := pgxscan.ScanAll(&requests, rows); err != nil {
+		log.Println("CollectRows error:", err)
+		return make([]*ServiceRequest, 0), err
 	}
 
 	return requests, nil
