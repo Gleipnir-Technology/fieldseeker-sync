@@ -4,6 +4,10 @@
 
 {{define "content"}}
 <div>
-Populate here.
+<ul>
+{{ range $i, $sr := . }}
+  <li>{{ $sr.City }}</li>
+{{ end }}
+</ul>
 </div>
 {{end}}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -32,5 +33,6 @@ func main() {
 	InitializeTemplates()
 	r.Get("/", HandleIndex)
 	r.Get("/service-request", HandleServiceRequest)
+	log.Println("Serving web requests on :3000")
 	http.ListenAndServe(":3000", r)
 }
