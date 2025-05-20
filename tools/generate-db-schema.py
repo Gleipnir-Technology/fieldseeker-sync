@@ -71,14 +71,16 @@ def read_schema(data: Mapping[str, Any]) -> List[Column]:
 		
 def column_type(name: str, additional: Optional[str] = None) -> str:
 	result = ""
-	if name == "esriFieldTypeDate":
+	if name == "esriFieldTypeInteger":
+		result = "INT8"
+	elif name == "esriFieldTypeDate":
 		result = "BIGINT"
 	elif name == "esriFieldTypeDouble":
 		result = "INTEGER"
 	elif name == "esriFieldTypeInteger":
-		result = "INTEGER"
+		result = "INT8"
 	elif name == "esriFieldTypeSmallInteger":
-		result = "INTEGER"
+		result = "INT2"
 	elif name == "esriFieldTypeString":
 		result = "TEXT"
 	elif name == "esriFieldTypeGlobalID":
