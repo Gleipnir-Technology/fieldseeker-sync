@@ -76,7 +76,7 @@ def column_type(name: str, additional: Optional[str] = None) -> str:
 	elif name == "esriFieldTypeDate":
 		result = "BIGINT"
 	elif name == "esriFieldTypeDouble":
-		result = "INTEGER"
+		result = "DOUBLE PRECISION"
 	elif name == "esriFieldTypeInteger":
 		result = "INT8"
 	elif name == "esriFieldTypeSmallInteger":
