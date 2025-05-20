@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	offset := flag.Int("offset", 0, "where to start in the set of records")
 	flag.Parse()
 	layers := flag.Args()
 
@@ -47,7 +48,7 @@ func main() {
 				continue
 			}
 		}
-		err := downloadAllRecords(layer)
+		err := downloadAllRecords(layer, *offset)
 		if err != nil {
 			log.Println("Failed: ", err)
 			os.Exit(5)
@@ -55,8 +56,8 @@ func main() {
 	}
 }
 
-func downloadAllRecords(layer arcgis.Layer) error {
-	fmt.Printf("%v %v\n", layer.ID, layer.Name)
+func downloadAllRecords(layer arcgis.Layer, offset int) error {
+	log.Printf("%v %v\n", layer.ID, layer.Name)
 	count, err := fieldseeker.QueryCount(layer.ID)
 	if err != nil {
 		return err
@@ -66,11 +67,11 @@ func downloadAllRecords(layer arcgis.Layer) error {
 		log.Printf("No records available")
 		return nil
 	}
-	if err != nil {
-		return err
-	}
-	offset := 0
 	for {
+		if offset >= count.Count {
+			log.Printf("Offset is at %v/%v records. Stopping.", offset, count.Count)
+			break
+		}
 		query := arcgis.NewQuery()
 		query.ResultRecordCount = fieldseeker.MaxRecordCount()
 		query.ResultOffset = offset
@@ -81,22 +82,40 @@ func downloadAllRecords(layer arcgis.Layer) error {
 			layer.ID,
 			query)
 		if err != nil {
-			fmt.Printf("Failure: %v", err)
+			log.Println("Failure:", err)
 			os.Exit(6)
 		}
-		//for _, r := range qr.Features {
-		//log.Println(r.Attributes["OBJECTID"])
-		//}
 		err = fssync.SaveOrUpdateDBRecords(context.Background(), "FS_"+layer.Name, qr)
 		if err != nil {
+			log.Println("Failed to save records:", err)
+			saveRawQuery(layer, query, "temp/failure.json")
 			os.Exit(7)
 		}
 		offset += len(qr.Features)
-		log.Printf("Got %v %v records. %v remain\n", len(qr.Features), layer.Name, count.Count-offset)
-		if offset >= count.Count {
-			break
-		}
+		log.Printf("Handled %v %v records. Offset %v. %v remain\n", len(qr.Features), layer.Name, offset, count.Count-offset)
 	}
 
 	return nil
+}
+
+func saveRawQuery(layer arcgis.Layer, query *arcgis.Query, filename string) {
+	output, err := os.Create(filename)
+	if err != nil {
+		log.Println("Failed to open", filename, err)
+		return
+	}
+	qr, err := fieldseeker.DoQueryRaw(
+		layer.ID,
+		query)
+	if err != nil {
+		log.Println("Failed to do query", err)
+		return
+	}
+
+	_, err = output.Write(qr)
+	if err != nil {
+		log.Println("Failed to write results", err)
+		return
+	}
+	log.Println("Wrote failed query to", filename)
 }
