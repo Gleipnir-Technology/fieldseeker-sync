@@ -14,6 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -61,25 +62,19 @@ func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 		// specially add geometry since it isn't in the list of attributes
 		args["geometry_x"] = f.Geometry.X
 		args["geometry_y"] = f.Geometry.Y
-		batch.Queue(query, args)
+		batch.Queue(query, args).Exec(func(ct pgconn.CommandTag) error {
+			if ct.Update() {
+				// log.Println("Update", f.Attributes[qr.UniqueIdField.Name])
+			} else if ct.Insert() {
+				// log.Println("Insert", f.Attributes[qr.UniqueIdField.Name])
+			} else {
+				log.Println("No idea what happened here")
+			}
+			return nil
+		})
 	}
 	results := pgInstance.db.SendBatch(ctx, batch)
-	defer results.Close()
 
-	for _, f := range qr.Features {
-		_, err := results.Exec()
-		if err != nil {
-			/*var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				fmt.Printf("Object %s already exists\n", f.Attributes["OBJECTID"])
-				continue
-			} else {
-				fmt.Println("Failed to upsert: ", err)
-			}*/
-			fmt.Println("Error on exec: ", err)
-			fmt.Println("Bad row: ", f)
-		}
-	}
 	return results.Close()
 }
 
