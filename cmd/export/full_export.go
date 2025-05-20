@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
@@ -18,7 +17,7 @@ func main() {
 
 	err := fssync.Initialize()
 	if err != nil {
-		fmt.Println("Failed to initialize: ", err)
+		log.Println("Failed to initialize: ", err)
 		os.Exit(1)
 	}
 	// Check that we specified the layers correctly
@@ -31,7 +30,7 @@ func main() {
 			}
 		}
 		if !is_valid {
-			fmt.Println("Layer is not valid", l)
+			log.Println("Layer is not valid", l)
 			os.Exit(2)
 		}
 	}
@@ -50,7 +49,7 @@ func main() {
 		}
 		err := downloadAllRecords(layer)
 		if err != nil {
-			fmt.Println("Failed: ", err)
+			log.Println("Failed: ", err)
 			os.Exit(5)
 		}
 	}
@@ -64,6 +63,7 @@ func downloadAllRecords(layer arcgis.Layer) error {
 	}
 	log.Printf("Need to get %v records\n", count.Count)
 	if count.Count == 0 {
+		log.Printf("No records available")
 		return nil
 	}
 	if err != nil {
