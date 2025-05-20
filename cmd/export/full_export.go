@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/Gleipnir-Technology/arcgis-go"
@@ -61,7 +62,7 @@ func downloadAllRecords(layer arcgis.Layer) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Need to get %v records\n", count.Count)
+	log.Printf("Need to get %v records\n", count.Count)
 	if count.Count == 0 {
 		return nil
 	}
@@ -73,6 +74,7 @@ func downloadAllRecords(layer arcgis.Layer) error {
 		query := arcgis.NewQuery()
 		query.ResultRecordCount = fieldseeker.MaxRecordCount()
 		query.ResultOffset = offset
+		query.SpatialReference = "4326"
 		query.OutFields = "*"
 		query.Where = "1=1"
 		qr, err := fieldseeker.DoQuery(
@@ -82,14 +84,16 @@ func downloadAllRecords(layer arcgis.Layer) error {
 			fmt.Printf("Failure: %v", err)
 			os.Exit(6)
 		}
-
+		//for _, r := range qr.Features {
+		//log.Println(r.Attributes["OBJECTID"])
+		//}
 		err = fssync.SaveOrUpdateDBRecords(context.Background(), "FS_"+layer.Name, qr)
 		if err != nil {
 			os.Exit(7)
 		}
 		offset += len(qr.Features)
-		fmt.Printf("Got %v %v records. %v remain\n", len(qr.Features), layer.Name, count.Count-offset)
-		if offset > count.Count {
+		log.Printf("Got %v %v records. %v remain\n", len(qr.Features), layer.Name, count.Count-offset)
+		if offset >= count.Count {
 			break
 		}
 	}
