@@ -7,5 +7,5 @@ rule go-compile
 
 build bin/autobuild: go-compile cmd/autobuild/command_manager.go cmd/autobuild/main.go cmd/autobuild/terminal.go | config.go database.go init.go types.go
 build bin/full_export: go-compile cmd/export/full_export.go | config.go database.go init.go types.go
-build bin/webserver: go-compile cmd/webserver/endpoints.go cmd/webserver/templates.go cmd/webserver/webserver.go | cmd/webserver/templates/base.html cmd/webserver/templates/index.html  cmd/webserver/templates/service-requests.html config.go database.go init.go types.go
+build bin/webserver: go-compile cmd/webserver/webserver.go | html/templates/base.html html/templates/index.html  html/templates/service-requests.html config.go database.go html/html.go init.go types.go
 
