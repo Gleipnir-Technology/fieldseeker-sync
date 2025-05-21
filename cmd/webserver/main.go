@@ -11,9 +11,29 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 	"gleipnir.technology/fieldseeker-sync-bridge"
 	"gleipnir.technology/fieldseeker-sync-bridge/html"
 )
+
+// ErrResponse renderer type for handling all sorts of errors.
+//
+// In the best case scenario, the excellent github.com/pkg/errors package
+// helps reveal information on the error, setting it on Err, and in the Render()
+// method, using it to set the application-specific error code in AppCode.
+type ErrResponse struct {
+	Error          error `json:"-"` // low-level runtime error
+	HTTPStatusCode int   `json:"-"` // http response status code
+
+	StatusText string `json:"status"`          // user-level status message
+	AppCode    int64  `json:"code,omitempty"`  // application-specific error code
+	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
+}
+
+func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, e.HTTPStatusCode)
+	return nil
+}
 
 func main() {
 	r := chi.NewRouter()
@@ -38,6 +58,10 @@ func main() {
 	r.Get("/", index)
 	r.Get("/service-request", serviceRequestList)
 
+	r.Route("/api", func(r chi.Router) {
+		r.Use(render.SetContentType(render.ContentTypeJSON))
+		r.Get("/service-request", serviceRequestApi)
+	})
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "static"))
 	FileServer(r, "/static", filesDir)
@@ -61,6 +85,44 @@ func index(w http.ResponseWriter, r *http.Request) {
 	html.Index(w, data)
 }
 
+func errRender(err error) render.Renderer {
+	return &ErrResponse{
+		Error:          err,
+		HTTPStatusCode: 500,
+		StatusText:     "Error rendering response",
+		ErrorText:      err.Error(),
+	}
+}
+
+type ServiceRequestResponse struct {
+	Lat  float64 `json:"lat"`
+	Long float64 `json:"long"`
+}
+
+func (srr ServiceRequestResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+func NewServiceRequest(sr *fssync.ServiceRequest) ServiceRequestResponse {
+	return ServiceRequestResponse{
+		Lat:  sr.Geometry.X,
+		Long: sr.Geometry.Y,
+	}
+}
+func serviceRequestApi(w http.ResponseWriter, r *http.Request) {
+	requests, err := fssync.ServiceRequests()
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+
+	data := []render.Renderer{}
+	for _, sr := range requests {
+		data = append(data, NewServiceRequest(sr))
+	}
+	if err := render.RenderList(w, r, data); err != nil {
+		render.Render(w, r, errRender(err))
+	}
+}
 func serviceRequestList(w http.ResponseWriter, r *http.Request) {
 	requests, err := fssync.ServiceRequests()
 	if err != nil {

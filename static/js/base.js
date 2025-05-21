@@ -14,4 +14,21 @@ onload = (event) => {
 function onMoveEnd(e) {
 	let bounds = map.getBounds()
 	console.log(bounds.getSouthEast(), bounds.getNorthWest())
+	updateMarkers(bounds)
+}
+
+async function updateMarkers(bounds) {
+	const params = new URLSearchParams({
+		maxX: bounds.getWest(),
+		maxY: bounds.getNorth(),
+		minX: bounds.getEast(),
+		minY: bounds.getSouth(),
+	});
+	const url = "/api/service-request?" + params.toString();
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`Response status: ${response.status}`);
+	}
+	const json = await response.json();
+	console.log(json);
 }
