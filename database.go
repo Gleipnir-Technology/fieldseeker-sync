@@ -78,6 +78,23 @@ func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 	return results.Close()
 }
 
+func SaveUser(displayname string, hash string, username string) error {
+	log.Println("Saving new user")
+	query := `INSERT INTO user_ (display_name, password_hash_type, password_hash, username) VALUES (@display_name, @password_hash_type, @password_hash, @username)`
+	args := pgx.NamedArgs{
+		"display_name":       displayname,
+		"password_hash_type": "bcrypt-14",
+		"password_hash":      hash,
+		"username":           username,
+	}
+	row, err := pgInstance.db.Exec(context.Background(), query, args)
+	if err != nil {
+		return fmt.Errorf("Unable to insert row into user_", err)
+	}
+	log.Println("Saved user", username, row)
+	return nil
+}
+
 func ServiceRequestCount() (int, error) {
 	if pgInstance == nil {
 		return 0, errors.New("You must initialize the DB first")
