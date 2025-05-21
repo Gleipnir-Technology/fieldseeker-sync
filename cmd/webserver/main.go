@@ -95,8 +95,9 @@ func errRender(err error) render.Renderer {
 }
 
 type ServiceRequestResponse struct {
-	Lat  float64 `json:"lat"`
-	Long float64 `json:"long"`
+	Lat    float64 `json:"lat"`
+	Long   float64 `json:"long"`
+	Target *string `json:"target"`
 }
 
 func (srr ServiceRequestResponse) Render(w http.ResponseWriter, r *http.Request) error {
@@ -104,8 +105,9 @@ func (srr ServiceRequestResponse) Render(w http.ResponseWriter, r *http.Request)
 }
 func NewServiceRequest(sr *fssync.ServiceRequest) ServiceRequestResponse {
 	return ServiceRequestResponse{
-		Lat:  sr.Geometry.X,
-		Long: sr.Geometry.Y,
+		Lat:    sr.Geometry.Y,
+		Long:   sr.Geometry.X,
+		Target: sr.Target,
 	}
 }
 func serviceRequestApi(w http.ResponseWriter, r *http.Request) {
