@@ -2,7 +2,24 @@
 
 {{define "title"}}<h1>{{.Title}}</h1>{{end}}
 
+{{define "style"}}
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		.leaflet-container {
+			height: 100%;
+			width: 100%;
+			max-width: 100%;
+			max-height: 100%;
+		}
+		#map {
+			height: 100%;
+			width: 100%;
+		}
+{{end}}
 {{define "content"}}
+  <div id="map" ></div>
 <div>
 	<h1>Overview 3</h1>sp
 	<p>FieldSeeker Sync Bridge</p>
@@ -13,4 +30,14 @@
 		</td><td>{{.ServiceRequestCount}}</td></tr>
 	</table>
 </div>
+{{end}}
+
+{{define "script"}}
+	const map = L.map('map').setView([51.505, -0.09], 13);
+
+	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+	}).addTo(map);
+	var marker = L.marker([51.5, -0.09]).addTo(map);
 {{end}}
