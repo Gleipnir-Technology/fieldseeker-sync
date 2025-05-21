@@ -6,6 +6,7 @@ require github.com/Gleipnir-Technology/arcgis-go v0.0.0 // explicit
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
+	github.com/alexedwards/scs/v2 v2.8.0 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/gdamore/tcell/v2 v2.8.1 // indirect

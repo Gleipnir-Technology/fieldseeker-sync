@@ -48,7 +48,24 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 		return fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
+	var version string
+	query := `SELECT version()`
+	err = pgInstance.db.QueryRow(context.Background(), query).Scan(&version)
+	if err != nil {
+		return fmt.Errorf("Failed to get database version: %w", err)
+	}
+	log.Println("Connected to", version)
 	return nil
+}
+
+func PasswordHash(username string) (string, error) {
+	var hash string
+	query := `SELECT password_hash FROM user_ WHERE username=$1`
+	err := pgInstance.db.QueryRow(context.Background(), query, username).Scan(&hash)
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
 }
 
 func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {

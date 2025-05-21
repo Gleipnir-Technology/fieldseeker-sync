@@ -9,9 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+
 	"gleipnir.technology/fieldseeker-sync-bridge"
 	"gleipnir.technology/fieldseeker-sync-bridge/html"
 )
@@ -30,12 +32,17 @@ type ErrResponse struct {
 	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
 }
 
+var sessionManager *scs.SessionManager
+
 func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
 }
 
 func main() {
+	sessionManager = scs.New()
+	sessionManager.Lifetime = 24 * time.Hour
+
 	r := chi.NewRouter()
 
 	// A good base middleware stack
@@ -43,10 +50,7 @@ func main() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
-	credentials := make(map[string]string, 0)
-	credentials["eliribble"] = "mypassword"
-	r.Use(middleware.BasicAuth("my realm", credentials))
+	r.Use(sessionManager.LoadAndSave)
 
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
@@ -60,6 +64,7 @@ func main() {
 
 	//html.InitializeTemplates()
 	r.Get("/", index)
+	r.Post("/login", login)
 	r.Get("/service-request", serviceRequestList)
 
 	r.Route("/api", func(r chi.Router) {
@@ -89,6 +94,30 @@ func index(w http.ResponseWriter, r *http.Request) {
 	html.Index(w, data)
 }
 
+func login(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	username := r.Form.Get("username")
+	password := r.Form.Get("password")
+	log.Println("Login attempt", username, password)
+	if username == "" {
+		http.Error(w, "Missing username", http.StatusBadRequest)
+	}
+	if password == "" {
+		http.Error(w, "Missing password", http.StatusBadRequest)
+	}
+	hash, err := fssync.PasswordHash(username)
+	if err != nil {
+		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
+	}
+	is_valid := fssync.VerifyPassword(password, hash)
+	if is_valid {
+		log.Println("Login for", username, "is valid")
+		sessionManager.Put(r.Context(), "username", username)
+	} else {
+		log.Println("Login for", username, "is invalid")
+		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
+	}
+}
 func errRender(err error) render.Renderer {
 	return &ErrResponse{
 		Error:          err,
