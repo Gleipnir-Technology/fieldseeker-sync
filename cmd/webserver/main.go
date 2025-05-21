@@ -44,6 +44,10 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	credentials := make(map[string]string, 0)
+	credentials["eliribble"] = "mypassword"
+	r.Use(middleware.BasicAuth("my realm", credentials))
+
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
