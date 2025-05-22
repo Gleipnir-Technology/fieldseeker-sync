@@ -212,7 +212,6 @@ func hasSession(r *http.Request) bool {
 }
 
 func isAllowedWithoutSession(r *http.Request) bool {
-	log.Println("Checking path", r.URL.Path)
 	if r.URL.Path == "/login" {
 		return true
 	}
@@ -222,7 +221,7 @@ func isAllowedWithoutSession(r *http.Request) bool {
 func loginRequired(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !(hasSession(r) || isAllowedWithoutSession(r)) {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			http.Redirect(w, r, "/login?next="+r.URL.Path, http.StatusSeeOther)
 			return
 		}
 		h.ServeHTTP(w, r)
