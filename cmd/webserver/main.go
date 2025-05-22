@@ -135,6 +135,7 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	if is_valid {
 		log.Println("Login for", username, "is valid")
 		sessionManager.Put(r.Context(), "username", username)
+		http.Redirect(w, r, "/", http.StatusFound)
 	} else {
 		log.Println("Login for", username, "is invalid")
 		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
