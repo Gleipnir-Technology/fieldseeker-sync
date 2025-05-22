@@ -208,9 +208,6 @@ func hasSession(r *http.Request) bool {
 	if err != nil || session == nil {
 		return false
 	}
-	if session.Expires.Before(time.Now()) {
-		return false
-	}
 	return true
 }
 
