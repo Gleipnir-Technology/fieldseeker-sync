@@ -39,6 +39,15 @@ func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func errRender(err error) render.Renderer {
+	return &ErrResponse{
+		Error:          err,
+		HTTPStatusCode: 500,
+		StatusText:     "Error rendering response",
+		ErrorText:      err.Error(),
+	}
+}
+
 func main() {
 	sessionManager = scs.New()
 	sessionManager.Lifetime = 24 * time.Hour
@@ -50,6 +59,7 @@ func main() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(loginRequired)
 	r.Use(sessionManager.LoadAndSave)
 
 	// Set a timeout value on the request context (ctx), that will signal
@@ -64,7 +74,8 @@ func main() {
 
 	//html.InitializeTemplates()
 	r.Get("/", index)
-	r.Post("/login", login)
+	r.Get("/login", loginGet)
+	r.Post("/login", loginPost)
 	r.Get("/service-request", serviceRequestList)
 
 	r.Route("/api", func(r chi.Router) {
@@ -94,7 +105,14 @@ func index(w http.ResponseWriter, r *http.Request) {
 	html.Index(w, data)
 }
 
-func login(w http.ResponseWriter, r *http.Request) {
+func loginGet(w http.ResponseWriter, r *http.Request) {
+	err := html.Login(w)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+	}
+}
+
+func loginPost(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
@@ -116,14 +134,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Println("Login for", username, "is invalid")
 		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
-	}
-}
-func errRender(err error) render.Renderer {
-	return &ErrResponse{
-		Error:          err,
-		HTTPStatusCode: 500,
-		StatusText:     "Error rendering response",
-		ErrorText:      err.Error(),
 	}
 }
 
@@ -185,5 +195,34 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
 		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
 		fs.ServeHTTP(w, r)
+	})
+}
+
+func hasSession(r *http.Request) bool {
+	session, err := r.Cookie("session")
+	if err != nil || session == nil {
+		return false
+	}
+	if session.Expires.Before(time.Now()) {
+		return false
+	}
+	return true
+}
+
+func isAllowedWithoutSession(r *http.Request) bool {
+	log.Println("Checking path", r.URL.Path)
+	if r.URL.Path == "/login" {
+		return true
+	}
+	return false
+}
+
+func loginRequired(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !(hasSession(r) || isAllowedWithoutSession(r)) {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		h.ServeHTTP(w, r)
 	})
 }
