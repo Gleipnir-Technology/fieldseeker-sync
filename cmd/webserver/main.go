@@ -117,15 +117,19 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 	log.Println("Login attempt", username, password)
-	if username == "" {
-		http.Error(w, "Missing username", http.StatusBadRequest)
-	}
-	if password == "" {
-		http.Error(w, "Missing password", http.StatusBadRequest)
+	if username == "" || password == "" {
+		if username == "" {
+			http.Error(w, "Missing username", http.StatusBadRequest)
+		}
+		if password == "" {
+			http.Error(w, "Missing password", http.StatusBadRequest)
+		}
+		return
 	}
 	hash, err := fssync.PasswordHash(username)
 	if err != nil {
 		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
+		return
 	}
 	is_valid := fssync.VerifyPassword(password, hash)
 	if is_valid {
