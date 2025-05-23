@@ -58,16 +58,6 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 	return nil
 }
 
-func PasswordHash(username string) (string, error) {
-	var hash string
-	query := `SELECT password_hash FROM user_ WHERE username=$1`
-	err := pgInstance.db.QueryRow(context.Background(), query, username).Scan(&hash)
-	if err != nil {
-		return "", err
-	}
-	return hash, nil
-}
-
 func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {
 	query := upsertFromQueryResult(table, qr)
 	batch := &pgx.Batch{}
@@ -140,6 +130,25 @@ func ServiceRequests() ([]*ServiceRequest, error) {
 	}
 
 	return requests, nil
+}
+
+func ValidateUser(username string, password string) (*User, error) {
+	var (
+		display_name string
+		hash         string
+	)
+	query := `SELECT display_name,password_hash FROM user_ WHERE username=$1`
+	err := pgInstance.db.QueryRow(context.Background(), query, username).Scan(&display_name, &hash)
+	if err != nil {
+		return nil, err
+	}
+	if !VerifyPassword(password, hash) {
+		return nil, nil
+	}
+	return &User{
+		DisplayName: display_name,
+		Username:    username,
+	}, nil
 }
 
 func doMigrations(connection_string string) error {

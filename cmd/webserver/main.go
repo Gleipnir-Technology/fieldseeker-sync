@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -32,6 +33,27 @@ type ErrResponse struct {
 	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
 }
 
+// authenticatedHandler is a handler function that also requires a user
+type AuthenticatedHandler func(http.ResponseWriter, *http.Request, *fssync.User)
+
+type EnsureAuth struct {
+	handler AuthenticatedHandler
+}
+
+func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	user, err := getAuthenticatedUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/login?next="+r.URL.Path, http.StatusSeeOther)
+		return
+	}
+
+	ea.handler(w, r, user)
+}
+
+func NewEnsureAuth(handlerToWrap AuthenticatedHandler) *EnsureAuth {
+	return &EnsureAuth{handlerToWrap}
+}
+
 var sessionManager *scs.SessionManager
 
 func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
@@ -48,6 +70,18 @@ func errRender(err error) render.Renderer {
 	}
 }
 
+func getAuthenticatedUser(r *http.Request) (*fssync.User, error) {
+	display_name := sessionManager.GetString(r.Context(), "display_name")
+	username := sessionManager.GetString(r.Context(), "username")
+	if display_name == "" || username == "" {
+		return nil, errors.New("No valid user in session")
+	}
+	return &fssync.User{
+		DisplayName: display_name,
+		Username:    username,
+	}, nil
+}
+
 func main() {
 	sessionManager = scs.New()
 	sessionManager.Lifetime = 24 * time.Hour
@@ -59,7 +93,6 @@ func main() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(loginRequired)
 	r.Use(sessionManager.LoadAndSave)
 
 	// Set a timeout value on the request context (ctx), that will signal
@@ -73,7 +106,7 @@ func main() {
 	}
 
 	//html.InitializeTemplates()
-	r.Get("/", index)
+	r.Method("GET", "/", NewEnsureAuth(index))
 	r.Get("/login", loginGet)
 	r.Post("/login", loginPost)
 	r.Get("/service-request", serviceRequestList)
@@ -90,7 +123,7 @@ func main() {
 	http.ListenAndServe(":3000", r)
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
+func index(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	count, err := fssync.ServiceRequestCount()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -100,6 +133,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	data := html.PageDataIndex{
 		ServiceRequestCount: count,
 		Title:               "Gateway Sync Test",
+		User:                u,
 	}
 
 	html.Index(w, data)
@@ -126,20 +160,18 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	hash, err := fssync.PasswordHash(username)
+	user, err := fssync.ValidateUser(username, password)
 	if err != nil {
 		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
 		return
-	}
-	is_valid := fssync.VerifyPassword(password, hash)
-	if is_valid {
-		log.Println("Login for", username, "is valid")
-		sessionManager.Put(r.Context(), "username", username)
-		http.Redirect(w, r, "/", http.StatusFound)
-	} else {
+	} else if user == nil {
 		log.Println("Login for", username, "is invalid")
 		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
 	}
+
+	sessionManager.Put(r.Context(), "display_name", user.DisplayName)
+	sessionManager.Put(r.Context(), "username", username)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 type ServiceRequestResponse struct {
@@ -200,30 +232,5 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
 		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
 		fs.ServeHTTP(w, r)
-	})
-}
-
-func hasSession(r *http.Request) bool {
-	session, err := r.Cookie("session")
-	if err != nil || session == nil {
-		return false
-	}
-	return true
-}
-
-func isAllowedWithoutSession(r *http.Request) bool {
-	if r.URL.Path == "/login" {
-		return true
-	}
-	return false
-}
-
-func loginRequired(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !(hasSession(r) || isAllowedWithoutSession(r)) {
-			http.Redirect(w, r, "/login?next="+r.URL.Path, http.StatusSeeOther)
-			return
-		}
-		h.ServeHTTP(w, r)
 	})
 }

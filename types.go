@@ -15,3 +15,10 @@ type ServiceRequest struct {
 	Target   *string  `db:"reqtarget"`
 	Zip      *string  `db:"reqzip"`
 }
+
+type User struct {
+	DisplayName      string `db:"display_name"`
+	PasswordHashType string `db:"password_hash_type"`
+	PasswordHash     string `db:"password_hash"`
+	Username         string `db:"username"`
+}

@@ -27,7 +27,9 @@ type BuiltTemplate struct {
 type PageDataIndex struct {
 	ServiceRequestCount int
 	Title               string
+	User                *fssync.User
 }
+
 type PageDataLogin struct {
 	Title string
 }
