@@ -136,7 +136,10 @@ func index(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 		User:                u,
 	}
 
-	html.Index(w, data)
+	err = html.Index(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func loginGet(w http.ResponseWriter, r *http.Request) {
