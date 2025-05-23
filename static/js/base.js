@@ -1,29 +1,73 @@
 var map;
 onload = (event) => {
-	console.log("hey")
-	map = L.map('map').setView([36.111, -118.0], 13);
+	const bounds = parseBoundsFromHash();
+	console.log("Fitting bounds", bounds);
+	map = L.map('map').fitBounds(bounds);
 
 	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 19,
 		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 	}).addTo(map);
 	map.on("moveend", onMoveEnd);
-	updateMarkers(map.getBounds())
+	getMarkersForBounds(map.getBounds());
+}
+
+function parseBoundsFromHash() {
+	const hash = window.location.hash;
+	const params = new URLSearchParams(
+		hash.substring(1)
+	);
+	try {
+		const bounds = L.latLngBounds(
+			L.latLng(
+				parseFloat(params.get("north")),
+				parseFloat(params.get("east")),
+			),
+			L.latLng(
+				parseFloat(params.get("south")),
+				parseFloat(params.get("west")),
+			)
+		)
+		console.log("From hash", bounds);
+		return bounds;
+	} catch(e) {
+		return L.latLngBounds(
+			L.latLng(
+				36.129001,
+				-118.391418,
+			),
+			L.latLng(
+				36.789491,
+				-120.16845,
+			)
+		);
+	}
 }
 
 function onMoveEnd(e) {
 	let bounds = map.getBounds()
-	console.log(bounds.getSouthEast(), bounds.getNorthWest())
-	//updateMarkers(bounds)
+	setHashToBounds(bounds)
+	console.log(bounds.getEast(), bounds.getNorth(), bounds.getWest(), bounds.getSouth())
+	//getMarkersForBounds(bounds)
 }
 
-async function updateMarkers(bounds) {
+function paramsFromBounds(bounds) {
 	const params = new URLSearchParams({
-		maxX: bounds.getWest(),
-		maxY: bounds.getNorth(),
-		minX: bounds.getEast(),
-		minY: bounds.getSouth(),
+		west: bounds.getWest(),
+		north: bounds.getNorth(),
+		east: bounds.getEast(),
+		south: bounds.getSouth(),
 	});
+	return params;
+}
+
+function setHashToBounds(bounds) {
+	const params = paramsFromBounds(bounds);
+	window.location.hash = params.toString();
+}
+
+async function getMarkersForBounds(bounds) {
+	const params = paramsFromBounds(bounds);
 	const url = "/api/service-request?" + params.toString();
 	const response = await fetch(url);
 	if (!response.ok) {
@@ -32,7 +76,7 @@ async function updateMarkers(bounds) {
 	const json = await response.json();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		L.marker([r.lat, r.long]).addTo(map).bindPopup(r.target).openPopup();
-		console.log(r.lat, r.long);
+		L.marker([r.lat, r.long]).addTo(map);
+		//console.log(r.lat, r.long);
 	}
 }
