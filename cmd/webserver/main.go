@@ -109,6 +109,7 @@ func main() {
 	r.Method("GET", "/", NewEnsureAuth(index))
 	r.Get("/login", loginGet)
 	r.Post("/login", loginPost)
+	r.Get("/logout", logoutGet)
 	r.Get("/service-request", serviceRequestList)
 
 	r.Route("/api", func(r chi.Router) {
@@ -175,6 +176,12 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	sessionManager.Put(r.Context(), "display_name", user.DisplayName)
 	sessionManager.Put(r.Context(), "username", username)
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func logoutGet(w http.ResponseWriter, r *http.Request) {
+	sessionManager.Put(r.Context(), "display_name", "")
+	sessionManager.Put(r.Context(), "username", "")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 type ServiceRequestResponse struct {

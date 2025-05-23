@@ -22,7 +22,9 @@
 			<div class="col-md-3 text-end">
 			</div>
 		</header>
-		{{template "navbar" .User}}
+		{{if .User}}
+			{{template "navbar" .User}}
+		{{end}}
 		{{template "content" .}}
 	</div>
 	<script>{{template "script" .}}</script>
