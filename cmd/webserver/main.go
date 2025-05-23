@@ -100,7 +100,7 @@ func main() {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	err := fssync.Initialize()
+	err := fssync.InitDB()
 	if err != nil {
 		fmt.Println("Failed to init fssync: %v", err)
 	}
