@@ -18,6 +18,7 @@ var (
 	login           = newBuiltTemplate("login", "base")
 	serviceRequests = newBuiltTemplate("service-requests", "base")
 )
+var components = [...]string{"navbar"}
 
 type BuiltTemplate struct {
 	files    []string
@@ -102,6 +103,9 @@ func parseEmbedded(files []string) *template.Template {
 	for _, f := range files {
 		paths = append(paths, "templates/"+f+".html")
 	}
+	for _, f := range components {
+		paths = append(paths, "templates/components/"+f+".html")
+	}
 	name := files[0]
 	return template.Must(
 		template.New(name).Funcs(funcMap).ParseFS(embeddedFiles, paths...))
@@ -117,6 +121,9 @@ func parseFromDisk(files []string) *template.Template {
 		paths = append(paths, "html/templates/"+f+".html")
 	}
 	name := files[0] + ".html"
+	for _, f := range components {
+		paths = append(paths, "html/templates/components/"+f+".html")
+	}
 	templ, err := template.New(name).Funcs(funcMap).ParseFiles(paths...)
 	if err != nil {
 		log.Println("TEMPLATE FAILED", err)
