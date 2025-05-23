@@ -67,8 +67,28 @@ function setHashToBounds(bounds) {
 }
 
 async function getMarkersForBounds(bounds) {
+	getServiceRequestsForBounds(bounds);
+	getTrapDataForBounds(bounds);
+}
+
+async function getServiceRequestsForBounds(bounds) {
 	const params = paramsFromBounds(bounds);
 	const url = "/api/service-request?" + params.toString();
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`Response status: ${response.status}`);
+	}
+	const json = await response.json();
+	for(let i = 0; i < json.length; i++) {
+		const r = json[i];
+		L.marker([r.lat, r.long]).addTo(map);
+		//console.log(r.lat, r.long);
+	}
+}
+
+async function getTrapDataForBounds(bounds) {
+	const params = paramsFromBounds(bounds);
+	const url = "/api/trap-data?" + params.toString();
 	const response = await fetch(url);
 	if (!response.ok) {
 		throw new Error(`Response status: ${response.status}`);

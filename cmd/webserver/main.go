@@ -117,6 +117,7 @@ func main() {
 	r.Route("/api", func(r chi.Router) {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestApi))
+		r.Method("GET", "/trap-data", NewEnsureAuth(trapDataApi))
 	})
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "static"))
@@ -186,6 +187,17 @@ func logoutGet(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
+type ResponseTrapData struct {
+	Description *string `json:"description"`
+	Lat         float64 `json:"lat"`
+	Long        float64 `json:"long"`
+	Name        *string `json:"name"`
+}
+
+func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 type ServiceRequestResponse struct {
 	Address  *string `json:"address"`
 	City     *string `json:"city"`
@@ -214,11 +226,20 @@ func NewServiceRequest(sr *fssync.ServiceRequest) ServiceRequestResponse {
 		Zip:      sr.Zip,
 	}
 }
-func serviceRequestApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+
+func NewTrapData(td *fssync.TrapData) ResponseTrapData {
+	return ResponseTrapData{
+		Description: td.Description,
+		Lat:         td.Geometry.Y,
+		Long:        td.Geometry.X,
+		Name:        td.Name,
+	}
+}
+
+func parseBounds(r *http.Request) (*fssync.Bounds, error) {
 	err := r.ParseForm()
 	if err != nil {
-		render.Render(w, r, errRender(err))
-		return
+		return nil, err
 	}
 
 	east := r.FormValue("east")
@@ -231,28 +252,33 @@ func serviceRequestApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	var temp float64
 	temp, err = strconv.ParseFloat(east, 64)
 	if err != nil {
-		render.Render(w, r, errRender(err))
-		return
+		return nil, err
 	}
 	bounds.East = temp
 	temp, err = strconv.ParseFloat(north, 64)
 	if err != nil {
-		render.Render(w, r, errRender(err))
-		return
+		return nil, err
 	}
 	bounds.North = temp
 	temp, err = strconv.ParseFloat(south, 64)
 	if err != nil {
-		render.Render(w, r, errRender(err))
-		return
+		return nil, err
 	}
 	bounds.South = temp
 	temp, err = strconv.ParseFloat(west, 64)
 	if err != nil {
+		return nil, err
+	}
+	bounds.West = temp
+	return &bounds, nil
+}
+
+func serviceRequestApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+	bounds, err := parseBounds(r)
+	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
-	bounds.West = temp
 
 	requests, err := fssync.ServiceRequests(bounds)
 	if err != nil {
@@ -268,6 +294,7 @@ func serviceRequestApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 		render.Render(w, r, errRender(err))
 	}
 }
+
 func serviceRequestList(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	bounds := fssync.Bounds{
 		East:  -180,
@@ -275,7 +302,7 @@ func serviceRequestList(w http.ResponseWriter, r *http.Request, u *fssync.User) 
 		South: -180,
 		West:  180,
 	}
-	requests, err := fssync.ServiceRequests(bounds)
+	requests, err := fssync.ServiceRequests(&bounds)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -287,6 +314,28 @@ func serviceRequestList(w http.ResponseWriter, r *http.Request, u *fssync.User) 
 	err = html.ServiceRequests(w, sr)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func trapDataApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+	bounds, err := parseBounds(r)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+
+	trap_data, err := fssync.TrapDataQuery(bounds)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+
+	data := []render.Renderer{}
+	for _, td := range trap_data {
+		data = append(data, NewTrapData(td))
+	}
+	if err := render.RenderList(w, r, data); err != nil {
+		render.Render(w, r, errRender(err))
 	}
 }
 

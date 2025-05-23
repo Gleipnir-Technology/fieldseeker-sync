@@ -16,6 +16,29 @@ type ServiceRequest struct {
 	Zip      *string  `db:"reqzip"`
 }
 
+type TrapData struct {
+	Access      *string
+	Comments    *string
+	Condition   *string
+	Data        []TrapData
+	Description *string
+	Geometry    Geometry
+	End         *string
+	FieldTech   *string
+	Name        *string
+	Species     *string
+	Type        *string
+}
+
+type FS_TrapLocation struct {
+	Access      *string  `db:"accessdesc"`
+	Description *string  `db:"description"`
+	Geometry    Geometry `db:"geometry"`
+	GlobalID    *string  `db:"globalid"`
+	ObjectID    int      `db:"objectid"`
+	Name        *string  `db:"name"`
+}
+
 type User struct {
 	DisplayName      string `db:"display_name"`
 	PasswordHashType string `db:"password_hash_type"`
