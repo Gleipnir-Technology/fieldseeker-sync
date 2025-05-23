@@ -107,10 +107,11 @@ func main() {
 
 	//html.InitializeTemplates()
 	r.Method("GET", "/", NewEnsureAuth(index))
+	r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestList))
+
 	r.Get("/login", loginGet)
 	r.Post("/login", loginPost)
 	r.Get("/logout", logoutGet)
-	r.Get("/service-request", serviceRequestList)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
@@ -215,13 +216,20 @@ func serviceRequestApi(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, errRender(err))
 	}
 }
-func serviceRequestList(w http.ResponseWriter, r *http.Request) {
+func serviceRequestList(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	requests, err := fssync.ServiceRequests()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	html.ServiceRequests(w, requests)
+	sr := html.PageDataServiceRequests{
+		ServiceRequests: requests,
+		User:            u,
+	}
+	err = html.ServiceRequests(w, sr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // FileServer conveniently sets up a http.FileServer handler to serve

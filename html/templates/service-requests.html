@@ -1,12 +1,13 @@
 {{template "base.html" .}}
 
-{{define "title"}}<h1>Service Requests</h1>{{end}}
-
+{{define "title"}}Service Requests{{end}}
+{{define "script"}}{{end}}
+{{define "style"}}{{end}}
 {{define "content"}}
 <div>
 <Table>
 	<tr><th>Geometry</th><th>Address</th><th>City</th><th>Zip</th><th>Priority</th><th>Status</th><th>Source</th><th>Target</th></tr>
-{{ range $i, $sr := . }}
+{{ range $i, $sr := .ServiceRequests }}
   <tr>
 		<th>{{ $sr.Geometry | geocode }}</td>
 		<th>{{ $sr.Address }}</td>

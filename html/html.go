@@ -35,6 +35,11 @@ type PageDataLogin struct {
 	Title string
 }
 
+type PageDataServiceRequests struct {
+	ServiceRequests []*fssync.ServiceRequest
+	User            *fssync.User
+}
+
 func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	name := bt.files[0] + ".html"
 	log.Println("Executing template", name)
@@ -61,7 +66,7 @@ func Login(w io.Writer) error {
 	return login.ExecuteTemplate(w, d)
 }
 
-func ServiceRequests(w io.Writer, sr []*fssync.ServiceRequest) error {
+func ServiceRequests(w io.Writer, sr PageDataServiceRequests) error {
 	return serviceRequests.ExecuteTemplate(w, sr)
 }
 
