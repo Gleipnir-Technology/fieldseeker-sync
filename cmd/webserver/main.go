@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -115,7 +116,7 @@ func main() {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
-		r.Get("/service-request", serviceRequestApi)
+		r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestApi))
 	})
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "static"))
@@ -186,9 +187,15 @@ func logoutGet(w http.ResponseWriter, r *http.Request) {
 }
 
 type ServiceRequestResponse struct {
-	Lat    float64 `json:"lat"`
-	Long   float64 `json:"long"`
-	Target *string `json:"target"`
+	Address  *string `json:"address"`
+	City     *string `json:"city"`
+	Lat      float64 `json:"lat"`
+	Long     float64 `json:"long"`
+	Priority *string `json:"priority"`
+	Source   *string `json:"source"`
+	Status   *string `json:"status"`
+	Target   *string `json:"target"`
+	Zip      *string `json:"zip"`
 }
 
 func (srr ServiceRequestResponse) Render(w http.ResponseWriter, r *http.Request) error {
@@ -196,13 +203,58 @@ func (srr ServiceRequestResponse) Render(w http.ResponseWriter, r *http.Request)
 }
 func NewServiceRequest(sr *fssync.ServiceRequest) ServiceRequestResponse {
 	return ServiceRequestResponse{
-		Lat:    sr.Geometry.Y,
-		Long:   sr.Geometry.X,
-		Target: sr.Target,
+		Address:  sr.Address,
+		City:     sr.City,
+		Lat:      sr.Geometry.Y,
+		Long:     sr.Geometry.X,
+		Priority: sr.Priority,
+		Status:   sr.Status,
+		Source:   sr.Source,
+		Target:   sr.Target,
+		Zip:      sr.Zip,
 	}
 }
-func serviceRequestApi(w http.ResponseWriter, r *http.Request) {
-	requests, err := fssync.ServiceRequests()
+func serviceRequestApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+	err := r.ParseForm()
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+
+	east := r.FormValue("east")
+	north := r.FormValue("north")
+	south := r.FormValue("south")
+	west := r.FormValue("west")
+
+	bounds := fssync.Bounds{}
+
+	var temp float64
+	temp, err = strconv.ParseFloat(east, 64)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+	bounds.East = temp
+	temp, err = strconv.ParseFloat(north, 64)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+	bounds.North = temp
+	temp, err = strconv.ParseFloat(south, 64)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+	bounds.South = temp
+	temp, err = strconv.ParseFloat(west, 64)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+	bounds.West = temp
+
+	requests, err := fssync.ServiceRequests(bounds)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -217,7 +269,13 @@ func serviceRequestApi(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func serviceRequestList(w http.ResponseWriter, r *http.Request, u *fssync.User) {
-	requests, err := fssync.ServiceRequests()
+	bounds := fssync.Bounds{
+		East:  -180,
+		North: 180,
+		South: -180,
+		West:  180,
+	}
+	requests, err := fssync.ServiceRequests(bounds)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

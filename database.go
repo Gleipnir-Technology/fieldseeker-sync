@@ -24,6 +24,13 @@ type postgres struct {
 	db *pgxpool.Pool
 }
 
+type Bounds struct {
+	East  float64
+	North float64
+	South float64
+	West  float64
+}
+
 var (
 	pgInstance *postgres
 	pgOnce     sync.Once
@@ -115,13 +122,18 @@ func ServiceRequestCount() (int, error) {
 	return count, nil
 }
 
-func ServiceRequests() ([]*ServiceRequest, error) {
-
+func ServiceRequests(b Bounds) ([]*ServiceRequest, error) {
 	if pgInstance == nil {
 		return make([]*ServiceRequest, 0), errors.New("You must initialize the DB first")
 	}
 
-	rows, _ := pgInstance.db.Query(context.Background(), "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest")
+	args := pgx.NamedArgs{
+		"east":  b.East,
+		"north": b.North,
+		"south": b.South,
+		"west":  b.West,
+	}
+	rows, _ := pgInstance.db.Query(context.Background(), "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north", args)
 	var requests []*ServiceRequest
 
 	if err := pgxscan.ScanAll(&requests, rows); err != nil {
