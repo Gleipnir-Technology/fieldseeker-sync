@@ -14,20 +14,21 @@
 			max-height: 100%;
 		}
 		#map {
-			height: 50%;
+			height: 600px;
 			width: 100%;
 		}
 {{end}}
 {{define "content"}}
-<div id="map" ></div>
+<div id="map" class="border"></div>
 <div>
-	<h1>Overview 3</h1>sp
+	<h1>Overview 3</h1>
 	<p>FieldSeeker Sync Bridge</p>
 	<table>
 		<tr><th>Table</th><th>Count</th></tr>
-		<tr><td>
-			<a href="/service-request">ServiceRequest</a>
-		</td><td>{{.ServiceRequestCount}}</td></tr>
+		<tr>
+			<td><a href="/service-request">ServiceRequest</a></td>
+			<td>{{.ServiceRequestCount}}</td>
+		</tr>
 	</table>
 </div>
 {{end}}
