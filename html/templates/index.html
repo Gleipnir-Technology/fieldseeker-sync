@@ -20,16 +20,23 @@
 {{end}}
 {{define "content"}}
 <div id="map" class="border"></div>
-<div>
-	<h1>Overview 3</h1>
-	<p>FieldSeeker Sync Bridge</p>
-	<table>
-		<tr><th>Table</th><th>Count</th></tr>
-		<tr>
-			<td><a href="/service-request">ServiceRequest</a></td>
-			<td>{{.ServiceRequestCount}}</td>
-		</tr>
-	</table>
+<div class="container">
+	<div class="row">
+		<div class="col">
+			<h1>Statistics</h1>
+			<table>
+				<tr><th>Type</th><th>Count</th></tr>
+				<tr>
+					<td>Service Request</td>
+					<td><span id="count-service-request">...</span></td>
+				</tr>
+				<tr>
+					<td>Trap Data</td>
+					<td><span id="count-trap-data">...</span></td>
+				</tr>
+			</table>
+		</div>
+	</div>
 </div>
 {{end}}
 

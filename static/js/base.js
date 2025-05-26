@@ -1,4 +1,8 @@
 var map;
+var markers = {
+	serviceRequest: [],
+	trapData: []
+}
 onload = (event) => {
 	const bounds = parseBoundsFromHash();
 	console.log("Fitting bounds", bounds);
@@ -48,7 +52,7 @@ function onMoveEnd(e) {
 	let bounds = map.getBounds()
 	setHashToBounds(bounds)
 	console.log(bounds.getEast(), bounds.getNorth(), bounds.getWest(), bounds.getSouth())
-	//getMarkersForBounds(bounds)
+	getMarkersForBounds(bounds)
 }
 
 function paramsFromBounds(bounds) {
@@ -84,6 +88,8 @@ async function getServiceRequestsForBounds(bounds) {
 		L.marker([r.lat, r.long]).addTo(map);
 		//console.log(r.lat, r.long);
 	}
+	var count = document.getElementById("count-service-request");
+	count.innerHTML = json.length;
 }
 
 async function getTrapDataForBounds(bounds) {
@@ -96,7 +102,10 @@ async function getTrapDataForBounds(bounds) {
 	const json = await response.json();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		L.marker([r.lat, r.long]).addTo(map);
-		//console.log(r.lat, r.long);
+		L.marker([r.lat, r.long]).addTo(map).on("click", function(e) {
+			console.log("Clicked", r);
+		})
 	}
+	var count = document.getElementById("count-trap-data");
+	count.innerHTML = json.length;
 }
