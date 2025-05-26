@@ -157,7 +157,6 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
-	log.Println("Login attempt", username, password)
 	if username == "" || password == "" {
 		if username == "" {
 			http.Error(w, "Missing username", http.StatusBadRequest)
