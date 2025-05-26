@@ -21,7 +21,7 @@ go build
 Then run it connecting to the database
 
 ```
-env DATABASE_URL=postgresql://fieldseeker:letmein@localhost:5432 ./fieldseeker-sync-bridge```
+env DATABASE_URL=postgresql://fieldseeker:letmein@localhost:5432 ./fieldseeker-sync```
 
 Check on the status of migrations
 

@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	"gleipnir.technology/fieldseeker-sync-bridge"
+	"gleipnir.technology/fieldseeker-sync"
 )
 
 //go:embed templates/*

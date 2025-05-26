@@ -1,4 +1,4 @@
-module gleipnir.technology/fieldseeker-sync-bridge
+module gleipnir.technology/fieldseeker-sync
 
 go 1.23.8
 

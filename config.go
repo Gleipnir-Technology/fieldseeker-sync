@@ -20,7 +20,7 @@ type Config struct {
 
 func ReadConfig() (*Config, error) {
 	v := viper.New()
-	v.SetConfigName("fieldseeker-sync-bridge") // name of config file (without extension)
+	v.SetConfigName("fieldseeker-sync") // name of config file (without extension)
 	v.SetConfigType("toml")                    // REQUIRED if the config file does not have the extension in the name
 	v.AddConfigPath("/etc/")                   // path to look for the config file in
 	v.AddConfigPath("$HOME/.config")           // call multiple times to add many search paths

@@ -16,8 +16,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 
-	"gleipnir.technology/fieldseeker-sync-bridge"
-	"gleipnir.technology/fieldseeker-sync-bridge/html"
+	"gleipnir.technology/fieldseeker-sync"
+	"gleipnir.technology/fieldseeker-sync/html"
 )
 
 // ErrResponse renderer type for handling all sorts of errors.
