@@ -120,7 +120,7 @@ func SaveUser(displayname string, hash string, username string) error {
 	}
 	row, err := pgInstance.db.Exec(context.Background(), query, args)
 	if err != nil {
-		return fmt.Errorf("Unable to insert row into user_", err)
+		return fmt.Errorf("Unable to insert row into user_: %v", err)
 	}
 	log.Println("Saved user", username, row)
 	return nil
