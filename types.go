@@ -1,5 +1,21 @@
 package fssync
 
+type Bounds struct {
+	East  float64
+	North float64
+	South float64
+	West  float64
+}
+
+func NewBounds() Bounds {
+	return Bounds{
+		East:  180,
+		North: 180,
+		South: -180,
+		West:  -180,
+	}
+}
+
 type Geometry struct {
 	X float64 `db:"X"`
 	Y float64 `db:"Y"`

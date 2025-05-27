@@ -24,13 +24,6 @@ type postgres struct {
 	db *pgxpool.Pool
 }
 
-type Bounds struct {
-	East  float64
-	North float64
-	South float64
-	West  float64
-}
-
 var (
 	pgInstance *postgres
 	pgOnce     sync.Once
