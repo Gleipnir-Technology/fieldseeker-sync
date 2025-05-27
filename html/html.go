@@ -42,7 +42,6 @@ type PageDataServiceRequests struct {
 
 func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	name := bt.files[0] + ".html"
-	log.Println("Executing template", name)
 	if bt.template == nil {
 		templ := parseFromDisk(bt.files)
 		if templ == nil {
