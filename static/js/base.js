@@ -1,8 +1,9 @@
 var map;
 var markers = {
-	serviceRequest: [],
-	trapData: []
+	serviceRequest: null,
+	trapData: null
 }
+
 onload = (event) => {
 	const bounds = parseBoundsFromHash();
 	console.log("Fitting bounds", bounds);
@@ -12,6 +13,8 @@ onload = (event) => {
 		maxZoom: 19,
 		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 	}).addTo(map);
+	markers.serviceRequest = L.layerGroup([]).addTo(map);
+	markers.trapData = L.layerGroup([]).addTo(map);
 	map.on("moveend", onMoveEnd);
 	getMarkersForBounds(map.getBounds());
 }
@@ -83,9 +86,10 @@ async function getServiceRequestsForBounds(bounds) {
 		throw new Error(`Response status: ${response.status}`);
 	}
 	const json = await response.json();
+	markers.serviceRequest.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		L.marker([r.lat, r.long]).addTo(map);
+		markers.serviceRequest.addLayer(L.marker([r.lat, r.long]));
 		//console.log(r.lat, r.long);
 	}
 	var count = document.getElementById("count-service-request");
@@ -100,11 +104,12 @@ async function getTrapDataForBounds(bounds) {
 		throw new Error(`Response status: ${response.status}`);
 	}
 	const json = await response.json();
+	markers.trapData.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		L.marker([r.lat, r.long]).addTo(map).on("click", function(e) {
+		markers.trapData.addLayer(L.marker([r.lat, r.long]).addTo(map).on("click", function(e) {
 			console.log("Clicked", r);
-		})
+		}));
 	}
 	var count = document.getElementById("count-trap-data");
 	count.innerHTML = json.length;
