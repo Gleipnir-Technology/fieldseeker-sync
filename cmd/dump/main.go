@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"gleipnir.technology/fieldseeker-sync-bridge"
+	"gleipnir.technology/fieldseeker-sync"
 )
 
 func main() {
@@ -35,7 +35,8 @@ func main() {
 				log.Println(trap)
 			}
 		} else if type_ == "mosquitoinspection" {
-			inspections, err := fssync.MosquitoInspectionQuery()
+			bounds := fssync.NewBounds()
+			inspections, err := fssync.MosquitoInspectionQuery(&bounds)
 			if err != nil {
 				log.Println(err)
 				os.Exit(4)

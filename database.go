@@ -13,6 +13,7 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -58,10 +59,10 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 	return nil
 }
 
-func MosquitoInspectionQuery() ([]*MosquitoInspection, error) {
+func MosquitoInspectionQuery(b *Bounds) ([]*MosquitoInspection, error) {
 	results := make([]*MosquitoInspection, 0)
 	if pgInstance == nil {
-		return make([]*ServiceRequest, 0), errors.New("You must initialize the DB first")
+		return results, errors.New("You must initialize the DB first")
 	}
 
 	args := pgx.NamedArgs{
@@ -75,11 +76,24 @@ func MosquitoInspectionQuery() ([]*MosquitoInspection, error) {
 
 	if err := pgxscan.ScanAll(&requests, rows); err != nil {
 		log.Println("CollectRows error:", err)
-		return make([]*ServiceRequest, 0), err
+		return results, err
 	}
 
-	return requests, nil
 	return results, nil
+}
+
+func NoteQuery() ([]Note, error) {
+	return []Note{
+		{
+			Category: "info",
+			Content:  "Just so you know",
+			ID:       uuid.MustParse("55a52c09-67d9-4c0d-9dc7-f492f08a60ed"),
+			Location: LatLong{
+				Latitude:  33.2667195,
+				Longitude: -111.8209039,
+			},
+		},
+	}, nil
 }
 
 func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {

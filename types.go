@@ -2,6 +2,7 @@ package fssync
 
 import (
 	"time"
+	"github.com/google/uuid"
 )
 
 type Bounds struct {
@@ -25,6 +26,11 @@ type Geometry struct {
 	Y float64 `db:"Y"`
 }
 
+type LatLong struct {
+	Latitude  float64
+	Longitude float64
+}
+
 type MosquitoInspection struct {
 	Comments  string
 	Condition string
@@ -40,6 +46,14 @@ type MosquitoSource struct {
 	Inspections       []MosquitoInspection
 	UseType           string
 	WaterOrigin       string
+}
+
+type Note struct {
+	Category string
+	Created  time.Time
+	Content  string
+	ID       uuid.UUID
+	Location LatLong
 }
 
 type ServiceRequest struct {

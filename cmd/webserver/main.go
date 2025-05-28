@@ -118,6 +118,7 @@ func main() {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestApi))
 		r.Method("GET", "/trap-data", NewEnsureAuth(trapDataApi))
+		r.Method("GET", "/client/ios", NewEnsureAuth(clientIosApi))
 	})
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "static"))
@@ -186,6 +187,27 @@ func logoutGet(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
+type ResponseLocation struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+func (rtd ResponseLocation) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type ResponseNote struct {
+	CategoryName string           `json:"categoryName"`
+	Content      string           `json:"content"`
+	ID           string           `json:"id"`
+	Location     ResponseLocation `json:"location"`
+	Timestamp    string           `json:"timestamp"`
+}
+
+func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 type ResponseTrapData struct {
 	Description *string `json:"description"`
 	Lat         float64 `json:"lat"`
@@ -212,6 +234,24 @@ type ServiceRequestResponse struct {
 func (srr ServiceRequestResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+func NewLocation(l fssync.LatLong) ResponseLocation {
+	return ResponseLocation{
+		Latitude:  l.Latitude,
+		Longitude: l.Longitude,
+	}
+}
+
+func NewNote(n fssync.Note) ResponseNote {
+	return ResponseNote{
+		CategoryName: n.Category,
+		Content:      n.Content,
+		ID:           n.ID.String(),
+		Location:     NewLocation(n.Location),
+		Timestamp:    n.Created.String(),
+	}
+}
+
 func NewServiceRequest(sr *fssync.ServiceRequest) ServiceRequestResponse {
 	return ServiceRequestResponse{
 		Address:  sr.Address,
@@ -294,6 +334,20 @@ func serviceRequestApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	}
 }
 
+func clientIosApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+	notes, err := fssync.NoteQuery()
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+	data := []render.Renderer{}
+	for _, n := range notes {
+		data = append(data, NewNote(n))
+	}
+	if err := render.RenderList(w, r, data); err != nil {
+		render.Render(w, r, errRender(err))
+	}
+}
 func serviceRequestList(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	bounds := fssync.Bounds{
 		East:  -180,
