@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/georgysavva/scany/v2/pgxscan"
@@ -85,12 +86,41 @@ func MosquitoInspectionQuery(b *Bounds) ([]*MosquitoInspection, error) {
 func NoteQuery() ([]Note, error) {
 	return []Note{
 		{
+			Category: "entry",
+			Content:  "Gate code 123",
+			Created:  time.Date(2025, time.March, 10, 23, 0, 0, 0, time.UTC),
+			ID:       uuid.MustParse("2012b322-b753-41e7-b5fb-2d6556a162d0"),
+			Location: LatLong{
+				Latitude:  33.0687195,
+				Longitude: -110.8019039,
+			},
+		},
+		{
 			Category: "info",
 			Content:  "Just so you know",
 			ID:       uuid.MustParse("55a52c09-67d9-4c0d-9dc7-f492f08a60ed"),
+			Created:  time.Date(2025, time.April, 17, 3, 4, 5, 0, time.UTC),
 			Location: LatLong{
 				Latitude:  33.2667195,
 				Longitude: -111.8209039,
+			},
+		},
+		{
+			Category: "todo",
+			Content:  "Check water",
+			ID:       uuid.MustParse("9187d1f1-a9d3-48d4-b654-98c8e933df28"),
+			Location: LatLong{
+				Latitude:  33.8012,
+				Longitude: -112.031,
+			},
+		},
+		{
+			Category: "todo",
+			Content:  "Spray treatment",
+			ID:       uuid.MustParse("a1ee1d92-f783-4303-857f-a152163d6e98"),
+			Location: LatLong{
+				Latitude:  33.4420,
+				Longitude: -111.613,
 			},
 		},
 	}, nil
