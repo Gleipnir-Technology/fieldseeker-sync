@@ -9,10 +9,10 @@ type Bounds struct {
 
 func NewBounds() Bounds {
 	return Bounds{
-		East:  180,
+		East: 180,
 		North: 180,
 		South: -180,
-		West:  -180,
+		West: -180,
 	}
 }
 
