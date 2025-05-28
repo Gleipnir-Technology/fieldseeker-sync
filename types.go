@@ -1,5 +1,9 @@
 package fssync
 
+import (
+	"time"
+)
+
 type Bounds struct {
 	East  float64
 	North float64
@@ -9,16 +13,33 @@ type Bounds struct {
 
 func NewBounds() Bounds {
 	return Bounds{
-		East: 180,
+		East:  180,
 		North: 180,
 		South: -180,
-		West: -180,
+		West:  -180,
 	}
 }
 
 type Geometry struct {
 	X float64 `db:"X"`
 	Y float64 `db:"Y"`
+}
+
+type MosquitoInspection struct {
+	Comments  string
+	Condition string
+	Created   time.Time
+}
+
+type MosquitoSource struct {
+	AccessDescription string
+	Comments          string
+	Description       string
+	Name              string
+	Habitat           string
+	Inspections       []MosquitoInspection
+	UseType           string
+	WaterOrigin       string
 }
 
 type ServiceRequest struct {

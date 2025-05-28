@@ -28,11 +28,21 @@ func main() {
 			trapdata, err := fssync.TrapDataQuery(&bounds)
 			if err != nil {
 				log.Println(err)
-				os.Exit(2)
+				os.Exit(3)
 			}
 			log.Println("Total trap datas", len(trapdata))
 			for _, trap := range trapdata {
 				log.Println(trap)
+			}
+		} else if type_ == "mosquitoinspection" {
+			inspections, err := fssync.MosquitoInspectionQuery()
+			if err != nil {
+				log.Println(err)
+				os.Exit(4)
+			}
+			log.Println("Total inspections", len(inspections))
+			for _, ins := range inspections {
+				log.Println(ins)
 			}
 		} else {
 			log.Println("Unrecognized type", type_)

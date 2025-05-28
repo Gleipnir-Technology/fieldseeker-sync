@@ -58,6 +58,30 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 	return nil
 }
 
+func MosquitoInspectionQuery() ([]*MosquitoInspection, error) {
+	results := make([]*MosquitoInspection, 0)
+	if pgInstance == nil {
+		return make([]*ServiceRequest, 0), errors.New("You must initialize the DB first")
+	}
+
+	args := pgx.NamedArgs{
+		"east":  b.East,
+		"north": b.North,
+		"south": b.South,
+		"west":  b.West,
+	}
+	rows, _ := pgInstance.db.Query(context.Background(), "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north", args)
+	var requests []*ServiceRequest
+
+	if err := pgxscan.ScanAll(&requests, rows); err != nil {
+		log.Println("CollectRows error:", err)
+		return make([]*ServiceRequest, 0), err
+	}
+
+	return requests, nil
+	return results, nil
+}
+
 func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {
 	query := upsertFromQueryResult(table, qr)
 	batch := &pgx.Batch{}
