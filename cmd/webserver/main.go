@@ -248,7 +248,7 @@ func NewNote(n fssync.Note) ResponseNote {
 		Content:      n.Content,
 		ID:           n.ID.String(),
 		Location:     NewLocation(n.Location),
-		Timestamp:    n.Created.String(),
+		Timestamp:    n.Created.Format("2006-01-02T15:04:05.000Z"),
 	}
 }
 
