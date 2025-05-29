@@ -1,8 +1,10 @@
 var map;
 var markers = {
 	serviceRequest: null,
-	trapData: null
+	trapData: null,
+	types: {}
 }
+
 
 onload = (event) => {
 	const bounds = parseBoundsFromHash();
@@ -15,6 +17,22 @@ onload = (event) => {
 	}).addTo(map);
 	markers.serviceRequest = L.layerGroup([]).addTo(map);
 	markers.trapData = L.layerGroup([]).addTo(map);
+
+	// Set up custom markers
+	var MarkerIcon = L.Icon.extend({
+		options: {
+			// Numbers are taken from L.Marker.prototype.options.icon
+			shadowUrl: '/static/img/marker-shadow.png',
+			iconAnchor:   [12, 41],
+			iconSize:     [25, 41],
+			popupAnchor:  [1, -34],
+			shadowSize:   [41, 41],
+			shadowAnchor: [12, 42],
+			tooltipAnchor: [16, -28],
+		}
+});
+	markers.types.blue = new MarkerIcon({iconUrl: "/static/img/marker-blue.png"})
+	markers.types.green = new MarkerIcon({iconUrl: "/static/img/marker-green.png"})
 	map.on("moveend", onMoveEnd);
 	getMarkersForBounds(map.getBounds());
 }
@@ -89,7 +107,7 @@ async function getServiceRequestsForBounds(bounds) {
 	markers.serviceRequest.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		markers.serviceRequest.addLayer(L.marker([r.lat, r.long]));
+		markers.serviceRequest.addLayer(L.marker([r.lat, r.long], {icon: markers.types.blue}));
 		//console.log(r.lat, r.long);
 	}
 	var count = document.getElementById("count-service-request");
@@ -107,7 +125,7 @@ async function getTrapDataForBounds(bounds) {
 	markers.trapData.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		markers.trapData.addLayer(L.marker([r.lat, r.long]).addTo(map).on("click", function(e) {
+		markers.trapData.addLayer(L.marker([r.lat, r.long], {icon: markers.types.green}).addTo(map).on("click", function(e) {
 			console.log("Clicked", r);
 		}));
 	}
