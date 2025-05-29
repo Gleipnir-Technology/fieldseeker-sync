@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -119,6 +120,7 @@ func main() {
 		r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestApi))
 		r.Method("GET", "/trap-data", NewEnsureAuth(trapDataApi))
 		r.Method("GET", "/client/ios", NewEnsureAuth(clientIosApi))
+		r.Get("/webhook/fieldseeker", webhookFieldseeker)
 	})
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "static"))
@@ -390,6 +392,52 @@ func trapDataApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	if err := render.RenderList(w, r, data); err != nil {
 		render.Render(w, r, errRender(err))
 	}
+}
+
+func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
+	// Create or open the log file
+	file, err := os.OpenFile("webhook/request.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		log.Printf("Error opening log file: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	// Write timestamp
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	fmt.Fprintf(file, "\n=== Request logged at %s ===\n", timestamp)
+
+	// Write request line
+	fmt.Fprintf(file, "%s %s %s\n", r.Method, r.RequestURI, r.Proto)
+
+	// Write all headers
+	fmt.Fprintf(file, "\nHeaders:\n")
+	for name, values := range r.Header {
+		for _, value := range values {
+			fmt.Fprintf(file, "%s: %s\n", name, value)
+		}
+	}
+
+	// Write body
+	fmt.Fprintf(file, "\nBody:\n")
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Error reading request body: %v", err)
+		fmt.Fprintf(file, "Error reading body: %v\n", err)
+	} else {
+		file.Write(body)
+		if len(body) == 0 {
+			fmt.Fprintf(file, "(empty body)")
+		}
+	}
+
+	fmt.Fprintf(file, "\n=== End of request ===\n\n")
+
+	// Extract the crc_token value for the signature portion
+
+	// Respond with 204 No Content
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // FileServer conveniently sets up a http.FileServer handler to serve

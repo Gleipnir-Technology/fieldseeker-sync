@@ -13,20 +13,25 @@ type ConfigArcgis struct {
 type ConfigDatabase struct {
 	URL string
 }
+type ConfigWebhook struct {
+	Secret string
+}
+
 type Config struct {
 	Arcgis   ConfigArcgis
 	Database ConfigDatabase
+	Webhook  ConfigWebhook
 }
 
 func ReadConfig() (*Config, error) {
 	v := viper.New()
 	v.SetConfigName("fieldseeker-sync") // name of config file (without extension)
-	v.SetConfigType("toml")                    // REQUIRED if the config file does not have the extension in the name
-	v.AddConfigPath("/etc/")                   // path to look for the config file in
-	v.AddConfigPath("$HOME/.config")           // call multiple times to add many search paths
-	v.AddConfigPath(".")                       // optionally look for config in the working directory
-	err := v.ReadInConfig()                    // Find and read the config file
-	if err != nil {                            // Handle errors reading the config file
+	v.SetConfigType("toml")             // REQUIRED if the config file does not have the extension in the name
+	v.AddConfigPath("/etc/")            // path to look for the config file in
+	v.AddConfigPath("$HOME/.config")    // call multiple times to add many search paths
+	v.AddConfigPath(".")                // optionally look for config in the working directory
+	err := v.ReadInConfig()             // Find and read the config file
+	if err != nil {                     // Handle errors reading the config file
 		return nil, err
 	}
 	var c Config
