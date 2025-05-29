@@ -217,7 +217,7 @@ type ResponseMosquitoSource struct {
 	Location    ResponseLocation             `json:"location"`
 	Habitat     *string                      `json:"habitat"`
 	Inspections []ResponseMosquitoInspection `json:"inspections"`
-	Name        *string                      `json:"status"`
+	Name        *string                      `json:"name"`
 	UseType     *string                      `json:"target"`
 	WaterOrigin *string                      `json:"zip"`
 }

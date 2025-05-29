@@ -183,7 +183,7 @@ function showMosquitoSource(ms) {
 		"<tr><td>Habitat</td><td>" + ms.habitat + "</td>" +
 		"<tr><td>Latitude</td><td>" + ms.location.latitude + "</td>" +
 		"<tr><td>Longitude</td><td>" + ms.location.longitude + "</td>" +
-		"<tr><td>Status</td><td>" + ms.status + "</td>" +
+		"<tr><td>Name</td><td>" + ms.name + "</td>" +
 		"<tr><td>Target</td><td>" + ms.target + "</td>" +
 		"</table><h2>Inspections</h2>" + inspections
 	);
