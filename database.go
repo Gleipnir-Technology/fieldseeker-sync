@@ -120,6 +120,10 @@ func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
 		})
 		inspection_by_id[mi.PointLocationID] = group
 	}
+	// sort the inspections by their created time
+	for _, insp := range inspection_by_id {
+		sort.Sort(ByCreated(inspection_by_id[insp]))
+	}
 	for _, pl := range locations {
 		results = append(results, &MosquitoSource{
 			Access:      pl.Access,

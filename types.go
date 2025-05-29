@@ -62,6 +62,11 @@ type MosquitoInspection struct {
 	Condition *string
 	Created   time.Time
 }
+type ByCreated []MosquitoInspection
+
+func (a ByCreated) Len() int           { return len(a) }
+func (a ByCreated) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByCreated) Less(i, j int) bool { return a[i].Created.After(a[j].Created) }
 
 type MosquitoSource struct {
 	Access      *string
@@ -69,6 +74,7 @@ type MosquitoSource struct {
 	Description *string
 	Location    LatLong
 	Habitat     *string
+	// ordered by created
 	Inspections []MosquitoInspection
 	Name        *string
 	UseType     *string
