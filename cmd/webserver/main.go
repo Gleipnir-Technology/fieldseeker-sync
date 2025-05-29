@@ -121,6 +121,7 @@ func main() {
 		r.Method("GET", "/trap-data", NewEnsureAuth(trapDataApi))
 		r.Method("GET", "/client/ios", NewEnsureAuth(clientIosApi))
 		r.Get("/webhook/fieldseeker", webhookFieldseeker)
+		r.Post("/webhook/fieldseeker", webhookFieldseeker)
 	})
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "static"))
