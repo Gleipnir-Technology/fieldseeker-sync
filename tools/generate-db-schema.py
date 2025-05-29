@@ -14,8 +14,8 @@ class Column:
 
 def main() -> None:
 	parser = argparse.ArgumentParser()
-	parser.add_argument("src", type=Path, help="The directory to pull schema from")
-	parser.add_argument("dest", type=Path, help="The output file to write to")
+	parser.add_argument("src", type=Path, default="schema" help="The directory to pull schema from")
+	parser.add_argument("dest", type=Path, default="migrations/new.sql", help="The output file to write to")
 	args = parser.parse_args()
 
 	logging.basicConfig(level=logging.DEBUG)
