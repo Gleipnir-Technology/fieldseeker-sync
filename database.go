@@ -104,7 +104,7 @@ func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
 	}
 
 	// Collect all the data into our final result structure
-	inspection_by_id := make(map[string][]MosquitoInspection, len(locations))
+	inspection_by_id := make(map[string][]MosquitoInspection, 0)
 	for _, mi := range inspections {
 		group := inspection_by_id[mi.PointLocationID]
 		created_epoch, err := strconv.ParseInt(mi.EndDateTime, 10, 64)

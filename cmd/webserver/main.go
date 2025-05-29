@@ -280,7 +280,7 @@ func NewMosquitoInspection(i fssync.MosquitoInspection) ResponseMosquitoInspecti
 	}
 }
 func NewMosquitoInspections(inspections []fssync.MosquitoInspection) []ResponseMosquitoInspection {
-	results := make([]ResponseMosquitoInspection, len(inspections))
+	results := make([]ResponseMosquitoInspection, 0)
 	for _, i := range inspections {
 		results = append(results, NewMosquitoInspection(i))
 	}
