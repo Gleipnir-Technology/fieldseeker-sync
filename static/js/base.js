@@ -1,5 +1,6 @@
 var map;
 var markers = {
+	mosquitoSource: null,
 	serviceRequest: null,
 	trapData: null,
 	types: {}
@@ -15,6 +16,7 @@ onload = (event) => {
 		maxZoom: 19,
 		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 	}).addTo(map);
+	markers.mosquitoSource = L.layerGroup([]).addTo(map);
 	markers.serviceRequest = L.layerGroup([]).addTo(map);
 	markers.trapData = L.layerGroup([]).addTo(map);
 
@@ -33,6 +35,7 @@ onload = (event) => {
 });
 	markers.types.blue = new MarkerIcon({iconUrl: "/static/img/marker-blue.png"})
 	markers.types.green = new MarkerIcon({iconUrl: "/static/img/marker-green.png"})
+	markers.types.red = new MarkerIcon({iconUrl: "/static/img/marker-red.png"})
 	map.on("moveend", onMoveEnd);
 	getMarkersForBounds(map.getBounds());
 }
@@ -92,8 +95,30 @@ function setHashToBounds(bounds) {
 }
 
 async function getMarkersForBounds(bounds) {
+	getMosquitoSourcesForBounds(bounds);
 	getServiceRequestsForBounds(bounds);
 	getTrapDataForBounds(bounds);
+}
+
+async function getMosquitoSourcesForBounds(bounds) {
+	const params = paramsFromBounds(bounds);
+	const url = "/api/mosquito-source?" + params.toString();
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`Response status: ${response.status}`);
+	}
+	const json = await response.json();
+	markers.mosquitoSource.clearLayers();
+	for(let i = 0; i < json.length; i++) {
+		const r = json[i];
+		var m = L.marker([r.location.longitude, r.location.latitude], {icon: markers.types.red})
+		m.on("click", function(e) {
+			console.log("Mosquito source", r);
+		});
+		markers.mosquitoSource.addLayer(m);
+	}
+	var count = document.getElementById("count-mosquito-source");
+	count.innerHTML = json.length;
 }
 
 async function getServiceRequestsForBounds(bounds) {
@@ -107,8 +132,11 @@ async function getServiceRequestsForBounds(bounds) {
 	markers.serviceRequest.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		markers.serviceRequest.addLayer(L.marker([r.lat, r.long], {icon: markers.types.blue}));
-		//console.log(r.lat, r.long);
+		var m = L.marker([r.lat, r.long], {icon: markers.types.blue});
+		m.on("click", function(e) {
+			console.log("Service request", r);
+		});
+		markers.serviceRequest.addLayer(m);
 	}
 	var count = document.getElementById("count-service-request");
 	count.innerHTML = json.length;
@@ -125,8 +153,8 @@ async function getTrapDataForBounds(bounds) {
 	markers.trapData.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		markers.trapData.addLayer(L.marker([r.lat, r.long], {icon: markers.types.green}).addTo(map).on("click", function(e) {
-			console.log("Clicked", r);
+		markers.trapData.addLayer(L.marker([r.lat, r.long], {icon: markers.types.green}).on("click", function(e) {
+			console.log("Trap data", r);
 		}));
 	}
 	var count = document.getElementById("count-trap-data");

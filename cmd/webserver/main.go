@@ -117,6 +117,7 @@ func main() {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
+		r.Method("GET", "/mosquito-source", NewEnsureAuth(mosquitoSourceApi))
 		r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestApi))
 		r.Method("GET", "/trap-data", NewEnsureAuth(trapDataApi))
 		r.Method("GET", "/client/ios", NewEnsureAuth(clientIosApi))
@@ -199,6 +200,32 @@ func (rtd ResponseLocation) Render(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
+type ResponseMosquitoInspection struct {
+	Comments  *string `json:"comments"`
+	Condition *string `json:"condition"`
+	Created   string  `json:"created"`
+}
+
+func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type ResponseMosquitoSource struct {
+	Access      *string                      `json:"access"`
+	Comments    *string                      `json:"comments"`
+	Description *string                      `json:"description"`
+	Location    ResponseLocation             `json:"location"`
+	Habitat     *string                      `json:"habitat"`
+	Inspections []ResponseMosquitoInspection `json:"inspections"`
+	Name        *string                      `json:"status"`
+	UseType     *string                      `json:"target"`
+	WaterOrigin *string                      `json:"zip"`
+}
+
+func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 type ResponseNote struct {
 	CategoryName string           `json:"categoryName"`
 	Content      string           `json:"content"`
@@ -222,7 +249,7 @@ func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-type ServiceRequestResponse struct {
+type ResponseServiceRequest struct {
 	Address  *string `json:"address"`
 	City     *string `json:"city"`
 	Lat      float64 `json:"lat"`
@@ -234,7 +261,7 @@ type ServiceRequestResponse struct {
 	Zip      *string `json:"zip"`
 }
 
-func (srr ServiceRequestResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -245,6 +272,35 @@ func NewLocation(l fssync.LatLong) ResponseLocation {
 	}
 }
 
+func NewMosquitoInspection(i fssync.MosquitoInspection) ResponseMosquitoInspection {
+	return ResponseMosquitoInspection{
+		Comments:  i.Comments,
+		Condition: i.Condition,
+		Created:   i.Created.String(),
+	}
+}
+func NewMosquitoInspections(inspections []fssync.MosquitoInspection) []ResponseMosquitoInspection {
+	results := make([]ResponseMosquitoInspection, len(inspections))
+	for _, i := range inspections {
+		results = append(results, NewMosquitoInspection(i))
+	}
+	return results
+}
+
+func NewMosquitoSource(ms *fssync.MosquitoSource) ResponseMosquitoSource {
+
+	return ResponseMosquitoSource{
+		Access:      ms.Access,
+		Comments:    ms.Comments,
+		Description: ms.Description,
+		Location:    NewLocation(ms.Location),
+		Habitat:     ms.Habitat,
+		Inspections: NewMosquitoInspections(ms.Inspections),
+		Name:        ms.Name,
+		UseType:     ms.UseType,
+		WaterOrigin: ms.WaterOrigin,
+	}
+}
 func NewNote(n fssync.Note) ResponseNote {
 	return ResponseNote{
 		CategoryName: n.Category,
@@ -255,8 +311,8 @@ func NewNote(n fssync.Note) ResponseNote {
 	}
 }
 
-func NewServiceRequest(sr *fssync.ServiceRequest) ServiceRequestResponse {
-	return ServiceRequestResponse{
+func NewServiceRequest(sr *fssync.ServiceRequest) ResponseServiceRequest {
+	return ResponseServiceRequest{
 		Address:  sr.Address,
 		City:     sr.City,
 		Lat:      sr.Geometry.Y,
@@ -275,6 +331,31 @@ func NewTrapData(td *fssync.TrapData) ResponseTrapData {
 		Lat:         td.Geometry.Y,
 		Long:        td.Geometry.X,
 		Name:        td.Name,
+	}
+}
+
+func mosquitoSourceApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+	bounds, err := parseBounds(r)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+
+	query := fssync.NewQuery()
+	query.Bounds = *bounds
+	sources, err := fssync.MosquitoSourceQuery(query)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
+	log.Printf("Got %v mosquito sources", len(sources))
+
+	data := []render.Renderer{}
+	for _, s := range sources {
+		data = append(data, NewMosquitoSource(s))
+	}
+	if err := render.RenderList(w, r, data); err != nil {
+		render.Render(w, r, errRender(err))
 	}
 }
 

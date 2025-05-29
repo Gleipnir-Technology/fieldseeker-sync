@@ -84,17 +84,21 @@ func MosquitoSourceQuery(query DBQuery) ([]*MosquitoSource, error) {
 		"north": query.Bounds.North,
 		"south": query.Bounds.South,
 		"west":  query.Bounds.West,
-		"limit": query.Limit,
 	}
+	q := "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",name,habitat,usetype,waterorigin,description,accessdesc,comments,globalid FROM FS_PointLocation WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north"
+	if query.Limit > 0 {
+		args["limit"] = query.Limit
+		q = q + " LIMIT @limit"
+	}
+	log.Println("Searching mosquito source bounds west: ", query.Bounds.West, " east:", query.Bounds.East, " south:", query.Bounds.South, " north:", query.Bounds.North)
 
-	rows, _ := pgInstance.db.Query(context.Background(), "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",name,habitat,usetype,waterorigin,description,accessdesc,comments,globalid FROM FS_PointLocation WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north LIMIT @limit", args)
+	rows, _ := pgInstance.db.Query(context.Background(), q, args)
 	var locations []*FS_PointLocation
 
 	if err := pgxscan.ScanAll(&locations, rows); err != nil {
 		log.Println("CollectRows on FS_PointLocation error:", err)
 		return results, err
 	}
-	log.Println("Locations", locations)
 
 	globalids := make([]string, len(locations))
 	for _, l := range locations {
@@ -103,7 +107,6 @@ func MosquitoSourceQuery(query DBQuery) ([]*MosquitoSource, error) {
 	args = pgx.NamedArgs{
 		"globalids": globalids,
 	}
-	log.Println("args", args)
 	rows, _ = pgInstance.db.Query(context.Background(), "SELECT comments,enddatetime,sitecond,pointlocid FROM FS_MosquitoInspection WHERE pointlocid=ANY(@globalids)", args)
 	var inspections []*FS_MosquitoInspection
 
