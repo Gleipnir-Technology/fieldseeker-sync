@@ -25,8 +25,8 @@ func main() {
 
 	for _, type_ := range types {
 		if type_ == "trapdata" {
-			bounds := fssync.NewBounds()
-			trapdata, err := fssync.TrapDataQuery(&bounds)
+			query := fssync.NewQuery()
+			trapdata, err := fssync.TrapDataQuery(&query)
 			if err != nil {
 				log.Println(err)
 				os.Exit(3)

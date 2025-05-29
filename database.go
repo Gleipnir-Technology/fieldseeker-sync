@@ -270,16 +270,16 @@ func ServiceRequests(b *Bounds) ([]*ServiceRequest, error) {
 	return requests, nil
 }
 
-func TrapDataQuery(b *Bounds) ([]*TrapData, error) {
+func TrapDataQuery(query *DBQuery) ([]*TrapData, error) {
 	if pgInstance == nil {
 		return make([]*TrapData, 0), errors.New("You must initialize the DB first")
 	}
 
 	args := pgx.NamedArgs{
-		"east":  b.East,
-		"north": b.North,
-		"south": b.South,
-		"west":  b.West,
+		"east":  query.Bounds.East,
+		"north": query.Bounds.North,
+		"south": query.Bounds.South,
+		"west":  query.Bounds.West,
 	}
 	rows, _ := pgInstance.db.Query(context.Background(), "SELECT geometry_x AS \"geometry.X\",geometry_y AS \"geometry.Y\",name,description,accessdesc,objectid,globalid FROM FS_TrapLocation WHERE geometry_x > @west AND geometry_x < @east AND geometry_y > @south AND geometry_y < @north", args)
 	var fs_trap_locations []*FS_TrapLocation

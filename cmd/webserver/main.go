@@ -461,7 +461,10 @@ func trapDataApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 		return
 	}
 
-	trap_data, err := fssync.TrapDataQuery(bounds)
+	query := fssync.NewQuery()
+	query.Bounds = *bounds
+	query.Limit = 100
+	trap_data, err := fssync.TrapDataQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
