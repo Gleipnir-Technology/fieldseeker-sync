@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	limit := flag.Int("limit", 10, "limit the number of objects")
 	flag.Parse()
 	types := flag.Args()
 
@@ -34,16 +35,44 @@ func main() {
 			for _, trap := range trapdata {
 				log.Println(trap)
 			}
-		} else if type_ == "mosquitoinspection" {
-			bounds := fssync.NewBounds()
-			inspections, err := fssync.MosquitoInspectionQuery(&bounds)
+		} else if type_ == "mosquitosource" {
+			query := fssync.NewQuery()
+			query.Limit = *limit
+			sources, err := fssync.MosquitoSourceQuery(query)
 			if err != nil {
 				log.Println(err)
 				os.Exit(4)
 			}
-			log.Println("Total inspections", len(inspections))
-			for _, ins := range inspections {
-				log.Println(ins)
+			log.Println("Total sources", len(sources))
+			for _, s := range sources {
+				log.Println("Access: ", *s.Access)
+				if s.Comments == nil {
+					log.Println("Comments: nil")
+				} else {
+					log.Println("Comments: ", *s.Comments)
+				}
+				log.Println("Description: ", *s.Description)
+				log.Println("Location: ", s.Location.Latitude, s.Location.Longitude)
+				log.Println("Habitat: ", *s.Habitat)
+				log.Println("Name: ", *s.Name)
+				if s.UseType == nil {
+					log.Println("UseType: nil")
+				} else {
+					log.Println("UseType: ", *s.UseType)
+				}
+				if s.WaterOrigin == nil {
+					log.Println("WaterOrigin: nil")
+				} else {
+					log.Println("WaterOrigin: ", *s.WaterOrigin)
+				}
+				for _, i := range s.Inspections {
+					cond := "nil"
+					if i.Condition != nil {
+						cond = *i.Condition
+					}
+					log.Println("  Condition: ", cond, " Created: ", i.Created.String())
+				}
+				log.Println("========")
 			}
 		} else {
 			log.Println("Unrecognized type", type_)

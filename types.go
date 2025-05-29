@@ -1,9 +1,28 @@
 package fssync
 
 import (
-	"time"
 	"github.com/google/uuid"
+	"time"
 )
+
+type FS_PointLocation struct {
+	Geometry    Geometry `db:"geometry"`
+	Access      *string  `db:"accessdesc"`
+	Comments    *string  `db:"comments"`
+	Description *string  `db:"description"`
+	GlobalID    string   `db:"globalid"`
+	Habitat     *string  `db:"habitat"`
+	Name        *string  `db:"name"`
+	UseType     *string  `db:"usetype"`
+	WaterOrigin *string  `db:"waterorigin"`
+}
+
+type FS_MosquitoInspection struct {
+	Comments        *string `db:"comments"`
+	Condition       *string `db:"sitecond"`
+	EndDateTime     string  `db:"enddatetime"`
+	PointLocationID string  `db:"pointlocid"`
+}
 
 type Bounds struct {
 	East  float64
@@ -26,26 +45,34 @@ type Geometry struct {
 	Y float64 `db:"Y"`
 }
 
+func (g Geometry) asLatLong() LatLong {
+	return LatLong{
+		Latitude:  g.X,
+		Longitude: g.Y,
+	}
+}
+
 type LatLong struct {
 	Latitude  float64
 	Longitude float64
 }
 
 type MosquitoInspection struct {
-	Comments  string
-	Condition string
+	Comments  *string
+	Condition *string
 	Created   time.Time
 }
 
 type MosquitoSource struct {
-	AccessDescription string
-	Comments          string
-	Description       string
-	Name              string
-	Habitat           string
-	Inspections       []MosquitoInspection
-	UseType           string
-	WaterOrigin       string
+	Access      *string
+	Comments    *string
+	Description *string
+	Location    LatLong
+	Habitat     *string
+	Inspections []MosquitoInspection
+	Name        *string
+	UseType     *string
+	WaterOrigin *string
 }
 
 type Note struct {

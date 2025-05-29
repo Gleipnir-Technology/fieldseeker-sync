@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -60,26 +61,87 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 	return nil
 }
 
-func MosquitoInspectionQuery(b *Bounds) ([]*MosquitoInspection, error) {
-	results := make([]*MosquitoInspection, 0)
+type DBQuery struct {
+	Bounds Bounds
+	Limit  int
+}
+
+func NewQuery() DBQuery {
+	return DBQuery{
+		Bounds: NewBounds(),
+		Limit:  0,
+	}
+}
+
+func MosquitoSourceQuery(query DBQuery) ([]*MosquitoSource, error) {
+	results := make([]*MosquitoSource, 0)
 	if pgInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
 
 	args := pgx.NamedArgs{
-		"east":  b.East,
-		"north": b.North,
-		"south": b.South,
-		"west":  b.West,
+		"east":  query.Bounds.East,
+		"north": query.Bounds.North,
+		"south": query.Bounds.South,
+		"west":  query.Bounds.West,
+		"limit": query.Limit,
 	}
-	rows, _ := pgInstance.db.Query(context.Background(), "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north", args)
-	var requests []*ServiceRequest
 
-	if err := pgxscan.ScanAll(&requests, rows); err != nil {
-		log.Println("CollectRows error:", err)
+	rows, _ := pgInstance.db.Query(context.Background(), "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",name,habitat,usetype,waterorigin,description,accessdesc,comments,globalid FROM FS_PointLocation WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north LIMIT @limit", args)
+	var locations []*FS_PointLocation
+
+	if err := pgxscan.ScanAll(&locations, rows); err != nil {
+		log.Println("CollectRows on FS_PointLocation error:", err)
+		return results, err
+	}
+	log.Println("Locations", locations)
+
+	globalids := make([]string, len(locations))
+	for _, l := range locations {
+		globalids = append(globalids, l.GlobalID)
+	}
+	args = pgx.NamedArgs{
+		"globalids": globalids,
+	}
+	log.Println("args", args)
+	rows, _ = pgInstance.db.Query(context.Background(), "SELECT comments,enddatetime,sitecond,pointlocid FROM FS_MosquitoInspection WHERE pointlocid=ANY(@globalids)", args)
+	var inspections []*FS_MosquitoInspection
+
+	if err := pgxscan.ScanAll(&inspections, rows); err != nil {
+		log.Println("CollectRows on FS_MosquitoInspection error:", err)
 		return results, err
 	}
 
+	// Collect all the data into our final result structure
+	inspection_by_id := make(map[string][]MosquitoInspection, len(locations))
+	for _, mi := range inspections {
+		group := inspection_by_id[mi.PointLocationID]
+		created_epoch, err := strconv.ParseInt(mi.EndDateTime, 10, 64)
+		if err != nil {
+			log.Println("Unable to convert timestamp", mi.EndDateTime, err)
+			continue
+		}
+		created := time.UnixMilli(created_epoch)
+		group = append(group, MosquitoInspection{
+			Comments:  mi.Comments,
+			Condition: mi.Condition,
+			Created:   created,
+		})
+		inspection_by_id[mi.PointLocationID] = group
+	}
+	for _, pl := range locations {
+		results = append(results, &MosquitoSource{
+			Access:      pl.Access,
+			Comments:    pl.Comments,
+			Description: pl.Description,
+			Location:    pl.Geometry.asLatLong(),
+			Habitat:     pl.Habitat,
+			Inspections: inspection_by_id[pl.GlobalID],
+			Name:        pl.Name,
+			UseType:     pl.UseType,
+			WaterOrigin: pl.WaterOrigin,
+		})
+	}
 	return results, nil
 }
 
