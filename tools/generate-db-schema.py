@@ -43,7 +43,7 @@ def main() -> None:
 			output.write(");\n\n")
 		output.write("-- +goose Down\n")
 		for table_name in sorted(schema):
-			output.write(f"DROP TABLE {table_name};\n")
+			output.write(f"DROP TABLE FS_{table_name};\n")
 
 def read_schema(data: Mapping[str, Any]) -> List[Column]:
 	columns = [
