@@ -113,7 +113,7 @@ async function getMosquitoSourcesForBounds(bounds) {
 		const r = json[i];
 		var m = L.marker([r.location.longitude, r.location.latitude], {icon: markers.types.red})
 		m.on("click", function(e) {
-			console.log("Mosquito source", r);
+			showMosquitoSource(r);
 		});
 		markers.mosquitoSource.addLayer(m);
 	}
@@ -134,7 +134,7 @@ async function getServiceRequestsForBounds(bounds) {
 		const r = json[i];
 		var m = L.marker([r.lat, r.long], {icon: markers.types.blue});
 		m.on("click", function(e) {
-			console.log("Service request", r);
+			showServiceRequest(r);
 		});
 		markers.serviceRequest.addLayer(m);
 	}
@@ -154,9 +154,65 @@ async function getTrapDataForBounds(bounds) {
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
 		markers.trapData.addLayer(L.marker([r.lat, r.long], {icon: markers.types.green}).on("click", function(e) {
-			console.log("Trap data", r);
+			showTrapData(r);
 		}));
 	}
 	var count = document.getElementById("count-trap-data");
 	count.innerHTML = json.length;
+}
+
+function showMosquitoSource(ms) {
+	console.log("Mosquito Source", ms);
+	var inspections = ("<table>" +
+		"<tr><th>Created</th><th>Condition</th><th>Comments</th></tr>");
+	for(let i = 0; i < ms.inspections.length; i++) {
+		let insp = ms.inspections[i];
+		inspections += (
+			"<tr>" +
+				"<td>" + insp.created + "</td>" +
+				"<td>" + insp.condition + "</td>" +
+				"<td>" + insp.comments + "</td>" +
+			"</tr>");
+	}
+	var detail = document.getElementById("detail");
+	detail.innerHTML = ("<h1>Mosquito Source</h1>" +
+		"<table>" +
+		"<tr><td>Access</td><td>" + ms.access + "</td>" +
+		"<tr><td>Comments</td><td>" + ms.comments + "</td>" +
+		"<tr><td>Description</td><td>" + ms.description + "</td>" +
+		"<tr><td>Habitat</td><td>" + ms.habitat + "</td>" +
+		"<tr><td>Latitude</td><td>" + ms.location.latitude + "</td>" +
+		"<tr><td>Longitude</td><td>" + ms.location.longitude + "</td>" +
+		"<tr><td>Status</td><td>" + ms.status + "</td>" +
+		"<tr><td>Target</td><td>" + ms.target + "</td>" +
+		"</table><h2>Inspections</h2>" + inspections
+	);
+}
+
+function showServiceRequest(sr) {
+	console.log("Service Request", sr);
+	var detail = document.getElementById("detail");
+	detail.innerHTML = ("<h1>Service Request</h1>" +
+		"<table>" +
+		"<tr><td>Address</td><td>" + sr.address + "</td>" +
+		"<tr><td>City</td><td>" + sr.city + "</td>" +
+		"<tr><td>Zip</td><td>" + sr.zip + "</td>" +
+		"<tr><td>Priority</td><td>" + sr.priority + "</td>" +
+		"<tr><td>Source</td><td>" + sr.source + "</td>" +
+		"<tr><td>Status</td><td>" + sr.status + "</td>" +
+		"<tr><td>Target</td><td>" + sr.target + "</td>" +
+		"</table>"
+	);
+}
+
+function showTrapData(sr) {
+	console.log("Trap Data", sr);
+	var detail = document.getElementById("detail");
+	detail.innerHTML = ("<h1>Trap Data</h1>" +
+		"<table>" +
+		"<tr><td>Name</td><td>" + sr.name + "</td>" +
+		"<tr><td>Latitude</td><td>" + sr.lat + "</td>" +
+		"<tr><td>Longitude</td><td>" + sr.long + "</td>" +
+		"</table>"
+	);
 }
