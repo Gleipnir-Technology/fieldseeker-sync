@@ -73,26 +73,14 @@ func NewQuery() DBQuery {
 	}
 }
 
-func MosquitoSourceQuery(query DBQuery) ([]*MosquitoSource, error) {
+func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
 	results := make([]*MosquitoSource, 0)
 	if pgInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
+	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",name,habitat,usetype,waterorigin,description,accessdesc,comments,globalid FROM FS_PointLocation WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
 
-	args := pgx.NamedArgs{
-		"east":  query.Bounds.East,
-		"north": query.Bounds.North,
-		"south": query.Bounds.South,
-		"west":  query.Bounds.West,
-	}
-	q := "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",name,habitat,usetype,waterorigin,description,accessdesc,comments,globalid FROM FS_PointLocation WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north"
-	if query.Limit > 0 {
-		args["limit"] = query.Limit
-		q = q + " LIMIT @limit"
-	}
-	log.Println("Searching mosquito source bounds west: ", query.Bounds.West, " east:", query.Bounds.East, " south:", query.Bounds.South, " north:", query.Bounds.North)
-
-	rows, _ := pgInstance.db.Query(context.Background(), q, args)
+	rows, _ := pgInstance.db.Query(context.Background(), query, args)
 	var locations []*FS_PointLocation
 
 	if err := pgxscan.ScanAll(&locations, rows); err != nil {
@@ -248,18 +236,13 @@ func ServiceRequestCount() (int, error) {
 	return count, nil
 }
 
-func ServiceRequestQuery(query *DBQuery) ([]*ServiceRequest, error) {
+func ServiceRequestQuery(q *DBQuery) ([]*ServiceRequest, error) {
 	if pgInstance == nil {
 		return make([]*ServiceRequest, 0), errors.New("You must initialize the DB first")
 	}
 
-	args := pgx.NamedArgs{
-		"east":  query.Bounds.East,
-		"north": query.Bounds.North,
-		"south": query.Bounds.South,
-		"west":  query.Bounds.West,
-	}
-	rows, _ := pgInstance.db.Query(context.Background(), "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north", args)
+	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
+	rows, _ := pgInstance.db.Query(context.Background(), query, args)
 	var requests []*ServiceRequest
 
 	if err := pgxscan.ScanAll(&requests, rows); err != nil {
@@ -270,18 +253,13 @@ func ServiceRequestQuery(query *DBQuery) ([]*ServiceRequest, error) {
 	return requests, nil
 }
 
-func TrapDataQuery(query *DBQuery) ([]*TrapData, error) {
+func TrapDataQuery(q *DBQuery) ([]*TrapData, error) {
 	if pgInstance == nil {
 		return make([]*TrapData, 0), errors.New("You must initialize the DB first")
 	}
 
-	args := pgx.NamedArgs{
-		"east":  query.Bounds.East,
-		"north": query.Bounds.North,
-		"south": query.Bounds.South,
-		"west":  query.Bounds.West,
-	}
-	rows, _ := pgInstance.db.Query(context.Background(), "SELECT geometry_x AS \"geometry.X\",geometry_y AS \"geometry.Y\",name,description,accessdesc,objectid,globalid FROM FS_TrapLocation WHERE geometry_x > @west AND geometry_x < @east AND geometry_y > @south AND geometry_y < @north", args)
+	args, query := prepQuery(q, "SELECT geometry_x AS \"geometry.X\",geometry_y AS \"geometry.Y\",name,description,accessdesc,objectid,globalid FROM FS_TrapLocation WHERE geometry_x > @west AND geometry_x < @east AND geometry_y > @south AND geometry_y < @north")
+	rows, _ := pgInstance.db.Query(context.Background(), query, args)
 	var fs_trap_locations []*FS_TrapLocation
 
 	if err := pgxscan.ScanAll(&fs_trap_locations, rows); err != nil {
@@ -338,6 +316,22 @@ func doMigrations(connection_string string) error {
 		return fmt.Errorf("Failed to run migrations: %w", err)
 	}
 	return nil
+}
+
+// Given a database query and predicate produce named args and a full text DB query
+func prepQuery(q *DBQuery, predicate string) (pgx.NamedArgs, string) {
+	args := pgx.NamedArgs{
+		"east":  q.Bounds.East,
+		"north": q.Bounds.North,
+		"south": q.Bounds.South,
+		"west":  q.Bounds.West,
+	}
+	query := predicate
+	if q.Limit > 0 {
+		args["limit"] = q.Limit
+		query = query + " LIMIT @limit"
+	}
+	return args, query
 }
 
 // Generate a query for upsert from a QueryResult

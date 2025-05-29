@@ -343,12 +343,12 @@ func mosquitoSourceApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 
 	query := fssync.NewQuery()
 	query.Bounds = *bounds
-	sources, err := fssync.MosquitoSourceQuery(query)
+	query.Limit = 100
+	sources, err := fssync.MosquitoSourceQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
-	log.Printf("Got %v mosquito sources", len(sources))
 
 	data := []render.Renderer{}
 	for _, s := range sources {
@@ -404,6 +404,7 @@ func serviceRequestApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	}
 	query := fssync.NewQuery()
 	query.Bounds = *bounds
+	query.Limit = 100
 	requests, err := fssync.ServiceRequestQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
@@ -442,6 +443,7 @@ func serviceRequestList(w http.ResponseWriter, r *http.Request, u *fssync.User) 
 	}
 	query := fssync.NewQuery()
 	query.Bounds = bounds
+	query.Limit = 100
 	requests, err := fssync.ServiceRequestQuery(&query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

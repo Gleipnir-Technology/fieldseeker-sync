@@ -38,7 +38,7 @@ func main() {
 		} else if type_ == "mosquitosource" {
 			query := fssync.NewQuery()
 			query.Limit = *limit
-			sources, err := fssync.MosquitoSourceQuery(query)
+			sources, err := fssync.MosquitoSourceQuery(&query)
 			if err != nil {
 				log.Println(err)
 				os.Exit(4)
