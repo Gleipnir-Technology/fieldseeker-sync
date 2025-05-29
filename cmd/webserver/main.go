@@ -402,8 +402,9 @@ func serviceRequestApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 		render.Render(w, r, errRender(err))
 		return
 	}
-
-	requests, err := fssync.ServiceRequests(bounds)
+	query := fssync.NewQuery()
+	query.Bounds = *bounds
+	requests, err := fssync.ServiceRequestQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -439,7 +440,9 @@ func serviceRequestList(w http.ResponseWriter, r *http.Request, u *fssync.User) 
 		South: -180,
 		West:  180,
 	}
-	requests, err := fssync.ServiceRequests(&bounds)
+	query := fssync.NewQuery()
+	query.Bounds = bounds
+	requests, err := fssync.ServiceRequestQuery(&query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
