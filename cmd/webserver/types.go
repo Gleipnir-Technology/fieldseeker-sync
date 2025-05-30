@@ -10,12 +10,12 @@ import (
 
 // ResponseErr renderer type for handling all sorts of errors.
 type ResponseClientIos struct {
-	MosquitoSources []ResponseMosquitoSource
-	ServiceRequests []ResponseServiceRequest
-	TrapData        []ResponseTrapData
+	MosquitoSources []ResponseMosquitoSource `json:"sources"`
+	ServiceRequests []ResponseServiceRequest `json:"requests"`
+	TrapData        []ResponseTrapData       `json:"traps"`
 }
 
-func (i *ResponseClientIos) Render(w http.ResponseWriter, r *http.Request) error {
+func (i ResponseClientIos) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 func NewResponseClientIos(sources []*fssync.MosquitoSource, requests []*fssync.ServiceRequest, traps []*fssync.TrapData) ResponseClientIos {
