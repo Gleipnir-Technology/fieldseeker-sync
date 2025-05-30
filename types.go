@@ -5,28 +5,28 @@ import (
 	"time"
 )
 
-type FS_InspectionSample struct {
-	Geometry     Geometry `db:"geometry"`
-	CreationDate string   `db:"creationdate"`
-	Creator      string   `db:"creator"`
-	EditDate     string   `db:"editdate"`
-	Editor       string   `db:"editor"`
-	IDByTech     string   `db:"idbytech"`
-	InspectionID string   `db:"insp_id"`
-	Processed    int      `db:"processed"`
-	SampleID     string   `db:"sampleid"`
+type FS_Geometry struct {
+	X float64 `db:"X"`
+	Y float64 `db:"Y"`
 }
 
-type FS_PointLocation struct {
-	Geometry    Geometry `db:"geometry"`
-	Access      *string  `db:"accessdesc"`
-	Comments    *string  `db:"comments"`
-	Description *string  `db:"description"`
-	GlobalID    string   `db:"globalid"`
-	Habitat     *string  `db:"habitat"`
-	Name        *string  `db:"name"`
-	UseType     *string  `db:"usetype"`
-	WaterOrigin *string  `db:"waterorigin"`
+func (geo FS_Geometry) Latitude() float64 {
+	return geo.X
+}
+func (geo FS_Geometry) Longitude() float64 {
+	return geo.Y
+}
+
+type FS_InspectionSample struct {
+	Geometry     FS_Geometry `db:"geometry"`
+	CreationDate string      `db:"creationdate"`
+	Creator      string      `db:"creator"`
+	EditDate     string      `db:"editdate"`
+	Editor       string      `db:"editor"`
+	IDByTech     string      `db:"idbytech"`
+	InspectionID string      `db:"insp_id"`
+	Processed    int         `db:"processed"`
+	SampleID     string      `db:"sampleid"`
 }
 
 type FS_MosquitoInspection struct {
@@ -34,6 +34,38 @@ type FS_MosquitoInspection struct {
 	Condition       *string `db:"sitecond"`
 	EndDateTime     string  `db:"enddatetime"`
 	PointLocationID string  `db:"pointlocid"`
+}
+
+type FS_PointLocation struct {
+	Geometry    FS_Geometry `db:"geometry"`
+	Access      *string     `db:"accessdesc"`
+	Comments    *string     `db:"comments"`
+	Description *string     `db:"description"`
+	GlobalID    string      `db:"globalid"`
+	Habitat     *string     `db:"habitat"`
+	Name        *string     `db:"name"`
+	UseType     *string     `db:"usetype"`
+	WaterOrigin *string     `db:"waterorigin"`
+}
+
+type FS_ServiceRequest struct {
+	Geometry FS_Geometry `db:"geometry"`
+	Address  *string     `db:"reqaddr1"`
+	City     *string     `db:"reqcity"`
+	Priority *string     `db:"priority"`
+	Source   *string     `db:"source"`
+	Status   *string     `db:"status"`
+	Target   *string     `db:"reqtarget"`
+	Zip      *string     `db:"reqzip"`
+}
+
+type FS_TrapLocation struct {
+	Access      *string     `db:"accessdesc"`
+	Description *string     `db:"description"`
+	Geometry    FS_Geometry `db:"geometry"`
+	GlobalID    *string     `db:"globalid"`
+	ObjectID    int         `db:"objectid"`
+	Name        *string     `db:"name"`
 }
 
 type FS_Treatment struct {
@@ -63,23 +95,6 @@ func NewBounds() Bounds {
 		South: -180,
 		West:  -180,
 	}
-}
-
-type Geometry struct {
-	X float64 `db:"X"`
-	Y float64 `db:"Y"`
-}
-
-func (g Geometry) asLatLong() LatLong {
-	return LatLong{
-		Latitude:  g.X,
-		Longitude: g.Y,
-	}
-}
-
-type LatLong struct {
-	Latitude  float64
-	Longitude float64
 }
 
 type MosquitoInspection struct {
@@ -133,24 +148,13 @@ type Note struct {
 	Location LatLong
 }
 
-type ServiceRequest struct {
-	Geometry Geometry `db:"geometry"`
-	Address  *string  `db:"reqaddr1"`
-	City     *string  `db:"reqcity"`
-	Priority *string  `db:"priority"`
-	Source   *string  `db:"source"`
-	Status   *string  `db:"status"`
-	Target   *string  `db:"reqtarget"`
-	Zip      *string  `db:"reqzip"`
-}
-
 type TrapData struct {
 	Access      *string
 	Comments    *string
 	Condition   *string
 	Data        []TrapData
 	Description *string
-	Geometry    Geometry
+	Geometry    FS_Geometry
 	End         *string
 	FieldTech   *string
 	Name        *string
@@ -158,18 +162,26 @@ type TrapData struct {
 	Type        *string
 }
 
-type FS_TrapLocation struct {
-	Access      *string  `db:"accessdesc"`
-	Description *string  `db:"description"`
-	Geometry    Geometry `db:"geometry"`
-	GlobalID    *string  `db:"globalid"`
-	ObjectID    int      `db:"objectid"`
-	Name        *string  `db:"name"`
-}
-
 type User struct {
 	DisplayName      string `db:"display_name"`
 	PasswordHashType string `db:"password_hash_type"`
 	PasswordHash     string `db:"password_hash"`
 	Username         string `db:"username"`
+}
+
+type LatLong interface {
+	Latitude() float64
+	Longitude() float64
+}
+
+type ServiceRequest interface {
+	LatLong() LatLong
+	Address() string
+	City() string
+	Description() string
+	ID() string
+	Habitat() string
+	Name() string
+	UseType() string
+	WaterOrigin() string
 }

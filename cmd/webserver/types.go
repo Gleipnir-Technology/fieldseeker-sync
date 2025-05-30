@@ -172,15 +172,14 @@ func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type ResponseServiceRequest struct {
-	Address  *string `json:"address"`
-	City     *string `json:"city"`
-	Lat      float64 `json:"lat"`
-	Long     float64 `json:"long"`
-	Priority *string `json:"priority"`
-	Source   *string `json:"source"`
-	Status   *string `json:"status"`
-	Target   *string `json:"target"`
-	Zip      *string `json:"zip"`
+	Address  *string          `json:"address"`
+	City     *string          `json:"city"`
+	Location ResponseLocation `json:"location"`
+	Priority *string          `json:"priority"`
+	Source   *string          `json:"source"`
+	Status   *string          `json:"status"`
+	Target   *string          `json:"target"`
+	Zip      *string          `json:"zip"`
 }
 
 func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request) error {
@@ -191,8 +190,7 @@ func NewResponseServiceRequest(sr *fssync.ServiceRequest) ResponseServiceRequest
 	return ResponseServiceRequest{
 		Address:  sr.Address,
 		City:     sr.City,
-		Lat:      sr.Geometry.Y,
-		Long:     sr.Geometry.X,
+		Location: NewResponseLocation(sr.Geometry),
 		Priority: sr.Priority,
 		Status:   sr.Status,
 		Source:   sr.Source,
@@ -209,10 +207,9 @@ func NewResponseServiceRequests(requests []*fssync.ServiceRequest) []ResponseSer
 }
 
 type ResponseTrapData struct {
-	Description *string `json:"description"`
-	Lat         float64 `json:"lat"`
-	Long        float64 `json:"long"`
-	Name        *string `json:"name"`
+	Description *string          `json:"description"`
+	Location    ResponseLocation `json:"location"`
+	Name        *string          `json:"name"`
 }
 
 func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error {
