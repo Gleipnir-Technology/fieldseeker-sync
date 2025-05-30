@@ -9,7 +9,23 @@ import (
 )
 
 // ResponseErr renderer type for handling all sorts of errors.
-//
+type ResponseClientIos struct {
+	MosquitoSources []ResponseMosquitoSource
+	ServiceRequests []ResponseServiceRequest
+	TrapData        []ResponseTrapData
+}
+
+func (i *ResponseClientIos) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+func NewResponseClientIos(sources []*fssync.MosquitoSource, requests []*fssync.ServiceRequest, traps []*fssync.TrapData) ResponseClientIos {
+	return ResponseClientIos{
+		MosquitoSources: NewResponseMosquitoSources(sources),
+		ServiceRequests: NewResponseServiceRequests(requests),
+		TrapData:        NewResponseTrapData(traps),
+	}
+}
+
 // In the best case scenario, the excellent github.com/pkg/errors package
 // helps reveal information on the error, setting it on Err, and in the Render()
 // method, using it to set the application-specific error code in AppCode.
