@@ -103,13 +103,21 @@ func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
 		return results, err
 	}
 
+	rows, _ = pgInstance.db.Query(context.Background(), "SELECT comments,enddatetime,habitat,product,qty,qtyunit,sitecond,treatacres,treathectares,pointlocid FROM FS_Treatment WHERE pointlocid=ANY(@globalids)", args)
+	var treatments []*FS_Treatment
+
+	if err := pgxscan.ScanAll(&treatments, rows); err != nil {
+		log.Println("CollectRows on FS_Treatment error:", err)
+		return results, err
+	}
+
 	// Collect all the data into our final result structure
 	inspection_by_id := make(map[string][]MosquitoInspection, 0)
 	for _, mi := range inspections {
 		group := inspection_by_id[mi.PointLocationID]
 		created_epoch, err := strconv.ParseInt(mi.EndDateTime, 10, 64)
 		if err != nil {
-			log.Println("Unable to convert timestamp", mi.EndDateTime, err)
+			log.Println("Unable to convert inspection timestamp", mi.EndDateTime, err)
 			continue
 		}
 		created := time.UnixMilli(created_epoch)
@@ -122,7 +130,34 @@ func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
 	}
 	// sort the inspections by their created time
 	for _, insp := range inspection_by_id {
-		sort.Sort(ByCreated(inspection_by_id[insp]))
+		sort.Sort(MosquitoInspectionByCreated(insp))
+	}
+
+	treatment_by_id := make(map[string][]MosquitoTreatment, 0)
+	for _, mt := range treatments {
+		group := treatment_by_id[mt.PointLocationID]
+		created_epoch, err := strconv.ParseInt(mt.EndDateTime, 10, 64)
+		if err != nil {
+			log.Println("Unable to convert treatment timestamp", mt.EndDateTime, err)
+			continue
+		}
+		created := time.UnixMilli(created_epoch)
+		group = append(group, MosquitoTreatment{
+			Comments:      mt.Comments,
+			Created:       created,
+			Habitat:       mt.Habitat,
+			Product:       mt.Product,
+			Quantity:      mt.Quantity,
+			QuantityUnit:  mt.QuantityUnit,
+			SiteCondition: mt.SiteCondition,
+			TreatAcres:    mt.TreatAcres,
+			TreatHectares: mt.TreatHectares,
+		})
+		treatment_by_id[mt.PointLocationID] = group
+	}
+	// sort the treatments by their created time
+	for _, treatment := range treatment_by_id {
+		sort.Sort(MosquitoTreatmentByCreated(treatment))
 	}
 	for _, pl := range locations {
 		results = append(results, &MosquitoSource{
@@ -133,6 +168,7 @@ func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
 			Habitat:     pl.Habitat,
 			Inspections: inspection_by_id[pl.GlobalID],
 			Name:        pl.Name,
+			Treatments:  treatment_by_id[pl.GlobalID],
 			UseType:     pl.UseType,
 			WaterOrigin: pl.WaterOrigin,
 		})

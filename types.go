@@ -24,6 +24,19 @@ type FS_MosquitoInspection struct {
 	PointLocationID string  `db:"pointlocid"`
 }
 
+type FS_Treatment struct {
+	Comments        *string  `db:"comments"`
+	EndDateTime     string   `db:"enddatetime"`
+	Habitat         *string  `db:"habitat"`
+	PointLocationID string   `db:"pointlocid"`
+	Product         *string  `db:"product"`
+	Quantity        float64  `db:"qty"`
+	QuantityUnit    *string  `db:"qtyunit"`
+	SiteCondition   *string  `db:"sitecond"`
+	TreatAcres      *float64 `db:"treatacres"`
+	TreatHectares   *float64 `db:"treathectares"`
+}
+
 type Bounds struct {
 	East  float64
 	North float64
@@ -62,11 +75,11 @@ type MosquitoInspection struct {
 	Condition *string
 	Created   time.Time
 }
-type ByCreated []MosquitoInspection
+type MosquitoInspectionByCreated []MosquitoInspection
 
-func (a ByCreated) Len() int           { return len(a) }
-func (a ByCreated) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByCreated) Less(i, j int) bool { return a[i].Created.After(a[j].Created) }
+func (a MosquitoInspectionByCreated) Len() int           { return len(a) }
+func (a MosquitoInspectionByCreated) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a MosquitoInspectionByCreated) Less(i, j int) bool { return a[i].Created.After(a[j].Created) }
 
 type MosquitoSource struct {
 	Access      *string
@@ -77,9 +90,28 @@ type MosquitoSource struct {
 	// ordered by created
 	Inspections []MosquitoInspection
 	Name        *string
+	// ordered by created
+	Treatments  []MosquitoTreatment
 	UseType     *string
 	WaterOrigin *string
 }
+
+type MosquitoTreatment struct {
+	Comments      *string
+	Created       time.Time
+	Habitat       *string
+	Product       *string
+	Quantity      float64
+	QuantityUnit  *string
+	SiteCondition *string
+	TreatAcres    *float64
+	TreatHectares *float64
+}
+type MosquitoTreatmentByCreated []MosquitoTreatment
+
+func (a MosquitoTreatmentByCreated) Len() int           { return len(a) }
+func (a MosquitoTreatmentByCreated) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a MosquitoTreatmentByCreated) Less(i, j int) bool { return a[i].Created.After(a[j].Created) }
 
 type Note struct {
 	Category string

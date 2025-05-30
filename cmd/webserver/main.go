@@ -218,11 +218,28 @@ type ResponseMosquitoSource struct {
 	Habitat     *string                      `json:"habitat"`
 	Inspections []ResponseMosquitoInspection `json:"inspections"`
 	Name        *string                      `json:"name"`
+	Treatments  []ResponseMosquitoTreatment  `json:"treatments"`
 	UseType     *string                      `json:"usetype"`
 	WaterOrigin *string                      `json:"waterorigin"`
 }
 
 func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type ResponseMosquitoTreatment struct {
+	Comments      *string  `json:"comments"`
+	Created       string   `json:"created"`
+	Habitat       *string  `json:"habitat"`
+	Product       *string  `json:"product"`
+	Quantity      float64  `json:"quantity"`
+	QuantityUnit  *string  `json:"quantity_unit"`
+	SiteCondition *string  `json:"site_condition"`
+	TreatAcres    *float64 `json:"treat_acres"`
+	TreatHectares *float64 `json:"treat_hectares"`
+}
+
+func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -297,10 +314,33 @@ func NewMosquitoSource(ms *fssync.MosquitoSource) ResponseMosquitoSource {
 		Habitat:     ms.Habitat,
 		Inspections: NewMosquitoInspections(ms.Inspections),
 		Name:        ms.Name,
+		Treatments:  NewMosquitoTreatments(ms.Treatments),
 		UseType:     ms.UseType,
 		WaterOrigin: ms.WaterOrigin,
 	}
 }
+
+func NewMosquitoTreatment(i fssync.MosquitoTreatment) ResponseMosquitoTreatment {
+	return ResponseMosquitoTreatment{
+		Comments:      i.Comments,
+		Created:       i.Created.String(),
+		Habitat:       i.Habitat,
+		Product:       i.Product,
+		Quantity:      i.Quantity,
+		QuantityUnit:  i.QuantityUnit,
+		SiteCondition: i.SiteCondition,
+		TreatAcres:    i.TreatAcres,
+		TreatHectares: i.TreatHectares,
+	}
+}
+func NewMosquitoTreatments(treatments []fssync.MosquitoTreatment) []ResponseMosquitoTreatment {
+	results := make([]ResponseMosquitoTreatment, 0)
+	for _, i := range treatments {
+		results = append(results, NewMosquitoTreatment(i))
+	}
+	return results
+}
+
 func NewNote(n fssync.Note) ResponseNote {
 	return ResponseNote{
 		CategoryName: n.Category,

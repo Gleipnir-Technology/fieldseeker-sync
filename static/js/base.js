@@ -174,6 +174,37 @@ function showMosquitoSource(ms) {
 				"<td>" + insp.comments + "</td>" +
 			"</tr>");
 	}
+	inspections += "</table>";
+
+	var treatments = ("<table>" +
+		"<tr>" +
+			"<th>Created</th>" +
+			"<th>Habitat</th>" +
+			"<th>Product</th>" +
+			"<th>Quantity</th>" +
+			"<th>Quantity Units</th>" +
+			"<th>Site Condition</th>" +
+			"<th>Treat Acres</th>" +
+			"<th>Treat Hectares</th>" +
+			"<th>Comments</th>" +
+		"</tr>");
+	for(let i = 0; i < ms.treatments.length; i++) {
+		let t = ms.treatments[i];
+		treatments += (
+			"<tr>" +
+				"<td>" + t.created + "</td>" +
+				"<td>" + t.habitat + "</td>" +
+				"<td>" + t.product + "</td>" +
+				"<td>" + t.quantity + "</td>" +
+				"<td>" + t.quantity_units + "</td>" +
+				"<td>" + t.site_condition + "</td>" +
+				"<td>" + t.treat_acres + "</td>" +
+				"<td>" + t.treat_hectares + "</td>" +
+				"<td>" + t.comments + "</td>" +
+			"</tr>");
+	}
+	treatments += "</table>";
+
 	var detail = document.getElementById("detail");
 	detail.innerHTML = ("<h1>Mosquito Source</h1>" +
 		"<table>" +
@@ -186,7 +217,8 @@ function showMosquitoSource(ms) {
 		"<tr><td>Name</td><td>" + ms.name + "</td>" +
 		"<tr><td>Use Type</td><td>" + ms.usetype + "</td>" +
 		"<tr><td>Water Origin</td><td>" + ms.waterorigin + "</td>" +
-		"</table><h2>Inspections</h2>" + inspections
+		"</table><h2>Inspections</h2>" + inspections +
+		"<h2>Treatments</h2>" + treatments
 	);
 }
 
