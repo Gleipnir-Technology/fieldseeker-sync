@@ -8,12 +8,12 @@ import (
 	"gleipnir.technology/fieldseeker-sync"
 )
 
-// ErrResponse renderer type for handling all sorts of errors.
+// ResponseErr renderer type for handling all sorts of errors.
 //
 // In the best case scenario, the excellent github.com/pkg/errors package
 // helps reveal information on the error, setting it on Err, and in the Render()
 // method, using it to set the application-specific error code in AppCode.
-type ErrResponse struct {
+type ResponseErr struct {
 	Error          error `json:"-"` // low-level runtime error
 	HTTPStatusCode int   `json:"-"` // http response status code
 
@@ -22,7 +22,7 @@ type ErrResponse struct {
 	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
 }
 
-func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (e *ResponseErr) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
 }
@@ -36,6 +36,13 @@ func (rtd ResponseLocation) Render(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
+func NewResponseLocation(l fssync.LatLong) ResponseLocation {
+	return ResponseLocation{
+		Latitude:  l.Latitude,
+		Longitude: l.Longitude,
+	}
+}
+
 type ResponseMosquitoInspection struct {
 	Comments  *string `json:"comments"`
 	Condition *string `json:"condition"`
@@ -44,6 +51,20 @@ type ResponseMosquitoInspection struct {
 
 func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+func NewResponseMosquitoInspection(i fssync.MosquitoInspection) ResponseMosquitoInspection {
+	return ResponseMosquitoInspection{
+		Comments:  i.Comments,
+		Condition: i.Condition,
+		Created:   i.Created.String(),
+	}
+}
+func NewResponseMosquitoInspections(inspections []fssync.MosquitoInspection) []ResponseMosquitoInspection {
+	results := make([]ResponseMosquitoInspection, 0)
+	for _, i := range inspections {
+		results = append(results, NewResponseMosquitoInspection(i))
+	}
+	return results
 }
 
 type ResponseMosquitoSource struct {
@@ -63,6 +84,29 @@ func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
+func NewResponseMosquitoSource(ms *fssync.MosquitoSource) ResponseMosquitoSource {
+
+	return ResponseMosquitoSource{
+		Access:      ms.Access,
+		Comments:    ms.Comments,
+		Description: ms.Description,
+		Location:    NewResponseLocation(ms.Location),
+		Habitat:     ms.Habitat,
+		Inspections: NewResponseMosquitoInspections(ms.Inspections),
+		Name:        ms.Name,
+		Treatments:  NewResponseMosquitoTreatments(ms.Treatments),
+		UseType:     ms.UseType,
+		WaterOrigin: ms.WaterOrigin,
+	}
+}
+func NewResponseMosquitoSources(sources []*fssync.MosquitoSource) []ResponseMosquitoSource {
+	results := make([]ResponseMosquitoSource, 0)
+	for _, i := range sources {
+		results = append(results, NewResponseMosquitoSource(i))
+	}
+	return results
+}
+
 type ResponseMosquitoTreatment struct {
 	Comments      *string  `json:"comments"`
 	Created       string   `json:"created"`
@@ -77,6 +121,26 @@ type ResponseMosquitoTreatment struct {
 
 func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+func NewResponseMosquitoTreatment(i fssync.MosquitoTreatment) ResponseMosquitoTreatment {
+	return ResponseMosquitoTreatment{
+		Comments:      i.Comments,
+		Created:       i.Created.String(),
+		Habitat:       i.Habitat,
+		Product:       i.Product,
+		Quantity:      i.Quantity,
+		QuantityUnit:  i.QuantityUnit,
+		SiteCondition: i.SiteCondition,
+		TreatAcres:    i.TreatAcres,
+		TreatHectares: i.TreatHectares,
+	}
+}
+func NewResponseMosquitoTreatments(treatments []fssync.MosquitoTreatment) []ResponseMosquitoTreatment {
+	results := make([]ResponseMosquitoTreatment, 0)
+	for _, i := range treatments {
+		results = append(results, NewResponseMosquitoTreatment(i))
+	}
+	return results
 }
 
 type ResponseNote struct {
@@ -107,7 +171,7 @@ func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func NewServiceRequest(sr *fssync.ServiceRequest) ResponseServiceRequest {
+func NewResponseServiceRequest(sr *fssync.ServiceRequest) ResponseServiceRequest {
 	return ResponseServiceRequest{
 		Address:  sr.Address,
 		City:     sr.City,
@@ -120,6 +184,13 @@ func NewServiceRequest(sr *fssync.ServiceRequest) ResponseServiceRequest {
 		Zip:      sr.Zip,
 	}
 }
+func NewResponseServiceRequests(requests []*fssync.ServiceRequest) []ResponseServiceRequest {
+	results := make([]ResponseServiceRequest, 0)
+	for _, i := range requests {
+		results = append(results, NewResponseServiceRequest(i))
+	}
+	return results
+}
 
 type ResponseTrapData struct {
 	Description *string `json:"description"`
@@ -131,7 +202,7 @@ type ResponseTrapData struct {
 func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewTrapData(td *fssync.TrapData) ResponseTrapData {
+func NewResponseTrapDatum(td *fssync.TrapData) ResponseTrapData {
 	return ResponseTrapData{
 		Description: td.Description,
 		Lat:         td.Geometry.Y,
@@ -139,62 +210,10 @@ func NewTrapData(td *fssync.TrapData) ResponseTrapData {
 		Name:        td.Name,
 	}
 }
-
-func NewLocation(l fssync.LatLong) ResponseLocation {
-	return ResponseLocation{
-		Latitude:  l.Latitude,
-		Longitude: l.Longitude,
-	}
-}
-
-func NewMosquitoInspection(i fssync.MosquitoInspection) ResponseMosquitoInspection {
-	return ResponseMosquitoInspection{
-		Comments:  i.Comments,
-		Condition: i.Condition,
-		Created:   i.Created.String(),
-	}
-}
-func NewMosquitoInspections(inspections []fssync.MosquitoInspection) []ResponseMosquitoInspection {
-	results := make([]ResponseMosquitoInspection, 0)
-	for _, i := range inspections {
-		results = append(results, NewMosquitoInspection(i))
-	}
-	return results
-}
-
-func NewMosquitoSource(ms *fssync.MosquitoSource) ResponseMosquitoSource {
-
-	return ResponseMosquitoSource{
-		Access:      ms.Access,
-		Comments:    ms.Comments,
-		Description: ms.Description,
-		Location:    NewLocation(ms.Location),
-		Habitat:     ms.Habitat,
-		Inspections: NewMosquitoInspections(ms.Inspections),
-		Name:        ms.Name,
-		Treatments:  NewMosquitoTreatments(ms.Treatments),
-		UseType:     ms.UseType,
-		WaterOrigin: ms.WaterOrigin,
-	}
-}
-
-func NewMosquitoTreatment(i fssync.MosquitoTreatment) ResponseMosquitoTreatment {
-	return ResponseMosquitoTreatment{
-		Comments:      i.Comments,
-		Created:       i.Created.String(),
-		Habitat:       i.Habitat,
-		Product:       i.Product,
-		Quantity:      i.Quantity,
-		QuantityUnit:  i.QuantityUnit,
-		SiteCondition: i.SiteCondition,
-		TreatAcres:    i.TreatAcres,
-		TreatHectares: i.TreatHectares,
-	}
-}
-func NewMosquitoTreatments(treatments []fssync.MosquitoTreatment) []ResponseMosquitoTreatment {
-	results := make([]ResponseMosquitoTreatment, 0)
-	for _, i := range treatments {
-		results = append(results, NewMosquitoTreatment(i))
+func NewResponseTrapData(data []*fssync.TrapData) []ResponseTrapData {
+	results := make([]ResponseTrapData, 0)
+	for _, i := range data {
+		results = append(results, NewResponseTrapDatum(i))
 	}
 	return results
 }
@@ -204,7 +223,7 @@ func NewNote(n fssync.Note) ResponseNote {
 		CategoryName: n.Category,
 		Content:      n.Content,
 		ID:           n.ID.String(),
-		Location:     NewLocation(n.Location),
+		Location:     NewResponseLocation(n.Location),
 		Timestamp:    n.Created.Format("2006-01-02T15:04:05.000Z"),
 	}
 }

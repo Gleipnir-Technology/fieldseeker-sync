@@ -45,7 +45,7 @@ func NewEnsureAuth(handlerToWrap AuthenticatedHandler) *EnsureAuth {
 var sessionManager *scs.SessionManager
 
 func errRender(err error) render.Renderer {
-	return &ErrResponse{
+	return &ResponseErr{
 		Error:          err,
 		HTTPStatusCode: 500,
 		StatusText:     "Error rendering response",
@@ -190,7 +190,7 @@ func mosquitoSourceApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 
 	data := []render.Renderer{}
 	for _, s := range sources {
-		data = append(data, NewMosquitoSource(s))
+		data = append(data, NewResponseMosquitoSource(s))
 	}
 	if err := render.RenderList(w, r, data); err != nil {
 		render.Render(w, r, errRender(err))
@@ -251,7 +251,7 @@ func serviceRequestApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 
 	data := []render.Renderer{}
 	for _, sr := range requests {
-		data = append(data, NewServiceRequest(sr))
+		data = append(data, NewResponseServiceRequest(sr))
 	}
 	if err := render.RenderList(w, r, data); err != nil {
 		render.Render(w, r, errRender(err))
@@ -315,7 +315,7 @@ func trapDataApi(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 
 	data := []render.Renderer{}
 	for _, td := range trap_data {
-		data = append(data, NewTrapData(td))
+		data = append(data, NewResponseTrapDatum(td))
 	}
 	if err := render.RenderList(w, r, data); err != nil {
 		render.Render(w, r, errRender(err))
