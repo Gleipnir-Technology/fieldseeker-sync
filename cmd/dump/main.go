@@ -45,32 +45,16 @@ func main() {
 			}
 			log.Println("Total sources", len(sources))
 			for _, s := range sources {
-				log.Println("Access: ", *s.Access)
-				if s.Comments == nil {
-					log.Println("Comments: nil")
-				} else {
-					log.Println("Comments: ", *s.Comments)
-				}
-				log.Println("Description: ", *s.Description)
-				log.Println("Location: ", s.Location.Latitude, s.Location.Longitude)
-				log.Println("Habitat: ", *s.Habitat)
-				log.Println("Name: ", *s.Name)
-				if s.UseType == nil {
-					log.Println("UseType: nil")
-				} else {
-					log.Println("UseType: ", *s.UseType)
-				}
-				if s.WaterOrigin == nil {
-					log.Println("WaterOrigin: nil")
-				} else {
-					log.Println("WaterOrigin: ", *s.WaterOrigin)
-				}
+				log.Println("Access: ", s.Access())
+				log.Println("Comments: ", s.Comments())
+				log.Println("Description: ", s.Description())
+				log.Println("Location: ", s.Location().Latitude(), s.Location().Longitude())
+				log.Println("Habitat: ", s.Habitat())
+				log.Println("Name: ", s.Name())
+				log.Println("UseType: ", s.UseType())
+				log.Println("WaterOrigin: ", s.WaterOrigin())
 				for _, i := range s.Inspections {
-					cond := "nil"
-					if i.Condition != nil {
-						cond = *i.Condition
-					}
-					log.Println("  Condition: ", cond, " Created: ", i.Created.String())
+					log.Println("  Condition: ", i.Condition(), " Created: ", i.Created().String())
 				}
 				log.Println("========")
 			}

@@ -36,7 +36,7 @@ type PageDataLogin struct {
 }
 
 type PageDataServiceRequests struct {
-	ServiceRequests []*fssync.ServiceRequest
+	ServiceRequests []fssync.ServiceRequest
 	User            *fssync.User
 }
 
@@ -69,7 +69,7 @@ func ServiceRequests(w io.Writer, sr PageDataServiceRequests) error {
 	return serviceRequests.ExecuteTemplate(w, sr)
 }
 
-func geocode(geo fssync.Geometry) string {
+func geocode(geo fssync.LatLong) string {
 	return "foo"
 }
 

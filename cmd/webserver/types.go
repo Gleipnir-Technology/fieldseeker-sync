@@ -18,7 +18,7 @@ type ResponseClientIos struct {
 func (i ResponseClientIos) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewResponseClientIos(sources []*fssync.MosquitoSource, requests []*fssync.ServiceRequest, traps []*fssync.TrapData) ResponseClientIos {
+func NewResponseClientIos(sources []fssync.MosquitoSource, requests []fssync.ServiceRequest, traps []fssync.TrapData) ResponseClientIos {
 	return ResponseClientIos{
 		MosquitoSources: NewResponseMosquitoSources(sources),
 		ServiceRequests: NewResponseServiceRequests(requests),
@@ -54,15 +54,16 @@ func (rtd ResponseLocation) Render(w http.ResponseWriter, r *http.Request) error
 
 func NewResponseLocation(l fssync.LatLong) ResponseLocation {
 	return ResponseLocation{
-		Latitude:  l.Latitude,
-		Longitude: l.Longitude,
+		Latitude:  l.Latitude(),
+		Longitude: l.Longitude(),
 	}
 }
 
 type ResponseMosquitoInspection struct {
-	Comments  *string `json:"comments"`
-	Condition *string `json:"condition"`
-	Created   string  `json:"created"`
+	Comments string `json:"comments"`
+
+	Condition string `json:"condition"`
+	Created   string `json:"created"`
 }
 
 func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Request) error {
@@ -70,9 +71,9 @@ func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Requ
 }
 func NewResponseMosquitoInspection(i fssync.MosquitoInspection) ResponseMosquitoInspection {
 	return ResponseMosquitoInspection{
-		Comments:  i.Comments,
-		Condition: i.Condition,
-		Created:   i.Created.String(),
+		Comments:  i.Comments(),
+		Condition: i.Condition(),
+		Created:   i.Created().String(),
 	}
 }
 func NewResponseMosquitoInspections(inspections []fssync.MosquitoInspection) []ResponseMosquitoInspection {
@@ -84,38 +85,39 @@ func NewResponseMosquitoInspections(inspections []fssync.MosquitoInspection) []R
 }
 
 type ResponseMosquitoSource struct {
-	Access      *string                      `json:"access"`
-	Comments    *string                      `json:"comments"`
-	Description *string                      `json:"description"`
+	Access string `json:"access"`
+
+	Comments    string                       `json:"comments"`
+	Description string                       `json:"description"`
 	Location    ResponseLocation             `json:"location"`
-	Habitat     *string                      `json:"habitat"`
+	Habitat     string                       `json:"habitat"`
 	Inspections []ResponseMosquitoInspection `json:"inspections"`
-	Name        *string                      `json:"name"`
+	Name        string                       `json:"name"`
 	Treatments  []ResponseMosquitoTreatment  `json:"treatments"`
-	UseType     *string                      `json:"usetype"`
-	WaterOrigin *string                      `json:"waterorigin"`
+	UseType     string                       `json:"usetype"`
+	WaterOrigin string                       `json:"waterorigin"`
 }
 
 func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func NewResponseMosquitoSource(ms *fssync.MosquitoSource) ResponseMosquitoSource {
+func NewResponseMosquitoSource(ms fssync.MosquitoSource) ResponseMosquitoSource {
 
 	return ResponseMosquitoSource{
-		Access:      ms.Access,
-		Comments:    ms.Comments,
-		Description: ms.Description,
-		Location:    NewResponseLocation(ms.Location),
-		Habitat:     ms.Habitat,
+		Access:      ms.Access(),
+		Comments:    ms.Comments(),
+		Description: ms.Description(),
+		Location:    NewResponseLocation(ms.Location()),
+		Habitat:     ms.Habitat(),
 		Inspections: NewResponseMosquitoInspections(ms.Inspections),
-		Name:        ms.Name,
+		Name:        ms.Name(),
 		Treatments:  NewResponseMosquitoTreatments(ms.Treatments),
-		UseType:     ms.UseType,
-		WaterOrigin: ms.WaterOrigin,
+		UseType:     ms.UseType(),
+		WaterOrigin: ms.WaterOrigin(),
 	}
 }
-func NewResponseMosquitoSources(sources []*fssync.MosquitoSource) []ResponseMosquitoSource {
+func NewResponseMosquitoSources(sources []fssync.MosquitoSource) []ResponseMosquitoSource {
 	results := make([]ResponseMosquitoSource, 0)
 	for _, i := range sources {
 		results = append(results, NewResponseMosquitoSource(i))
@@ -124,15 +126,15 @@ func NewResponseMosquitoSources(sources []*fssync.MosquitoSource) []ResponseMosq
 }
 
 type ResponseMosquitoTreatment struct {
-	Comments      *string  `json:"comments"`
-	Created       string   `json:"created"`
-	Habitat       *string  `json:"habitat"`
-	Product       *string  `json:"product"`
-	Quantity      float64  `json:"quantity"`
-	QuantityUnit  *string  `json:"quantity_unit"`
-	SiteCondition *string  `json:"site_condition"`
-	TreatAcres    *float64 `json:"treat_acres"`
-	TreatHectares *float64 `json:"treat_hectares"`
+	Comments      string  `json:"comments"`
+	Created       string  `json:"created"`
+	Habitat       string  `json:"habitat"`
+	Product       string  `json:"product"`
+	Quantity      float64 `json:"quantity"`
+	QuantityUnit  string  `json:"quantity_unit"`
+	SiteCondition string  `json:"site_condition"`
+	TreatAcres    float64 `json:"treat_acres"`
+	TreatHectares float64 `json:"treat_hectares"`
 }
 
 func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Request) error {
@@ -140,15 +142,15 @@ func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Reque
 }
 func NewResponseMosquitoTreatment(i fssync.MosquitoTreatment) ResponseMosquitoTreatment {
 	return ResponseMosquitoTreatment{
-		Comments:      i.Comments,
-		Created:       i.Created.String(),
-		Habitat:       i.Habitat,
-		Product:       i.Product,
-		Quantity:      i.Quantity,
-		QuantityUnit:  i.QuantityUnit,
-		SiteCondition: i.SiteCondition,
-		TreatAcres:    i.TreatAcres,
-		TreatHectares: i.TreatHectares,
+		Comments:      i.Comments(),
+		Created:       i.Created().String(),
+		Habitat:       i.Habitat(),
+		Product:       i.Product(),
+		Quantity:      i.Quantity(),
+		QuantityUnit:  i.QuantityUnit(),
+		SiteCondition: i.SiteCondition(),
+		TreatAcres:    i.TreatAcres(),
+		TreatHectares: i.TreatHectares(),
 	}
 }
 func NewResponseMosquitoTreatments(treatments []fssync.MosquitoTreatment) []ResponseMosquitoTreatment {
@@ -160,11 +162,12 @@ func NewResponseMosquitoTreatments(treatments []fssync.MosquitoTreatment) []Resp
 }
 
 type ResponseNote struct {
-	CategoryName string           `json:"categoryName"`
-	Content      string           `json:"content"`
-	ID           string           `json:"id"`
-	Location     ResponseLocation `json:"location"`
-	Timestamp    string           `json:"timestamp"`
+	CategoryName string `json:"categoryName"`
+	Content      string `json:"content"`
+
+	ID        string           `json:"id"`
+	Location  ResponseLocation `json:"location"`
+	Timestamp string           `json:"timestamp"`
 }
 
 func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
@@ -172,33 +175,33 @@ func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type ResponseServiceRequest struct {
-	Address  *string          `json:"address"`
-	City     *string          `json:"city"`
+	Address  string           `json:"address"`
+	City     string           `json:"city"`
 	Location ResponseLocation `json:"location"`
-	Priority *string          `json:"priority"`
-	Source   *string          `json:"source"`
-	Status   *string          `json:"status"`
-	Target   *string          `json:"target"`
-	Zip      *string          `json:"zip"`
+	Priority string           `json:"priority"`
+	Source   string           `json:"source"`
+	Status   string           `json:"status"`
+	Target   string           `json:"target"`
+	Zip      string           `json:"zip"`
 }
 
 func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func NewResponseServiceRequest(sr *fssync.ServiceRequest) ResponseServiceRequest {
+func NewResponseServiceRequest(sr fssync.ServiceRequest) ResponseServiceRequest {
 	return ResponseServiceRequest{
-		Address:  sr.Address,
-		City:     sr.City,
-		Location: NewResponseLocation(sr.Geometry),
-		Priority: sr.Priority,
-		Status:   sr.Status,
-		Source:   sr.Source,
-		Target:   sr.Target,
-		Zip:      sr.Zip,
+		Address:  sr.Address(),
+		City:     sr.City(),
+		Location: NewResponseLocation(sr.Location()),
+		Priority: sr.Priority(),
+		Status:   sr.Status(),
+		Source:   sr.Source(),
+		Target:   sr.Target(),
+		Zip:      sr.Zip(),
 	}
 }
-func NewResponseServiceRequests(requests []*fssync.ServiceRequest) []ResponseServiceRequest {
+func NewResponseServiceRequests(requests []fssync.ServiceRequest) []ResponseServiceRequest {
 	results := make([]ResponseServiceRequest, 0)
 	for _, i := range requests {
 		results = append(results, NewResponseServiceRequest(i))
@@ -207,36 +210,25 @@ func NewResponseServiceRequests(requests []*fssync.ServiceRequest) []ResponseSer
 }
 
 type ResponseTrapData struct {
-	Description *string          `json:"description"`
+	Description string           `json:"description"`
 	Location    ResponseLocation `json:"location"`
-	Name        *string          `json:"name"`
+	Name        string           `json:"name"`
 }
 
 func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewResponseTrapDatum(td *fssync.TrapData) ResponseTrapData {
+func NewResponseTrapDatum(td fssync.TrapData) ResponseTrapData {
 	return ResponseTrapData{
-		Description: td.Description,
-		Lat:         td.Geometry.Y,
-		Long:        td.Geometry.X,
-		Name:        td.Name,
+		Description: td.Description(),
+		Location:    NewResponseLocation(td.Location()),
+		Name:        td.Name(),
 	}
 }
-func NewResponseTrapData(data []*fssync.TrapData) []ResponseTrapData {
+func NewResponseTrapData(data []fssync.TrapData) []ResponseTrapData {
 	results := make([]ResponseTrapData, 0)
 	for _, i := range data {
 		results = append(results, NewResponseTrapDatum(i))
 	}
 	return results
-}
-
-func NewNote(n fssync.Note) ResponseNote {
-	return ResponseNote{
-		CategoryName: n.Category,
-		Content:      n.Content,
-		ID:           n.ID.String(),
-		Location:     NewResponseLocation(n.Location),
-		Timestamp:    n.Created.Format("2006-01-02T15:04:05.000Z"),
-	}
 }

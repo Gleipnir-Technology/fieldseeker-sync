@@ -8,10 +8,8 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/georgysavva/scany/v2/pgxscan"
@@ -72,8 +70,8 @@ func NewQuery() DBQuery {
 	}
 }
 
-func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
-	results := make([]*MosquitoSource, 0)
+func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
+	results := make([]MosquitoSource, 0)
 	if pgInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
@@ -87,8 +85,10 @@ func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
 		return results, err
 	}
 
-	globalids := make([]string, len(locations))
+	location_by_globalid := make(map[string]*FS_PointLocation, len(locations))
+	globalids := make([]string, 0)
 	for _, l := range locations {
+		location_by_globalid[l.GlobalID] = l
 		globalids = append(globalids, l.GlobalID)
 	}
 	args = pgx.NamedArgs{
@@ -102,6 +102,13 @@ func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
 		return results, err
 	}
 
+	inspections_by_locid := make(map[string][]*FS_MosquitoInspection)
+	for _, i := range inspections {
+		x := inspections_by_locid[i.PointLocationID]
+		x = append(x, i)
+		inspections_by_locid[i.PointLocationID] = x
+	}
+
 	rows, _ = pgInstance.db.Query(context.Background(), "SELECT comments,enddatetime,habitat,product,qty,qtyunit,sitecond,treatacres,treathectares,pointlocid FROM FS_Treatment WHERE pointlocid=ANY(@globalids)", args)
 	var treatments []*FS_Treatment
 
@@ -109,68 +116,14 @@ func MosquitoSourceQuery(q *DBQuery) ([]*MosquitoSource, error) {
 		log.Println("CollectRows on FS_Treatment error:", err)
 		return results, err
 	}
-
-	// Collect all the data into our final result structure
-	inspection_by_id := make(map[string][]MosquitoInspection, 0)
-	for _, mi := range inspections {
-		group := inspection_by_id[mi.PointLocationID]
-		created_epoch, err := strconv.ParseInt(mi.EndDateTime, 10, 64)
-		if err != nil {
-			log.Println("Unable to convert inspection timestamp", mi.EndDateTime, err)
-			continue
-		}
-		created := time.UnixMilli(created_epoch)
-		group = append(group, MosquitoInspection{
-			Comments:  mi.Comments,
-			Condition: mi.Condition,
-			Created:   created,
-		})
-		inspection_by_id[mi.PointLocationID] = group
-	}
-	// sort the inspections by their created time
-	for _, insp := range inspection_by_id {
-		sort.Sort(MosquitoInspectionByCreated(insp))
-	}
-
-	treatment_by_id := make(map[string][]MosquitoTreatment, 0)
-	for _, mt := range treatments {
-		group := treatment_by_id[mt.PointLocationID]
-		created_epoch, err := strconv.ParseInt(mt.EndDateTime, 10, 64)
-		if err != nil {
-			log.Println("Unable to convert treatment timestamp", mt.EndDateTime, err)
-			continue
-		}
-		created := time.UnixMilli(created_epoch)
-		group = append(group, MosquitoTreatment{
-			Comments:      mt.Comments,
-			Created:       created,
-			Habitat:       mt.Habitat,
-			Product:       mt.Product,
-			Quantity:      mt.Quantity,
-			QuantityUnit:  mt.QuantityUnit,
-			SiteCondition: mt.SiteCondition,
-			TreatAcres:    mt.TreatAcres,
-			TreatHectares: mt.TreatHectares,
-		})
-		treatment_by_id[mt.PointLocationID] = group
-	}
-	// sort the treatments by their created time
-	for _, treatment := range treatment_by_id {
-		sort.Sort(MosquitoTreatmentByCreated(treatment))
+	treatments_by_locid := make(map[string][]*FS_Treatment)
+	for _, i := range treatments {
+		x := treatments_by_locid[i.PointLocationID]
+		x = append(x, i)
+		treatments_by_locid[i.PointLocationID] = x
 	}
 	for _, pl := range locations {
-		results = append(results, &MosquitoSource{
-			Access:      pl.Access,
-			Comments:    pl.Comments,
-			Description: pl.Description,
-			Location:    pl.Geometry,
-			Habitat:     pl.Habitat,
-			Inspections: inspection_by_id[pl.GlobalID],
-			Name:        pl.Name,
-			Treatments:  treatment_by_id[pl.GlobalID],
-			UseType:     pl.UseType,
-			WaterOrigin: pl.WaterOrigin,
-		})
+		results = append(results, NewMosquitoSource(pl, inspections_by_locid[pl.GlobalID], treatments_by_locid[pl.GlobalID]))
 	}
 	return results, nil
 }
@@ -232,47 +185,48 @@ func ServiceRequestCount() (int, error) {
 	return count, nil
 }
 
-func ServiceRequestQuery(q *DBQuery) ([]*ServiceRequest, error) {
+func ServiceRequestQuery(q *DBQuery) ([]ServiceRequest, error) {
+	results := make([]ServiceRequest, 0)
 	if pgInstance == nil {
-		return make([]*ServiceRequest, 0), errors.New("You must initialize the DB first")
+		return results, errors.New("You must initialize the DB first")
 	}
 
 	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
 	rows, _ := pgInstance.db.Query(context.Background(), query, args)
-	var requests []*ServiceRequest
+	var fs_service_requests []*FS_ServiceRequest
 
-	if err := pgxscan.ScanAll(&requests, rows); err != nil {
+	if err := pgxscan.ScanAll(&fs_service_requests, rows); err != nil {
 		log.Println("CollectRows error:", err)
-		return make([]*ServiceRequest, 0), err
+		return results, err
+	}
+	for _, r := range fs_service_requests {
+		results = append(results, ServiceRequest{data: r})
 	}
 
-	return requests, nil
+	return results, nil
 }
 
-func TrapDataQuery(q *DBQuery) ([]*TrapData, error) {
+func TrapDataQuery(q *DBQuery) ([]TrapData, error) {
+	results := make([]TrapData, 0)
 	if pgInstance == nil {
-		return make([]*TrapData, 0), errors.New("You must initialize the DB first")
+		return results, errors.New("You must initialize the DB first")
 	}
 
+	log.Println("Getting FS_TrapLocation")
 	args, query := prepQuery(q, "SELECT geometry_x AS \"geometry.X\",geometry_y AS \"geometry.Y\",name,description,accessdesc,objectid,globalid FROM FS_TrapLocation WHERE geometry_x > @west AND geometry_x < @east AND geometry_y > @south AND geometry_y < @north")
 	rows, _ := pgInstance.db.Query(context.Background(), query, args)
 	var fs_trap_locations []*FS_TrapLocation
 
 	if err := pgxscan.ScanAll(&fs_trap_locations, rows); err != nil {
 		log.Println("CollectRows error:", err)
-		return make([]*TrapData, 0), err
+		return results, err
 	}
-	var traps []*TrapData
+	log.Println("Found FS_TrapLocation", len(fs_trap_locations))
 	for _, l := range fs_trap_locations {
-		traps = append(traps, &TrapData{
-			Geometry:    l.Geometry,
-			Access:      l.Access,
-			Description: l.Description,
-			Name:        l.Name,
-		})
+		results = append(results, TrapData{data: l})
 	}
 
-	return traps, nil
+	return results, nil
 }
 
 func ValidateUser(username string, password string) (*User, error) {
