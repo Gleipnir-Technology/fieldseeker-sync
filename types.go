@@ -5,6 +5,18 @@ import (
 	"time"
 )
 
+type FS_InspectionSample struct {
+	Geometry     Geometry `db:"geometry"`
+	CreationDate string   `db:"creationdate"`
+	Creator      string   `db:"creator"`
+	EditDate     string   `db:"editdate"`
+	Editor       string   `db:"editor"`
+	IDByTech     string   `db:"idbytech"`
+	InspectionID string   `db:"insp_id"`
+	Processed    int      `db:"processed"`
+	SampleID     string   `db:"sampleid"`
+}
+
 type FS_PointLocation struct {
 	Geometry    Geometry `db:"geometry"`
 	Access      *string  `db:"accessdesc"`
