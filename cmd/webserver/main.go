@@ -218,8 +218,8 @@ type ResponseMosquitoSource struct {
 	Habitat     *string                      `json:"habitat"`
 	Inspections []ResponseMosquitoInspection `json:"inspections"`
 	Name        *string                      `json:"name"`
-	UseType     *string                      `json:"target"`
-	WaterOrigin *string                      `json:"zip"`
+	UseType     *string                      `json:"usetype"`
+	WaterOrigin *string                      `json:"waterorigin"`
 }
 
 func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request) error {
