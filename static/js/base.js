@@ -132,7 +132,7 @@ async function getServiceRequestsForBounds(bounds) {
 	markers.serviceRequest.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		var m = L.marker([r.lat, r.long], {icon: markers.types.blue});
+		var m = L.marker([r.location.longitude, r.location.latitude], {icon: markers.types.blue});
 		m.on("click", function(e) {
 			showServiceRequest(r);
 		});
@@ -153,7 +153,7 @@ async function getTrapDataForBounds(bounds) {
 	markers.trapData.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		markers.trapData.addLayer(L.marker([r.lat, r.long], {icon: markers.types.green}).on("click", function(e) {
+		markers.trapData.addLayer(L.marker([r.location.longitude, r.location.latitude], {icon: markers.types.green}).on("click", function(e) {
 			showTrapData(r);
 		}));
 	}
@@ -244,8 +244,8 @@ function showTrapData(sr) {
 	detail.innerHTML = ("<h1>Trap Data</h1>" +
 		"<table>" +
 		"<tr><td>Name</td><td>" + sr.name + "</td>" +
-		"<tr><td>Latitude</td><td>" + sr.lat + "</td>" +
-		"<tr><td>Longitude</td><td>" + sr.long + "</td>" +
+		"<tr><td>Latitude</td><td>" + sr.location.latitude + "</td>" +
+		"<tr><td>Longitude</td><td>" + sr.location.longitude + "</td>" +
 		"</table>"
 	);
 }
