@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type hasCreated interface {
@@ -26,10 +28,10 @@ type FS_Geometry struct {
 }
 
 func (geo FS_Geometry) Latitude() float64 {
-	return geo.X
+	return geo.Y
 }
 func (geo FS_Geometry) Longitude() float64 {
-	return geo.Y
+	return geo.X
 }
 
 type FS_InspectionSample struct {
@@ -48,45 +50,51 @@ type FS_MosquitoInspection struct {
 	Comments        *string `db:"comments"`
 	Condition       *string `db:"sitecond"`
 	EndDateTime     string  `db:"enddatetime"`
+	GlobalID        string  `db:"globalid"`
 	PointLocationID string  `db:"pointlocid"`
 }
 
 type FS_PointLocation struct {
-	Access      *string     `db:"accessdesc"`
-	Comments    *string     `db:"comments"`
-	Description *string     `db:"description"`
-	Geometry    FS_Geometry `db:"geometry"`
-	GlobalID    string      `db:"globalid"`
-	Habitat     *string     `db:"habitat"`
-	Inspections MosquitoInspectionSlice
-	Name        *string `db:"name"`
-	Treatments  []MosquitoTreatment
-	UseType     *string `db:"usetype"`
-	WaterOrigin *string `db:"waterorigin"`
+	Access       *string     `db:"accessdesc"`
+	Comments     *string     `db:"comments"`
+	CreationDate *int64      `db:"creationdate"`
+	Description  *string     `db:"description"`
+	Geometry     FS_Geometry `db:"geometry"`
+	GlobalID     string      `db:"globalid"`
+	Habitat      *string     `db:"habitat"`
+	Inspections  MosquitoInspectionSlice
+	Name         *string `db:"name"`
+	Treatments   []MosquitoTreatment
+	UseType      *string `db:"usetype"`
+	WaterOrigin  *string `db:"waterorigin"`
 }
 
 type FS_ServiceRequest struct {
-	Address  *string     `db:"reqaddr1"`
-	City     *string     `db:"reqcity"`
-	Geometry FS_Geometry `db:"geometry"`
-	Priority *string     `db:"priority"`
-	Source   *string     `db:"source"`
-	Status   *string     `db:"status"`
-	Target   *string     `db:"reqtarget"`
-	Zip      *string     `db:"reqzip"`
+	Address      *string     `db:"reqaddr1"`
+	CreationDate *int64      `db:"creationdate"`
+	City         *string     `db:"reqcity"`
+	Geometry     FS_Geometry `db:"geometry"`
+	GlobalID     string      `db:"globalid"`
+	Priority     *string     `db:"priority"`
+	Source       *string     `db:"source"`
+	Status       *string     `db:"status"`
+	Target       *string     `db:"reqtarget"`
+	Zip          *string     `db:"reqzip"`
 }
 type FS_TrapLocation struct {
-	Access      *string     `db:"accessdesc"`
-	Description *string     `db:"description"`
-	Geometry    FS_Geometry `db:"geometry"`
-	GlobalID    *string     `db:"globalid"`
-	ObjectID    int         `db:"objectid"`
-	Name        *string     `db:"name"`
+	Access       *string     `db:"accessdesc"`
+	CreationDate *int64      `db:"creationdate"`
+	Description  *string     `db:"description"`
+	Geometry     FS_Geometry `db:"geometry"`
+	GlobalID     string      `db:"globalid"`
+	ObjectID     int         `db:"objectid"`
+	Name         *string     `db:"name"`
 }
 
 type FS_Treatment struct {
 	Comments        *string  `db:"comments"`
 	EndDateTime     string   `db:"enddatetime"`
+	GlobalID        string   `db:"globalid"`
 	Habitat         *string  `db:"habitat"`
 	PointLocationID string   `db:"pointlocid"`
 	Product         *string  `db:"product"`
@@ -137,6 +145,9 @@ func (mi MosquitoInspection) Condition() string {
 	}
 	return *mi.data.Condition
 }
+func (mi MosquitoInspection) ID() string {
+	return mi.data.GlobalID
+}
 
 func (mi MosquitoInspection) Created() time.Time {
 	return parseTime(mi.data.EndDateTime)
@@ -182,6 +193,13 @@ func (s MosquitoSource) Comments() string {
 	return *s.location.Comments
 }
 
+func (s MosquitoSource) Created() time.Time {
+	if s.location.CreationDate == nil {
+		return time.UnixMilli(0)
+	}
+	return time.UnixMilli(*s.location.CreationDate)
+}
+
 func (s MosquitoSource) Description() string {
 	if s.location.Description == nil {
 		return ""
@@ -193,6 +211,9 @@ func (s MosquitoSource) Location() LatLong {
 	return s.location.Geometry
 }
 
+func (s MosquitoSource) ID() uuid.UUID {
+	return uuid.MustParse(s.location.GlobalID)
+}
 func (s MosquitoSource) Habitat() string {
 	if s.location.Habitat == nil {
 		return ""
@@ -239,6 +260,9 @@ func (t MosquitoTreatment) Comments() string {
 }
 func (t MosquitoTreatment) Created() time.Time {
 	return parseTime(t.data.EndDateTime)
+}
+func (mi MosquitoTreatment) ID() string {
+	return mi.data.GlobalID
 }
 func (t MosquitoTreatment) Habitat() string {
 	if t.data.Habitat == nil {
@@ -320,6 +344,15 @@ func (sr ServiceRequest) City() string {
 	}
 	return *sr.data.City
 }
+func (sr ServiceRequest) Created() time.Time {
+	if sr.data.CreationDate == nil {
+		return time.UnixMilli(0)
+	}
+	return time.UnixMilli(*sr.data.CreationDate)
+}
+func (sr ServiceRequest) ID() uuid.UUID {
+	return uuid.MustParse(sr.data.GlobalID)
+}
 func (sr ServiceRequest) Location() LatLong {
 	return sr.data.Geometry
 }
@@ -370,11 +403,20 @@ func (tl TrapData) Access() string {
 	}
 	return *tl.data.Access
 }
+func (tl TrapData) Created() time.Time {
+	if tl.data.CreationDate == nil {
+		return time.UnixMilli(0)
+	}
+	return time.UnixMilli(*tl.data.CreationDate)
+}
 func (tl TrapData) Description() string {
 	if tl.data.Description == nil {
 		return ""
 	}
 	return *tl.data.Description
+}
+func (tl TrapData) ID() uuid.UUID {
+	return uuid.MustParse(tl.data.GlobalID)
 }
 func (tl TrapData) Location() LatLong {
 	return tl.data.Geometry

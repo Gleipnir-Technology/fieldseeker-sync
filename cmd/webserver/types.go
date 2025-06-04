@@ -60,10 +60,10 @@ func NewResponseLocation(l fssync.LatLong) ResponseLocation {
 }
 
 type ResponseMosquitoInspection struct {
-	Comments string `json:"comments"`
-
+	Comments  string `json:"comments"`
 	Condition string `json:"condition"`
 	Created   string `json:"created"`
+	ID        string `json:"id"`
 }
 
 func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Request) error {
@@ -73,7 +73,8 @@ func NewResponseMosquitoInspection(i fssync.MosquitoInspection) ResponseMosquito
 	return ResponseMosquitoInspection{
 		Comments:  i.Comments(),
 		Condition: i.Condition(),
-		Created:   i.Created().String(),
+		Created:   i.Created().Format("2006-01-02T15:04:05.000Z"),
+		ID:        i.ID(),
 	}
 }
 func NewResponseMosquitoInspections(inspections []fssync.MosquitoInspection) []ResponseMosquitoInspection {
@@ -85,17 +86,18 @@ func NewResponseMosquitoInspections(inspections []fssync.MosquitoInspection) []R
 }
 
 type ResponseMosquitoSource struct {
-	Access string `json:"access"`
-
+	Access      string                       `json:"access"`
 	Comments    string                       `json:"comments"`
+	Created     string                       `json:"created"`
 	Description string                       `json:"description"`
+	ID          string                       `json:"id"`
 	Location    ResponseLocation             `json:"location"`
 	Habitat     string                       `json:"habitat"`
 	Inspections []ResponseMosquitoInspection `json:"inspections"`
 	Name        string                       `json:"name"`
 	Treatments  []ResponseMosquitoTreatment  `json:"treatments"`
-	UseType     string                       `json:"usetype"`
-	WaterOrigin string                       `json:"waterorigin"`
+	UseType     string                       `json:"use_type"`
+	WaterOrigin string                       `json:"water_origin"`
 }
 
 func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request) error {
@@ -107,7 +109,9 @@ func NewResponseMosquitoSource(ms fssync.MosquitoSource) ResponseMosquitoSource 
 	return ResponseMosquitoSource{
 		Access:      ms.Access(),
 		Comments:    ms.Comments(),
+		Created:     ms.Created().Format("2006-01-02T15:04:05.000Z"),
 		Description: ms.Description(),
+		ID:          ms.ID().String(),
 		Location:    NewResponseLocation(ms.Location()),
 		Habitat:     ms.Habitat(),
 		Inspections: NewResponseMosquitoInspections(ms.Inspections),
@@ -129,6 +133,7 @@ type ResponseMosquitoTreatment struct {
 	Comments      string  `json:"comments"`
 	Created       string  `json:"created"`
 	Habitat       string  `json:"habitat"`
+	ID            string  `json:"id"`
 	Product       string  `json:"product"`
 	Quantity      float64 `json:"quantity"`
 	QuantityUnit  string  `json:"quantity_unit"`
@@ -143,8 +148,9 @@ func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Reque
 func NewResponseMosquitoTreatment(i fssync.MosquitoTreatment) ResponseMosquitoTreatment {
 	return ResponseMosquitoTreatment{
 		Comments:      i.Comments(),
-		Created:       i.Created().String(),
+		Created:       i.Created().Format("2006-01-02T15:04:05.000Z"),
 		Habitat:       i.Habitat(),
+		ID:            i.ID(),
 		Product:       i.Product(),
 		Quantity:      i.Quantity(),
 		QuantityUnit:  i.QuantityUnit(),
@@ -177,6 +183,8 @@ func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
 type ResponseServiceRequest struct {
 	Address  string           `json:"address"`
 	City     string           `json:"city"`
+	Created  string           `json:"created"`
+	ID       string           `json:"id"`
 	Location ResponseLocation `json:"location"`
 	Priority string           `json:"priority"`
 	Source   string           `json:"source"`
@@ -193,6 +201,8 @@ func NewResponseServiceRequest(sr fssync.ServiceRequest) ResponseServiceRequest 
 	return ResponseServiceRequest{
 		Address:  sr.Address(),
 		City:     sr.City(),
+		Created:  sr.Created().Format("2006-01-02T15:04:05.000Z"),
+		ID:       sr.ID().String(),
 		Location: NewResponseLocation(sr.Location()),
 		Priority: sr.Priority(),
 		Status:   sr.Status(),
@@ -210,7 +220,9 @@ func NewResponseServiceRequests(requests []fssync.ServiceRequest) []ResponseServ
 }
 
 type ResponseTrapData struct {
+	Created     string           `json:"created"`
 	Description string           `json:"description"`
+	ID          string           `json:"id"`
 	Location    ResponseLocation `json:"location"`
 	Name        string           `json:"name"`
 }
@@ -220,7 +232,9 @@ func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error
 }
 func NewResponseTrapDatum(td fssync.TrapData) ResponseTrapData {
 	return ResponseTrapData{
+		Created:     td.Created().Format("2006-01-02T15:04:05.000Z"),
 		Description: td.Description(),
+		ID:          td.ID().String(),
 		Location:    NewResponseLocation(td.Location()),
 		Name:        td.Name(),
 	}
