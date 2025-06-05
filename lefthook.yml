@@ -1,0 +1,11 @@
+pre-commit:
+  commands:
+    lint:
+      glob: "*.go"
+      run: gofmt -w {staged_files}
+      stage_fixed: true
+pre-push:
+  commands:
+    test:
+      glob: "*.go"
+      run: go test -race -count=1 -timeout=30s
