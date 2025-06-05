@@ -69,6 +69,8 @@ func main() {
 	sessionManager = scs.New()
 	sessionManager.Lifetime = 24 * time.Hour
 
+	// Set our own responder so that we can set headers ourselves
+	render.Respond = Responder
 	r := chi.NewRouter()
 
 	// A good base middleware stack
