@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -128,31 +129,70 @@ func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
 	return results, nil
 }
 
+// Pretty big function. Given a set of query results we're going to iterate over each of them.
+// For each one, if the row doesn't exist, we create a row. If it does exist, we check to see
+// if its already correctly represented. If it isn't, we add a new version.
 func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {
-	query := upsertFromQueryResult(table, qr)
-	batch := &pgx.Batch{}
-	for _, f := range qr.Features {
-		args := pgx.NamedArgs{}
-		for k, v := range f.Attributes {
-			args[k] = v
-		}
-		// specially add geometry since it isn't in the list of attributes
-		args["geometry_x"] = f.Geometry.X
-		args["geometry_y"] = f.Geometry.Y
-		batch.Queue(query, args).Exec(func(ct pgconn.CommandTag) error {
-			if ct.Update() {
-				// log.Println("Update", f.Attributes[qr.UniqueIdField.Name])
-			} else if ct.Insert() {
-				// log.Println("Insert", f.Attributes[qr.UniqueIdField.Name])
-			} else {
-				log.Println("No idea what happened here")
-			}
-			return nil
-		})
+	// Get the current state of every row for our current query result
+	sorted_columns := make([]string, 0, len(qr.Fields))
+	for _, f := range qr.Fields {
+		sorted_columns = append(sorted_columns, f.Name)
 	}
-	results := pgInstance.db.SendBatch(ctx, batch)
+	sort.Strings(sorted_columns)
 
-	return results.Close()
+	objectids := make([]int, 0)
+	for _, l := range qr.Features {
+		oid := l.Attributes["OBJECTID"].(float64)
+		objectids = append(objectids, int(oid))
+	}
+
+	rows_by_objectid, err := rowmapViaQuery(ctx, table, sorted_columns, objectids)
+	if err != nil {
+		return fmt.Errorf("Failed to get existing rows: %v", err)
+	}
+	log.Println("Rows from query", len(rows_by_objectid))
+
+	for _, feature := range qr.Features {
+		oid := feature.Attributes["OBJECTID"].(float64)
+		row := rows_by_objectid[int(oid)]
+		// If we have no matching row we'll need to create it
+		if len(row) == 0 {
+			if err := insertRowFromFeature(ctx, table, sorted_columns, &feature); err != nil {
+				return fmt.Errorf("Failed to insert row: %v", err)
+			}
+		} else {
+			if err := updateRowFromFeature(ctx, table, sorted_columns, &feature); err != nil {
+				return fmt.Errorf("Failed to update row: %v", err)
+			}
+		}
+	}
+	/*
+		query := upsertFromQueryResult(table, qr)
+		batch := &pgx.Batch{}
+		for _, f := range qr.Features {
+			args := pgx.NamedArgs{}
+			for k, v := range f.Attributes {
+				args[k] = v
+			}
+			// specially add geometry since it isn't in the list of attributes
+			args["geometry_x"] = f.Geometry.X
+			args["geometry_y"] = f.Geometry.Y
+			batch.Queue(query, args).Exec(func(ct pgconn.CommandTag) error {
+				if ct.Update() {
+					// log.Println("Update", f.Attributes[qr.UniqueIdField.Name])
+				} else if ct.Insert() {
+					// log.Println("Insert", f.Attributes[qr.UniqueIdField.Name])
+				} else {
+					log.Println("No idea what happened here")
+				}
+				return nil
+			})
+		}
+		results := pgInstance.db.SendBatch(ctx, batch)
+
+		return results.Close()
+	*/
+	return nil
 }
 
 func SaveUser(displayname string, hash string, username string) error {
@@ -268,6 +308,98 @@ func doMigrations(connection_string string) error {
 	return nil
 }
 
+func insertRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table string, sorted_columns []string, feature *arcgis.Feature) error {
+	// Create the query to produce the main row
+	var sb strings.Builder
+	sb.WriteString("INSERT INTO ")
+	sb.WriteString(table)
+	sb.WriteString(" (")
+	for _, field := range sorted_columns {
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("geometry_x,geometry_y")
+	sb.WriteString(")\nVALUES (")
+	for _, field := range sorted_columns {
+		sb.WriteString("@")
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("@geometry_x,@geometry_y)")
+
+	args := pgx.NamedArgs{}
+	for k, v := range feature.Attributes {
+		args[k] = v
+	}
+	// specially add geometry since it isn't in the list of attributes
+	args["geometry_x"] = feature.Geometry.X
+	args["geometry_y"] = feature.Geometry.Y
+
+	_, err := transaction.Exec(ctx, sb.String(), args)
+	if err != nil {
+		return fmt.Errorf("Failed to insert row into %s: %v", table, err)
+	}
+	return nil
+}
+
+func insertRowFromFeatureHistory(ctx context.Context, transaction pgx.Tx, table string, sorted_columns []string, feature *arcgis.Feature, version int) error {
+	history_table := toHistoryTable(table)
+	var sb strings.Builder
+	sb.WriteString("INSERT INTO ")
+	sb.WriteString(history_table)
+	sb.WriteString(" (")
+	for _, field := range sorted_columns {
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("created,geometry_x,geometry_y,version")
+	sb.WriteString(")\nVALUES (")
+	for _, field := range sorted_columns {
+		sb.WriteString("@")
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("@created,@geometry_x,@geometry_y,@version)")
+	args := pgx.NamedArgs{}
+	for k, v := range feature.Attributes {
+		args[k] = v
+	}
+	args["created"] = time.Now()
+	args["version"] = version
+	if _, err := transaction.Exec(ctx, sb.String(), args); err != nil {
+		return fmt.Errorf("Failed to insert history row into %s: %v", table, err)
+	}
+	return nil
+}
+
+func insertRowFromFeature(ctx context.Context, table string, sorted_columns []string, feature *arcgis.Feature) error {
+	var options pgx.TxOptions
+	transaction, err := pgInstance.db.BeginTx(ctx, options)
+	if err != nil {
+		return fmt.Errorf("Unable to start transaction")
+	}
+
+	err = insertRowFromFeatureFS(ctx, transaction, table, sorted_columns, feature)
+	if err != nil {
+		return fmt.Errorf("Unable to insert FS: %v", err)
+	}
+
+	err = insertRowFromFeatureHistory(ctx, transaction, table, sorted_columns, feature, 1)
+	if err != nil {
+		return fmt.Errorf("Failed to insert history: %v", err)
+	}
+
+	err = transaction.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to commit transaction: %v", err)
+	}
+	return nil
+}
+
 // Given a database query and predicate produce named args and a full text DB query
 func prepQuery(q *DBQuery, predicate string) (pgx.NamedArgs, string) {
 	args := pgx.NamedArgs{
@@ -282,6 +414,157 @@ func prepQuery(q *DBQuery, predicate string) (pgx.NamedArgs, string) {
 		query = query + " LIMIT @limit"
 	}
 	return args, query
+}
+
+type StringScanner struct {
+}
+
+// Produces a map of OBJECTID to a 'row' which is in turn a map of column names to their values as strings
+func rowmapViaQuery(ctx context.Context, table string, sorted_columns []string, objectids []int) (map[int]map[string]string, error) {
+	result := make(map[int]map[string]string)
+
+	query := selectAllFromQueryResult(table, sorted_columns)
+
+	args := pgx.NamedArgs{
+		"objectids": objectids,
+	}
+	rows, err := pgInstance.db.Query(ctx, query, args)
+	if err != nil {
+		return result, fmt.Errorf("Failed to query rows: %v", err)
+	}
+	defer rows.Close()
+
+	// +2 for geometry x and geometry x
+	columnNames := make([]string, len(sorted_columns)+2)
+	for i, c := range sorted_columns {
+		columnNames[i] = c
+	}
+	columnNames[len(sorted_columns)] = "geometry_x"
+	columnNames[len(sorted_columns)+1] = "geometry_y"
+
+	rowSlice, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (map[string]string, error) {
+		fieldDescriptions := row.FieldDescriptions()
+		values := make([]interface{}, len(fieldDescriptions))
+		valuePtrs := make([]interface{}, len(fieldDescriptions))
+
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
+
+		if err := row.Scan(valuePtrs...); err != nil {
+			return nil, err
+		}
+
+		result := make(map[string]string)
+		for i, fd := range fieldDescriptions {
+			if values[i] != nil {
+				result[fd.Name] = fmt.Sprintf("%v", values[i])
+				//log.Printf("col %v type %T val %v", fd.Name, values[i], values[i])
+			} else {
+				result[fd.Name] = ""
+			}
+		}
+
+		return result, nil
+	})
+	if err != nil {
+		return result, fmt.Errorf("Failed to collect rows: %v", err)
+	}
+	for _, row := range rowSlice {
+		o := row["objectid"]
+		objectid, err := strconv.Atoi(o)
+		if err != nil {
+			return result, fmt.Errorf("Failed to parse objectid %s: %v", o, err)
+		}
+		result[objectid] = row
+	}
+	return result, nil
+}
+
+// Generate a query to get all columns from a QueryResult
+func selectAllFromQueryResult(table string, sorted_columns []string) string {
+	var sb strings.Builder
+	sb.WriteString("SELECT * FROM ")
+	sb.WriteString(table)
+	sb.WriteString(" WHERE OBJECTID=ANY(@objectids)")
+	return sb.String()
+}
+
+func toHistoryTable(table string) string {
+	return "History_" + table[3:len(table)]
+}
+
+func updateRowFromFeature(ctx context.Context, table string, sorted_columns []string, feature *arcgis.Feature) error {
+	// Get the current highest version for the row in question
+	history_table := toHistoryTable(table)
+	var sb strings.Builder
+	sb.WriteString("SELECT MAX(version) FROM ")
+	sb.WriteString(history_table)
+	sb.WriteString(" WHERE OBJECTID=@objectid")
+
+	args := pgx.NamedArgs{}
+	o := feature.Attributes["OBJECTID"].(float64)
+	args["objectid"] = int(o)
+
+	var version int
+	if err := pgInstance.db.QueryRow(ctx, sb.String(), args).Scan(&version); err != nil {
+		return fmt.Errorf("Failed to query for version: %v", err)
+	}
+
+	var options pgx.TxOptions
+	transaction, err := pgInstance.db.BeginTx(ctx, options)
+	if err != nil {
+		return fmt.Errorf("Unable to start transaction")
+	}
+
+	err = insertRowFromFeatureHistory(ctx, transaction, table, sorted_columns, feature, version+1)
+	if err != nil {
+		return fmt.Errorf("Failed to insert history: %v", err)
+	}
+	err = updateRowFromFeatureFS(ctx, transaction, table, sorted_columns, feature)
+	if err != nil {
+		return fmt.Errorf("Failed to update row from feature: %v", err)
+	}
+
+	err = transaction.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to commit transaction: %v", err)
+	}
+	return nil
+}
+
+func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table string, sorted_columns []string, feature *arcgis.Feature) error {
+	// Create the query to produce the main row
+	var sb strings.Builder
+	sb.WriteString("UPDATE ")
+	sb.WriteString(table)
+	sb.WriteString(" SET ")
+	for _, field := range sorted_columns {
+		// OBJECTID is special as our primary key, so skip it
+		if field == "OBJECTID" {
+			continue
+		}
+		sb.WriteString(field)
+		sb.WriteString("=@")
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("geometry_x=@geometry_x,geometry_y=@geometry_y WHERE OBJECTID=@OBJECTID")
+
+	args := pgx.NamedArgs{}
+	for k, v := range feature.Attributes {
+		args[k] = v
+	}
+	// specially add geometry since it isn't in the list of attributes
+	args["geometry_x"] = feature.Geometry.X
+	args["geometry_y"] = feature.Geometry.Y
+
+	_, err := transaction.Exec(ctx, sb.String(), args)
+	if err != nil {
+		return fmt.Errorf("Failed to update row into %s: %v", table, err)
+	}
+	return nil
 }
 
 // Generate a query for upsert from a QueryResult
