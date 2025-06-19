@@ -1,0 +1,15 @@
+[Unit]
+Description=Fieldseeker Sync Export
+After=network.target
+
+[Service]
+Type=oneshot
+User=fieldseeker-sync
+Group=nogroup
+WorkingDirectory=/tmp
+ExecStart=/usr/local/bin/fieldseeker-sync-export
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

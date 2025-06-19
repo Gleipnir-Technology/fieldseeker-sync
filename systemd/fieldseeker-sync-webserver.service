@@ -1,0 +1,30 @@
+[Unit]
+Description=Fieldseeker Sync Webserver
+Documentation=https://www.gleipnir.technology/fieldseeker-sync/docs/
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=fieldseeker-sync
+Group=nogroup
+WorkingDirectory=/tmp
+ExecStart=/usr/local/bin/fieldseeker-sync-webserver
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening (optional but recommended)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/usr/local/bin/fieldseeker-sync-webserver
+
+# Resource limits (optional)
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
