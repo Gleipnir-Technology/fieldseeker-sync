@@ -200,20 +200,20 @@ func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type ResponseServiceRequest struct {
-	Address           string           `json:"address"`
-	AssignedTech      string           `json:"assigned_tech"`
-	City              string           `json:"city"`
-	Created           string           `json:"created"`
-	HasDog            *bool            `json:"has_dog"`
-	HasSpanishSpeaker *bool            `json:"has_spanish_speaker"`
-	ID                string           `json:"id"`
-	Location          ResponseLocation `json:"location"`
-	Priority          string           `json:"priority"`
-	RecordedDate      string           `json:"recorded_date"`
-	Source            string           `json:"source"`
-	Status            string           `json:"status"`
-	Target            string           `json:"target"`
-	Zip               string           `json:"zip"`
+	Address            string           `json:"address"`
+	AssignedTechnician string           `json:"assigned_technician"`
+	City               string           `json:"city"`
+	Created            string           `json:"created"`
+	HasDog             *bool            `json:"has_dog"`
+	HasSpanishSpeaker  *bool            `json:"has_spanish_speaker"`
+	ID                 string           `json:"id"`
+	Location           ResponseLocation `json:"location"`
+	Priority           string           `json:"priority"`
+	RecordedDate       string           `json:"recorded_date"`
+	Source             string           `json:"source"`
+	Status             string           `json:"status"`
+	Target             string           `json:"target"`
+	Zip                string           `json:"zip"`
 }
 
 func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request) error {
@@ -222,19 +222,19 @@ func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request)
 
 func NewResponseServiceRequest(sr fssync.ServiceRequest) ResponseServiceRequest {
 	return ResponseServiceRequest{
-		Address:           sr.Address(),
-		AssignedTech:      sr.AssignedTech(),
-		City:              sr.City(),
-		Created:           sr.Created().Format("2006-01-02T15:04:05.000Z"),
-		HasDog:            sr.HasDog(),
-		HasSpanishSpeaker: sr.HasSpanishSpeaker(),
-		ID:                sr.ID().String(),
-		Location:          NewResponseLocation(sr.Location()),
-		Priority:          sr.Priority(),
-		Status:            sr.Status(),
-		Source:            sr.Source(),
-		Target:            sr.Target(),
-		Zip:               sr.Zip(),
+		Address:            sr.Address(),
+		AssignedTechnician: sr.AssignedTechnician(),
+		City:               sr.City(),
+		Created:            sr.Created().Format("2006-01-02T15:04:05.000Z"),
+		HasDog:             sr.HasDog(),
+		HasSpanishSpeaker:  sr.HasSpanishSpeaker(),
+		ID:                 sr.ID().String(),
+		Location:           NewResponseLocation(sr.Location()),
+		Priority:           sr.Priority(),
+		Status:             sr.Status(),
+		Source:             sr.Source(),
+		Target:             sr.Target(),
+		Zip:                sr.Zip(),
 	}
 }
 func NewResponseServiceRequests(requests []fssync.ServiceRequest) []ResponseServiceRequest {

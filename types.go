@@ -423,7 +423,7 @@ func (sr ServiceRequest) Address() string {
 	}
 	return *sr.data.ReqAddr1
 }
-func (sr ServiceRequest) AssignedTech() string {
+func (sr ServiceRequest) AssignedTechnician() string {
 	if sr.data.AssignedTech == nil {
 		return ""
 	}
