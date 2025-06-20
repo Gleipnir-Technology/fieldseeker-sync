@@ -47,39 +47,52 @@ type FS_InspectionSample struct {
 }
 
 type FS_MosquitoInspection struct {
+	ActionTaken     *string `db:"actiontaken"`
 	Comments        *string `db:"comments"`
 	Condition       *string `db:"sitecond"`
 	EndDateTime     string  `db:"enddatetime"`
+	FieldTech       *string `db:"fieldtech"`
 	GlobalID        string  `db:"globalid"`
+	LocationName    *string `db:"locationname"`
 	PointLocationID string  `db:"pointlocid"`
+	SiteCond        *string `db:"sitecond"`
+	Zone            *string `db:"zone"`
 }
 
 type FS_PointLocation struct {
-	Access       *string     `db:"accessdesc"`
-	Comments     *string     `db:"comments"`
-	CreationDate *int64      `db:"creationdate"`
-	Description  *string     `db:"description"`
-	Geometry     FS_Geometry `db:"geometry"`
-	GlobalID     string      `db:"globalid"`
-	Habitat      *string     `db:"habitat"`
-	Inspections  MosquitoInspectionSlice
-	Name         *string `db:"name"`
-	Treatments   []MosquitoTreatment
-	UseType      *string `db:"usetype"`
-	WaterOrigin  *string `db:"waterorigin"`
+	Access                  *string     `db:"accessdesc"`
+	Active                  *int        `db:"active"`
+	Comments                *string     `db:"comments"`
+	CreationDate            *int64      `db:"creationdate"`
+	Description             *string     `db:"description"`
+	Geometry                FS_Geometry `db:"geometry"`
+	GlobalID                string      `db:"globalid"`
+	Habitat                 *string     `db:"habitat"`
+	Inspections             MosquitoInspectionSlice
+	LastInspectDate         *int64  `db:"lastinspectdate"`
+	Name                    *string `db:"name"`
+	NextActionDateScheduled *int64  `db:"nextactiondatescheduled"`
+	Treatments              []MosquitoTreatment
+	UseType                 *string `db:"usetype"`
+	WaterOrigin             *string `db:"waterorigin"`
+	Zone                    *string `db:"zone"`
 }
 
 type FS_ServiceRequest struct {
-	Address      *string     `db:"reqaddr1"`
+	AssignedTech *string     `db:"assignedtech"`
 	CreationDate *int64      `db:"creationdate"`
 	City         *string     `db:"reqcity"`
+	Dog          *int        `db:"dog"`
 	Geometry     FS_Geometry `db:"geometry"`
 	GlobalID     string      `db:"globalid"`
 	Priority     *string     `db:"priority"`
+	RecDateTime  *int64      `db:"recdatetime"`
+	ReqAddr1     *string     `db:"reqaddr1"`
+	ReqTarget    *string     `db:"reqtarget"`
+	ReqZip       *string     `db:"reqzip"`
 	Source       *string     `db:"source"`
+	Spanish      *int        `db:"spanish"`
 	Status       *string     `db:"status"`
-	Target       *string     `db:"reqtarget"`
-	Zip          *string     `db:"reqzip"`
 }
 type FS_TrapLocation struct {
 	Access       *string     `db:"accessdesc"`
@@ -93,7 +106,8 @@ type FS_TrapLocation struct {
 
 type FS_Treatment struct {
 	Comments        *string  `db:"comments"`
-	EndDateTime     string   `db:"enddatetime"`
+	EndDateTime     *int64   `db:"enddatetime"`
+	FieldTech       *string  `db:"fieldtech"`
 	GlobalID        string   `db:"globalid"`
 	Habitat         *string  `db:"habitat"`
 	PointLocationID string   `db:"pointlocid"`
@@ -132,6 +146,13 @@ type MosquitoInspection struct {
 	data *FS_MosquitoInspection
 }
 
+func (mi MosquitoInspection) ActionTaken() string {
+	if mi.data.ActionTaken == nil {
+		return ""
+	}
+	return *mi.data.ActionTaken
+}
+
 func (mi MosquitoInspection) Comments() string {
 	if mi.data.Comments == nil {
 		return ""
@@ -145,13 +166,36 @@ func (mi MosquitoInspection) Condition() string {
 	}
 	return *mi.data.Condition
 }
-func (mi MosquitoInspection) ID() string {
-	return mi.data.GlobalID
-}
 
 func (mi MosquitoInspection) Created() time.Time {
 	return parseTime(mi.data.EndDateTime)
 }
+
+func (mi MosquitoInspection) FieldTech() string {
+	if mi.data.FieldTech == nil {
+		return ""
+	}
+	return *mi.data.FieldTech
+}
+
+func (mi MosquitoInspection) ID() string {
+	return mi.data.GlobalID
+}
+
+func (mi MosquitoInspection) LocationName() string {
+	if mi.data.LocationName == nil {
+		return ""
+	}
+	return *mi.data.LocationName
+}
+
+func (mi MosquitoInspection) SiteCondition() string {
+	if mi.data.SiteCond == nil {
+		return ""
+	}
+	return *mi.data.SiteCond
+}
+
 func NewMosquitoInspections(inspections []*FS_MosquitoInspection) []MosquitoInspection {
 	results := make([]MosquitoInspection, 0)
 	for _, t := range inspections {
@@ -186,6 +230,18 @@ func (s MosquitoSource) Access() string {
 	return *s.location.Access
 }
 
+func (s MosquitoSource) Active() *bool {
+	var result bool
+	if s.location.Active == nil {
+		return nil
+	} else if *s.location.Active == 0 {
+		result = false
+	} else {
+		result = true
+	}
+	return &result
+}
+
 func (s MosquitoSource) Comments() string {
 	if s.location.Comments == nil {
 		return ""
@@ -207,10 +263,6 @@ func (s MosquitoSource) Description() string {
 	return *s.location.Description
 }
 
-func (s MosquitoSource) Location() LatLong {
-	return s.location.Geometry
-}
-
 func (s MosquitoSource) ID() uuid.UUID {
 	return uuid.MustParse(s.location.GlobalID)
 }
@@ -221,11 +273,29 @@ func (s MosquitoSource) Habitat() string {
 	return *s.location.Habitat
 }
 
+func (s MosquitoSource) LastInspectionDate() time.Time {
+	if s.location.LastInspectDate == nil {
+		return time.UnixMilli(0)
+	}
+	return time.UnixMilli(*s.location.LastInspectDate)
+}
+
+func (s MosquitoSource) Location() LatLong {
+	return s.location.Geometry
+}
+
 func (s MosquitoSource) Name() string {
 	if s.location.Name == nil {
 		return ""
 	}
 	return *s.location.Name
+}
+
+func (s MosquitoSource) NextActionDateScheduled() time.Time {
+	if s.location.NextActionDateScheduled == nil {
+		return time.UnixMilli(0)
+	}
+	return time.UnixMilli(*s.location.NextActionDateScheduled)
 }
 
 func (s MosquitoSource) UseType() string {
@@ -239,6 +309,12 @@ func (s MosquitoSource) WaterOrigin() string {
 		return ""
 	}
 	return *s.location.WaterOrigin
+}
+func (s MosquitoSource) Zone() string {
+	if s.location.Zone == nil {
+		return ""
+	}
+	return *s.location.Zone
 }
 func NewMosquitoSource(location *FS_PointLocation, inspections []*FS_MosquitoInspection, treatments []*FS_Treatment) MosquitoSource {
 	return MosquitoSource{
@@ -259,7 +335,16 @@ func (t MosquitoTreatment) Comments() string {
 	return *t.data.Comments
 }
 func (t MosquitoTreatment) Created() time.Time {
-	return parseTime(t.data.EndDateTime)
+	if t.data.EndDateTime == nil {
+		return time.UnixMilli(0)
+	}
+	return time.UnixMilli(*t.data.EndDateTime)
+}
+func (t MosquitoTreatment) FieldTech() string {
+	if t.data.FieldTech == nil {
+		return ""
+	}
+	return *t.data.FieldTech
 }
 func (mi MosquitoTreatment) ID() string {
 	return mi.data.GlobalID
@@ -333,10 +418,16 @@ type ServiceRequest struct {
 }
 
 func (sr ServiceRequest) Address() string {
-	if sr.data.Address == nil {
+	if sr.data.ReqAddr1 == nil {
 		return ""
 	}
-	return *sr.data.Address
+	return *sr.data.ReqAddr1
+}
+func (sr ServiceRequest) AssignedTech() string {
+	if sr.data.AssignedTech == nil {
+		return ""
+	}
+	return *sr.data.AssignedTech
 }
 func (sr ServiceRequest) City() string {
 	if sr.data.City == nil {
@@ -350,6 +441,28 @@ func (sr ServiceRequest) Created() time.Time {
 	}
 	return time.UnixMilli(*sr.data.CreationDate)
 }
+func (sr ServiceRequest) HasDog() *bool {
+	var result bool
+	if sr.data.Dog == nil {
+		return nil
+	} else if *sr.data.Dog == 0 {
+		result = false
+	} else {
+		result = true
+	}
+	return &result
+}
+func (sr ServiceRequest) HasSpanishSpeaker() *bool {
+	var result bool
+	if sr.data.Spanish == nil {
+		return nil
+	} else if *sr.data.Spanish == 0 {
+		result = false
+	} else {
+		result = true
+	}
+	return &result
+}
 func (sr ServiceRequest) ID() uuid.UUID {
 	return uuid.MustParse(sr.data.GlobalID)
 }
@@ -361,6 +474,12 @@ func (sr ServiceRequest) Priority() string {
 		return ""
 	}
 	return *sr.data.Priority
+}
+func (sr ServiceRequest) RecDateTime() time.Time {
+	if sr.data.RecDateTime == nil {
+		return time.UnixMilli(0)
+	}
+	return time.UnixMilli(*sr.data.RecDateTime)
 }
 func (sr ServiceRequest) Status() string {
 	if sr.data.Status == nil {
@@ -375,10 +494,10 @@ func (sr ServiceRequest) Source() string {
 	return *sr.data.Source
 }
 func (sr ServiceRequest) Target() string {
-	if sr.data.Target == nil {
+	if sr.data.ReqTarget == nil {
 		return ""
 	}
-	return *sr.data.Target
+	return *sr.data.ReqTarget
 }
 func (sr ServiceRequest) UseType() string {
 	return ""
@@ -387,10 +506,10 @@ func (sr ServiceRequest) WaterOrigin() string {
 	return ""
 }
 func (sr ServiceRequest) Zip() string {
-	if sr.data.Zip == nil {
+	if sr.data.ReqZip == nil {
 		return ""
 	}
-	return *sr.data.Zip
+	return *sr.data.ReqZip
 }
 
 type TrapData struct {

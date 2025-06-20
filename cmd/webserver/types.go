@@ -60,10 +60,15 @@ func NewResponseLocation(l fssync.LatLong) ResponseLocation {
 }
 
 type ResponseMosquitoInspection struct {
-	Comments  string `json:"comments"`
-	Condition string `json:"condition"`
-	Created   string `json:"created"`
-	ID        string `json:"id"`
+	ActionTaken   string `json:"action_taken"`
+	Comments      string `json:"comments"`
+	Condition     string `json:"condition"`
+	Created       string `json:"created"`
+	EndDateTime   string `json:"end_date_time"`
+	FieldTech     string `json:"field_tech"`
+	ID            string `json:"id"`
+	LocationName  string `json:"location_name"`
+	SiteCondition string `json:"site_condition"`
 }
 
 func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Request) error {
@@ -71,10 +76,13 @@ func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Requ
 }
 func NewResponseMosquitoInspection(i fssync.MosquitoInspection) ResponseMosquitoInspection {
 	return ResponseMosquitoInspection{
-		Comments:  i.Comments(),
-		Condition: i.Condition(),
-		Created:   i.Created().Format("2006-01-02T15:04:05.000Z"),
-		ID:        i.ID(),
+		ActionTaken:   i.ActionTaken(),
+		Comments:      i.Comments(),
+		Condition:     i.Condition(),
+		Created:       i.Created().Format("2006-01-02T15:04:05.000Z"),
+		ID:            i.ID(),
+		LocationName:  i.LocationName(),
+		SiteCondition: i.SiteCondition(),
 	}
 }
 func NewResponseMosquitoInspections(inspections []fssync.MosquitoInspection) []ResponseMosquitoInspection {
@@ -86,18 +94,22 @@ func NewResponseMosquitoInspections(inspections []fssync.MosquitoInspection) []R
 }
 
 type ResponseMosquitoSource struct {
-	Access      string                       `json:"access"`
-	Comments    string                       `json:"comments"`
-	Created     string                       `json:"created"`
-	Description string                       `json:"description"`
-	ID          string                       `json:"id"`
-	Location    ResponseLocation             `json:"location"`
-	Habitat     string                       `json:"habitat"`
-	Inspections []ResponseMosquitoInspection `json:"inspections"`
-	Name        string                       `json:"name"`
-	Treatments  []ResponseMosquitoTreatment  `json:"treatments"`
-	UseType     string                       `json:"use_type"`
-	WaterOrigin string                       `json:"water_origin"`
+	Access                  string                       `json:"access"`
+	Active                  *bool                        `json:"active"`
+	Comments                string                       `json:"comments"`
+	Created                 string                       `json:"created"`
+	Description             string                       `json:"description"`
+	ID                      string                       `json:"id"`
+	LastInspectionDate      string                       `json:"last_inspection_date"`
+	Location                ResponseLocation             `json:"location"`
+	Habitat                 string                       `json:"habitat"`
+	Inspections             []ResponseMosquitoInspection `json:"inspections"`
+	Name                    string                       `json:"name"`
+	NextActionDateScheduled string                       `json:"next_action_date_scheduled"`
+	Treatments              []ResponseMosquitoTreatment  `json:"treatments"`
+	UseType                 string                       `json:"use_type"`
+	WaterOrigin             string                       `json:"water_origin"`
+	Zone                    string                       `json:"zone"`
 }
 
 func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request) error {
@@ -107,18 +119,22 @@ func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request)
 func NewResponseMosquitoSource(ms fssync.MosquitoSource) ResponseMosquitoSource {
 
 	return ResponseMosquitoSource{
-		Access:      ms.Access(),
-		Comments:    ms.Comments(),
-		Created:     ms.Created().Format("2006-01-02T15:04:05.000Z"),
-		Description: ms.Description(),
-		ID:          ms.ID().String(),
-		Location:    NewResponseLocation(ms.Location()),
-		Habitat:     ms.Habitat(),
-		Inspections: NewResponseMosquitoInspections(ms.Inspections),
-		Name:        ms.Name(),
-		Treatments:  NewResponseMosquitoTreatments(ms.Treatments),
-		UseType:     ms.UseType(),
-		WaterOrigin: ms.WaterOrigin(),
+		Active:                  ms.Active(),
+		Access:                  ms.Access(),
+		Comments:                ms.Comments(),
+		Created:                 ms.Created().Format("2006-01-02T15:04:05.000Z"),
+		Description:             ms.Description(),
+		ID:                      ms.ID().String(),
+		LastInspectionDate:      ms.LastInspectionDate().Format("2006-01-02T15:04:05.000Z"),
+		Location:                NewResponseLocation(ms.Location()),
+		Habitat:                 ms.Habitat(),
+		Inspections:             NewResponseMosquitoInspections(ms.Inspections),
+		Name:                    ms.Name(),
+		NextActionDateScheduled: ms.NextActionDateScheduled().Format("2006-01-02T15:04:05.000Z"),
+		Treatments:              NewResponseMosquitoTreatments(ms.Treatments),
+		UseType:                 ms.UseType(),
+		WaterOrigin:             ms.WaterOrigin(),
+		Zone:                    ms.Zone(),
 	}
 }
 func NewResponseMosquitoSources(sources []fssync.MosquitoSource) []ResponseMosquitoSource {
@@ -132,6 +148,8 @@ func NewResponseMosquitoSources(sources []fssync.MosquitoSource) []ResponseMosqu
 type ResponseMosquitoTreatment struct {
 	Comments      string  `json:"comments"`
 	Created       string  `json:"created"`
+	EndDateTime   string  `json:"end_date_time"`
+	FieldTech     string  `json:"field_tech"`
 	Habitat       string  `json:"habitat"`
 	ID            string  `json:"id"`
 	Product       string  `json:"product"`
@@ -149,6 +167,7 @@ func NewResponseMosquitoTreatment(i fssync.MosquitoTreatment) ResponseMosquitoTr
 	return ResponseMosquitoTreatment{
 		Comments:      i.Comments(),
 		Created:       i.Created().Format("2006-01-02T15:04:05.000Z"),
+		FieldTech:     i.FieldTech(),
 		Habitat:       i.Habitat(),
 		ID:            i.ID(),
 		Product:       i.Product(),
@@ -181,16 +200,20 @@ func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type ResponseServiceRequest struct {
-	Address  string           `json:"address"`
-	City     string           `json:"city"`
-	Created  string           `json:"created"`
-	ID       string           `json:"id"`
-	Location ResponseLocation `json:"location"`
-	Priority string           `json:"priority"`
-	Source   string           `json:"source"`
-	Status   string           `json:"status"`
-	Target   string           `json:"target"`
-	Zip      string           `json:"zip"`
+	Address           string           `json:"address"`
+	AssignedTech      string           `json:"assigned_tech"`
+	City              string           `json:"city"`
+	Created           string           `json:"created"`
+	HasDog            *bool            `json:"has_dog"`
+	HasSpanishSpeaker *bool            `json:"has_spanish_speaker"`
+	ID                string           `json:"id"`
+	Location          ResponseLocation `json:"location"`
+	Priority          string           `json:"priority"`
+	RecordedDate      string           `json:"recorded_date"`
+	Source            string           `json:"source"`
+	Status            string           `json:"status"`
+	Target            string           `json:"target"`
+	Zip               string           `json:"zip"`
 }
 
 func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request) error {
@@ -199,16 +222,19 @@ func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request)
 
 func NewResponseServiceRequest(sr fssync.ServiceRequest) ResponseServiceRequest {
 	return ResponseServiceRequest{
-		Address:  sr.Address(),
-		City:     sr.City(),
-		Created:  sr.Created().Format("2006-01-02T15:04:05.000Z"),
-		ID:       sr.ID().String(),
-		Location: NewResponseLocation(sr.Location()),
-		Priority: sr.Priority(),
-		Status:   sr.Status(),
-		Source:   sr.Source(),
-		Target:   sr.Target(),
-		Zip:      sr.Zip(),
+		Address:           sr.Address(),
+		AssignedTech:      sr.AssignedTech(),
+		City:              sr.City(),
+		Created:           sr.Created().Format("2006-01-02T15:04:05.000Z"),
+		HasDog:            sr.HasDog(),
+		HasSpanishSpeaker: sr.HasSpanishSpeaker(),
+		ID:                sr.ID().String(),
+		Location:          NewResponseLocation(sr.Location()),
+		Priority:          sr.Priority(),
+		Status:            sr.Status(),
+		Source:            sr.Source(),
+		Target:            sr.Target(),
+		Zip:               sr.Zip(),
 	}
 }
 func NewResponseServiceRequests(requests []fssync.ServiceRequest) []ResponseServiceRequest {

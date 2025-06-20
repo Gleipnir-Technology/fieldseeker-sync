@@ -76,7 +76,7 @@ func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
 	if pgInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
-	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",creationdate,name,habitat,usetype,waterorigin,description,accessdesc,comments,globalid FROM FS_PointLocation WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
+	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",accessdesc,active,comments,creationdate,description,habitat,lastinspectdate,name,nextactiondatescheduled,usetype,waterorigin,zone,globalid FROM FS_PointLocation WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
 
 	rows, _ := pgInstance.db.Query(context.Background(), query, args)
 	var locations []*FS_PointLocation
@@ -95,7 +95,7 @@ func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
 	args = pgx.NamedArgs{
 		"globalids": globalids,
 	}
-	rows, _ = pgInstance.db.Query(context.Background(), "SELECT comments,enddatetime,globalid,sitecond,pointlocid FROM FS_MosquitoInspection WHERE pointlocid=ANY(@globalids)", args)
+	rows, _ = pgInstance.db.Query(context.Background(), "SELECT actiontaken,comments,enddatetime,fieldtech,globalid,locationname,pointlocid,sitecond,zone FROM FS_MosquitoInspection WHERE pointlocid=ANY(@globalids)", args)
 	var inspections []*FS_MosquitoInspection
 
 	if err := pgxscan.ScanAll(&inspections, rows); err != nil {
@@ -110,7 +110,7 @@ func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
 		inspections_by_locid[i.PointLocationID] = x
 	}
 
-	rows, _ = pgInstance.db.Query(context.Background(), "SELECT comments,enddatetime,globalid,habitat,product,qty,qtyunit,sitecond,treatacres,treathectares,pointlocid FROM FS_Treatment WHERE pointlocid=ANY(@globalids)", args)
+	rows, _ = pgInstance.db.Query(context.Background(), "SELECT comments,enddatetime,fieldtech,globalid,habitat,product,qty,qtyunit,sitecond,treatacres,treathectares,pointlocid FROM FS_Treatment WHERE pointlocid=ANY(@globalids)", args)
 	var treatments []*FS_Treatment
 
 	if err := pgxscan.ScanAll(&treatments, rows); err != nil {
@@ -231,7 +231,7 @@ func ServiceRequestQuery(q *DBQuery) ([]ServiceRequest, error) {
 		return results, errors.New("You must initialize the DB first")
 	}
 
-	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",CreationDate,globalid,PRIORITY,REQADDR1,REQCITY,REQTARGET,REQZIP,STATUS,SOURCE FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
+	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",ASSIGNEDTECH,CreationDate,DOG,globalid,PRIORITY,REQADDR1,REQCITY,RECDATETIME,REQTARGET,REQZIP,SOURCE,Spanish,STATUS FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
 	rows, _ := pgInstance.db.Query(context.Background(), query, args)
 	var fs_service_requests []*FS_ServiceRequest
 
