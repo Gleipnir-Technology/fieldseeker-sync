@@ -171,7 +171,7 @@ func (mi MosquitoInspection) Created() time.Time {
 	return parseTime(mi.data.EndDateTime)
 }
 
-func (mi MosquitoInspection) FieldTech() string {
+func (mi MosquitoInspection) FieldTechnician() string {
 	if mi.data.FieldTech == nil {
 		return ""
 	}
@@ -340,7 +340,7 @@ func (t MosquitoTreatment) Created() time.Time {
 	}
 	return time.UnixMilli(*t.data.EndDateTime)
 }
-func (t MosquitoTreatment) FieldTech() string {
+func (t MosquitoTreatment) FieldTechnician() string {
 	if t.data.FieldTech == nil {
 		return ""
 	}

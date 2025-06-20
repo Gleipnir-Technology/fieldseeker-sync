@@ -60,15 +60,15 @@ func NewResponseLocation(l fssync.LatLong) ResponseLocation {
 }
 
 type ResponseMosquitoInspection struct {
-	ActionTaken   string `json:"action_taken"`
-	Comments      string `json:"comments"`
-	Condition     string `json:"condition"`
-	Created       string `json:"created"`
-	EndDateTime   string `json:"end_date_time"`
-	FieldTech     string `json:"field_tech"`
-	ID            string `json:"id"`
-	LocationName  string `json:"location_name"`
-	SiteCondition string `json:"site_condition"`
+	ActionTaken     string `json:"action_taken"`
+	Comments        string `json:"comments"`
+	Condition       string `json:"condition"`
+	Created         string `json:"created"`
+	EndDateTime     string `json:"end_date_time"`
+	FieldTechnician string `json:"field_technician"`
+	ID              string `json:"id"`
+	LocationName    string `json:"location_name"`
+	SiteCondition   string `json:"site_condition"`
 }
 
 func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Request) error {
@@ -146,18 +146,18 @@ func NewResponseMosquitoSources(sources []fssync.MosquitoSource) []ResponseMosqu
 }
 
 type ResponseMosquitoTreatment struct {
-	Comments      string  `json:"comments"`
-	Created       string  `json:"created"`
-	EndDateTime   string  `json:"end_date_time"`
-	FieldTech     string  `json:"field_tech"`
-	Habitat       string  `json:"habitat"`
-	ID            string  `json:"id"`
-	Product       string  `json:"product"`
-	Quantity      float64 `json:"quantity"`
-	QuantityUnit  string  `json:"quantity_unit"`
-	SiteCondition string  `json:"site_condition"`
-	TreatAcres    float64 `json:"treat_acres"`
-	TreatHectares float64 `json:"treat_hectares"`
+	Comments        string  `json:"comments"`
+	Created         string  `json:"created"`
+	EndDateTime     string  `json:"end_date_time"`
+	FieldTechnician string  `json:"field_technician"`
+	Habitat         string  `json:"habitat"`
+	ID              string  `json:"id"`
+	Product         string  `json:"product"`
+	Quantity        float64 `json:"quantity"`
+	QuantityUnit    string  `json:"quantity_unit"`
+	SiteCondition   string  `json:"site_condition"`
+	TreatAcres      float64 `json:"treat_acres"`
+	TreatHectares   float64 `json:"treat_hectares"`
 }
 
 func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Request) error {
@@ -165,17 +165,17 @@ func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Reque
 }
 func NewResponseMosquitoTreatment(i fssync.MosquitoTreatment) ResponseMosquitoTreatment {
 	return ResponseMosquitoTreatment{
-		Comments:      i.Comments(),
-		Created:       i.Created().Format("2006-01-02T15:04:05.000Z"),
-		FieldTech:     i.FieldTech(),
-		Habitat:       i.Habitat(),
-		ID:            i.ID(),
-		Product:       i.Product(),
-		Quantity:      i.Quantity(),
-		QuantityUnit:  i.QuantityUnit(),
-		SiteCondition: i.SiteCondition(),
-		TreatAcres:    i.TreatAcres(),
-		TreatHectares: i.TreatHectares(),
+		Comments:        i.Comments(),
+		Created:         i.Created().Format("2006-01-02T15:04:05.000Z"),
+		FieldTechnician: i.FieldTechnician(),
+		Habitat:         i.Habitat(),
+		ID:              i.ID(),
+		Product:         i.Product(),
+		Quantity:        i.Quantity(),
+		QuantityUnit:    i.QuantityUnit(),
+		SiteCondition:   i.SiteCondition(),
+		TreatAcres:      i.TreatAcres(),
+		TreatHectares:   i.TreatHectares(),
 	}
 }
 func NewResponseMosquitoTreatments(treatments []fssync.MosquitoTreatment) []ResponseMosquitoTreatment {
