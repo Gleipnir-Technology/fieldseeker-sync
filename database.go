@@ -150,7 +150,7 @@ func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 	if err != nil {
 		return fmt.Errorf("Failed to get existing rows: %v", err)
 	}
-	log.Println("Rows from query", len(rows_by_objectid))
+	// log.Println("Rows from query", len(rows_by_objectid))
 
 	for _, feature := range qr.Features {
 		oid := feature.Attributes["OBJECTID"].(float64)
