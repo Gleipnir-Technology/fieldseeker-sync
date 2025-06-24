@@ -69,7 +69,7 @@ func downloadAllRecords(layer arcgis.Layer, offset int) error {
 	}
 	for {
 		if offset >= count.Count {
-			log.Printf("Offset is at %v/%v records. Stopping.", offset, count.Count)
+			//log.Printf("Offset is at %v/%v records. Stopping.", offset, count.Count)
 			break
 		}
 		query := arcgis.NewQuery()
@@ -92,7 +92,7 @@ func downloadAllRecords(layer arcgis.Layer, offset int) error {
 			os.Exit(7)
 		}
 		offset += len(qr.Features)
-		log.Printf("Handled %v %v records. Offset %v. %v remain\n", len(qr.Features), layer.Name, offset, count.Count-offset)
+		//log.Printf("Handled %v %v records. Offset %v. %v remain\n", len(qr.Features), layer.Name, offset, count.Count-offset)
 	}
 
 	return nil
