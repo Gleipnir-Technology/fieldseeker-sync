@@ -157,41 +157,16 @@ func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 		row := rows_by_objectid[int(oid)]
 		// If we have no matching row we'll need to create it
 		if len(row) == 0 {
+
 			if err := insertRowFromFeature(ctx, table, sorted_columns, &feature); err != nil {
 				return fmt.Errorf("Failed to insert row: %v", err)
 			}
-		} else {
+		} else if hasUpdates(row, feature) {
 			if err := updateRowFromFeature(ctx, table, sorted_columns, &feature); err != nil {
 				return fmt.Errorf("Failed to update row: %v", err)
 			}
 		}
 	}
-	/*
-		query := upsertFromQueryResult(table, qr)
-		batch := &pgx.Batch{}
-		for _, f := range qr.Features {
-			args := pgx.NamedArgs{}
-			for k, v := range f.Attributes {
-				args[k] = v
-			}
-			// specially add geometry since it isn't in the list of attributes
-			args["geometry_x"] = f.Geometry.X
-			args["geometry_y"] = f.Geometry.Y
-			batch.Queue(query, args).Exec(func(ct pgconn.CommandTag) error {
-				if ct.Update() {
-					// log.Println("Update", f.Attributes[qr.UniqueIdField.Name])
-				} else if ct.Insert() {
-					// log.Println("Insert", f.Attributes[qr.UniqueIdField.Name])
-				} else {
-					log.Println("No idea what happened here")
-				}
-				return nil
-			})
-		}
-		results := pgInstance.db.SendBatch(ctx, batch)
-
-		return results.Close()
-	*/
 	return nil
 }
 
@@ -306,6 +281,54 @@ func doMigrations(connection_string string) error {
 		return fmt.Errorf("Failed to run migrations: %w", err)
 	}
 	return nil
+}
+
+func hasUpdates(row map[string]string, feature arcgis.Feature) bool {
+	for key, value := range feature.Attributes {
+		rowdata := row[strings.ToLower(key)]
+		// We'll accept any 'nil' as represented by the empty string in the database
+		if value == nil && rowdata == "" {
+			continue
+		}
+		// check strings first, their simplest
+		if featureAsString, ok := value.(string); ok {
+			if featureAsString != rowdata {
+				return true
+			}
+			continue
+		} else if featureAsInt, ok := value.(int); ok {
+			// Previously had a nil value, now we have a real value
+			if rowdata == "" {
+				return true
+			}
+			rowAsInt, err := strconv.Atoi(rowdata)
+			if err != nil {
+				log.Fatal(fmt.Sprintf("Failed to convert '%s' to an int to compare against %v for %v", rowdata, featureAsInt, key))
+			}
+			if rowAsInt != featureAsInt {
+				return true
+			} else {
+				continue
+			}
+		} else if featureAsFloat, ok := value.(float64); ok {
+			// Previously had a nil value, now we have a real value
+			if rowdata == "" {
+				return true
+			}
+			rowAsFloat, err := strconv.ParseFloat(rowdata, 64)
+			if err != nil {
+				log.Fatal(fmt.Sprintf("Failed to convert '%s' to a float64 to compare against %v for %v", rowdata, featureAsFloat, key))
+			}
+			if rowAsFloat != featureAsFloat {
+				return true
+			} else {
+				continue
+			}
+		}
+		log.Printf("Type: %T\tkey: %s\tvalue: %v\trow: %s\n", value, key, value, rowdata)
+		log.Fatal("Need type update.")
+	}
+	return false
 }
 
 func insertRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table string, sorted_columns []string, feature *arcgis.Feature) error {
