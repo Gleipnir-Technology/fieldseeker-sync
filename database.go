@@ -342,7 +342,7 @@ func insertRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 		sb.WriteString(",")
 	}
 	// Specially add the geometry values since they aren't in the fields
-	sb.WriteString("geometry_x,geometry_y")
+	sb.WriteString("geometry_x,geometry_y,updated")
 	sb.WriteString(")\nVALUES (")
 	for _, field := range sorted_columns {
 		sb.WriteString("@")
@@ -350,7 +350,7 @@ func insertRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 		sb.WriteString(",")
 	}
 	// Specially add the geometry values since they aren't in the fields
-	sb.WriteString("@geometry_x,@geometry_y)")
+	sb.WriteString("@geometry_x,@geometry_y,@updated)")
 
 	args := pgx.NamedArgs{}
 	for k, v := range feature.Attributes {
@@ -359,6 +359,7 @@ func insertRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 	// specially add geometry since it isn't in the list of attributes
 	args["geometry_x"] = feature.Geometry.X
 	args["geometry_y"] = feature.Geometry.Y
+	args["updated"] = time.Now()
 
 	_, err := transaction.Exec(ctx, sb.String(), args)
 	if err != nil {
@@ -573,7 +574,7 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 		sb.WriteString(",")
 	}
 	// Specially add the geometry values since they aren't in the fields
-	sb.WriteString("geometry_x=@geometry_x,geometry_y=@geometry_y WHERE OBJECTID=@OBJECTID")
+	sb.WriteString("geometry_x=@geometry_x,geometry_y=@geometry_y,@updated WHERE OBJECTID=@OBJECTID")
 
 	args := pgx.NamedArgs{}
 	for k, v := range feature.Attributes {
@@ -582,6 +583,7 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 	// specially add geometry since it isn't in the list of attributes
 	args["geometry_x"] = feature.Geometry.X
 	args["geometry_y"] = feature.Geometry.Y
+	args["geometry_y"] = time.Now()
 
 	_, err := transaction.Exec(ctx, sb.String(), args)
 	if err != nil {
