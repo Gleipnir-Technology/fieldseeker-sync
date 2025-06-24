@@ -574,7 +574,7 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 		sb.WriteString(",")
 	}
 	// Specially add the geometry values since they aren't in the fields
-	sb.WriteString("geometry_x=@geometry_x,geometry_y=@geometry_y,@updated WHERE OBJECTID=@OBJECTID")
+	sb.WriteString("geometry_x=@geometry_x,geometry_y=@geometry_y,updated=@updated WHERE OBJECTID=@OBJECTID")
 
 	args := pgx.NamedArgs{}
 	for k, v := range feature.Attributes {
