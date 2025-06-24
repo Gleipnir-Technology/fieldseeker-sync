@@ -4,7 +4,7 @@ go 1.24
 
 toolchain go1.24.3
 
-require github.com/Gleipnir-Technology/arcgis-go v0.0.1 // explicit
+require github.com/Gleipnir-Technology/arcgis-go v0.0.2 // explicit
 
 require (
 	github.com/alexedwards/scs/v2 v2.8.0
