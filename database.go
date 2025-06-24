@@ -132,7 +132,8 @@ func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
 // Pretty big function. Given a set of query results we're going to iterate over each of them.
 // For each one, if the row doesn't exist, we create a row. If it does exist, we check to see
 // if its already correctly represented. If it isn't, we add a new version.
-func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) error {
+func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) (int, int, error) {
+	inserts, updates := 0, 0
 	// Get the current state of every row for our current query result
 	sorted_columns := make([]string, 0, len(qr.Fields))
 	for _, f := range qr.Fields {
@@ -148,7 +149,7 @@ func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 
 	rows_by_objectid, err := rowmapViaQuery(ctx, table, sorted_columns, objectids)
 	if err != nil {
-		return fmt.Errorf("Failed to get existing rows: %v", err)
+		return inserts, updates, fmt.Errorf("Failed to get existing rows: %v", err)
 	}
 	// log.Println("Rows from query", len(rows_by_objectid))
 
@@ -159,15 +160,17 @@ func SaveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 		if len(row) == 0 {
 
 			if err := insertRowFromFeature(ctx, table, sorted_columns, &feature); err != nil {
-				return fmt.Errorf("Failed to insert row: %v", err)
+				return inserts, updates, fmt.Errorf("Failed to insert row: %v", err)
 			}
+			inserts += 1
 		} else if hasUpdates(row, feature) {
 			if err := updateRowFromFeature(ctx, table, sorted_columns, &feature); err != nil {
-				return fmt.Errorf("Failed to update row: %v", err)
+				return inserts, updates, fmt.Errorf("Failed to update row: %v", err)
 			}
+			updates += 1
 		}
 	}
-	return nil
+	return inserts, updates, nil
 }
 
 func SaveUser(displayname string, hash string, username string) error {
