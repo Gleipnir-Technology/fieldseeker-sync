@@ -57,12 +57,12 @@ func main() {
 }
 
 func downloadAllRecords(layer arcgis.Layer, offset int) error {
-	log.Printf("%v %v\n", layer.ID, layer.Name)
+	//log.Printf("%v %v\n", layer.ID, layer.Name)
 	count, err := fieldseeker.QueryCount(layer.ID)
 	if err != nil {
 		return err
 	}
-	log.Printf("Need to get %v records\n", count.Count)
+	log.Printf("Need to get %v records for layer '%v'\n", count.Count, layer.Name)
 	if count.Count == 0 {
 		log.Printf("No records available")
 		return nil
