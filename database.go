@@ -583,7 +583,7 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 	// specially add geometry since it isn't in the list of attributes
 	args["geometry_x"] = feature.Geometry.X
 	args["geometry_y"] = feature.Geometry.Y
-	args["geometry_y"] = time.Now()
+	args["updated"] = time.Now()
 
 	_, err := transaction.Exec(ctx, sb.String(), args)
 	if err != nil {
