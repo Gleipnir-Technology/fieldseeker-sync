@@ -71,7 +71,7 @@ func downloadAllRecords(layer arcgis.Layer, offset int) (int, int, error) {
 	}
 	log.Printf("Need to get %v records for layer '%v'\n", count.Count, layer.Name)
 	if count.Count == 0 {
-		log.Printf("No records available\n")
+		//log.Printf("No records available\n")
 		return inserts, updates, nil
 	}
 	for {
