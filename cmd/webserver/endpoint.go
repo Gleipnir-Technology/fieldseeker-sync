@@ -1,14 +1,82 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/google/uuid"
 
 	"gleipnir.technology/fieldseeker-sync"
 	"gleipnir.technology/fieldseeker-sync/html"
 )
+
+func apiAudioPost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+   // Read first 20 bytes to check for M4A signature
+   buffer := make([]byte, 20)
+   _, err := r.Body.Read(buffer)
+   if err != nil {
+   	http.Error(w, "Unable to read request body", http.StatusBadRequest)
+   	return
+   }
+
+   // Check for M4A file signature (ftyp at offset 4, followed by M4A identifiers)
+   if string(buffer[4:8]) != "ftyp" {
+   	http.Error(w, "File is not a valid M4A", http.StatusBadRequest)
+   	return
+   }
+
+   // Check for M4A brand identifiers
+   brandValid := false
+   brands := []string{"M4A ", "mp41", "mp42", "isom"}
+   for _, brand := range brands {
+   	if string(buffer[8:12]) == brand {
+   		brandValid = true
+   		break
+   	}
+   }
+
+   if !brandValid {
+   	http.Error(w, "File is not a valid M4A", http.StatusBadRequest)
+   	return
+   }
+
+   // Generate unique filename using UUID
+   filename := fmt.Sprintf("%s.m4a", uuid.New().String())
+   config := fssync.GetConfig()
+   filepath := fmt.Sprintf("%s/%s", config.UserFiles.Directory, filename)
+
+   // Create file in configured directory
+   dst, err := os.Create(filepath)
+   if err != nil {
+   	http.Error(w, "Unable to create file", http.StatusInternalServerError)
+   	return
+   }
+   defer dst.Close()
+
+   // Write the header bytes we already read
+   _, err = dst.Write(buffer)
+   if err != nil {
+   	http.Error(w, "Unable to save file", http.StatusInternalServerError)
+   	return
+   }
+
+   // Copy rest of request body to file
+   _, err = io.Copy(dst, r.Body)
+   if err != nil {
+   	http.Error(w, "Unable to save file", http.StatusInternalServerError)
+   	return
+   }
+
+   w.WriteHeader(http.StatusOK)
+   fmt.Fprintf(w, "M4A uploaded successfully to %s", filepath)
+}
 
 func apiClientIos(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	query := fssync.NewQuery()
@@ -33,6 +101,85 @@ func apiClientIos(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	if err := render.Render(w, r, response); err != nil {
 		render.Render(w, r, errRender(err))
 	}
+}
+
+func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+	id := chi.URLParam(r, "uuid")
+	noteUUID, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "Failed to decode the uuid", http.StatusBadRequest)
+		return
+	}
+	var payload fssync.NidusNotePayload
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read the payload", http.StatusBadRequest)
+		return
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		log.Println("Note PUT JSON decode error: ", err)
+		output, err := os.OpenFile("/tmp/request.body", os.O_RDWR|os.O_CREATE, 0666)
+		if err != nil {
+			log.Println("Failed to open temp request.bady")
+		}
+		defer output.Close()
+		output.Write(body)
+		log.Println("Wrote request to /tmp/request.body")
+
+		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
+		return
+	}
+	fssync.NoteUpdate(noteUUID, payload)
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func apiImagePost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+	// Read first 8 bytes to check PNG signature
+	pngSignature := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
+	buffer := make([]byte, 8)
+	_, err := r.Body.Read(buffer)
+	if err != nil {
+		http.Error(w, "Unable to read request body", http.StatusBadRequest)
+		return
+	}
+
+	// Verify PNG signature
+	for i, b := range pngSignature {
+		if buffer[i] != b {
+			http.Error(w, "File is not a valid PNG", http.StatusBadRequest)
+			return
+		}
+	}
+
+	// Generate unique filename using UUID
+	filename := fmt.Sprintf("%s.png", uuid.New().String())
+	config := fssync.GetConfig()
+	filepath := fmt.Sprintf("%s/%s", config.UserFiles.Directory, filename)
+
+	// Create file in configured directory
+	dst, err := os.Create(filepath)
+	if err != nil {
+		http.Error(w, "Unable to create file", http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	// Write the header bytes we already read
+	_, err = dst.Write(buffer)
+	if err != nil {
+		http.Error(w, "Unable to save file", http.StatusInternalServerError)
+		return
+	}
+
+	// Copy rest of request body to file
+	_, err = io.Copy(dst, r.Body)
+	if err != nil {
+		http.Error(w, "Unable to save file", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "PNG uploaded successfully to %s", filepath)
 }
 
 func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *fssync.User) {
@@ -118,8 +265,8 @@ func index(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 
 	data := html.PageDataIndex{
 		ServiceRequestCount: count,
-		Title:               "Gateway Sync Test",
-		User:                u,
+		Title:		     "Gateway Sync Test",
+		User:		     u,
 	}
 
 	err = html.Index(w, data)

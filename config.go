@@ -27,6 +27,10 @@ type Config struct {
 	Webhook  ConfigWebhook
 }
 
+func GetConfig() *Config {
+	return config
+}
+
 func ReadConfig() (*Config, error) {
 	v := viper.New()
 	v.SetConfigName("fieldseeker-sync") // name of config file (without extension)
