@@ -11,5 +11,5 @@ build bin/dump: go-compile cmd/dump/main.go | config.go database.go init.go type
 build bin/full_export: go-compile cmd/export/main.go | config.go database.go init.go types.go
 build bin/login: go-compile cmd/login/main.go | config.go database.go init.go types.go
 build bin/registration: go-compile cmd/registration/main.go | config.go database.go html/html.go init.go password.go types.go migrations/00001_initial.sql migrations/00002_user.sql
-build bin/webserver: go-compile cmd/webserver/endpoint.go cmd/webserver/main.go cmd/webserver/render.go cmd/webserver/types.go | html/templates/base.html html/templates/index.html  html/templates/service-requests.html config.go database.go html/html.go init.go types.go
+build bin/webserver: go-compile cmd/webserver/endpoint.go cmd/webserver/main.go cmd/webserver/negotiate.go cmd/webserver/render.go cmd/webserver/types.go | html/templates/base.html html/templates/index.html  html/templates/service-requests.html config.go database.go html/html.go init.go types.go
 

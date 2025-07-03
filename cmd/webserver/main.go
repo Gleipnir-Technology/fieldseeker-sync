@@ -35,10 +35,20 @@ func NewEnsureAuth(handlerToWrap AuthenticatedHandler) *EnsureAuth {
 var sessionManager *scs.SessionManager
 
 func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// If this is an API request respond with a more machine-readable error state
+	accept := r.Header.Values("Accept")
+	offers := []string{"application/json", "text/html"}
+
+	content_type := NegotiateContent(accept, offers)
 	user, err := getAuthenticatedUser(r)
 	if err != nil {
-		http.Redirect(w, r, "/login?next="+r.URL.Path, http.StatusSeeOther)
-		return
+		if content_type == "text/html" {
+			http.Redirect(w, r, "/login?next="+r.URL.Path, http.StatusSeeOther)
+			return
+		} else {
+			http.Error(w, "Login required", http.StatusUnauthorized)
+			return
+		}
 	}
 
 	ea.handler(w, r, user)
