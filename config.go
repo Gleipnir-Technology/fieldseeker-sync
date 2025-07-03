@@ -13,6 +13,9 @@ type ConfigArcgis struct {
 type ConfigDatabase struct {
 	URL string
 }
+type ConfigUserFiles struct {
+	Directory string
+}
 type ConfigWebhook struct {
 	Secret string
 }
@@ -20,6 +23,7 @@ type ConfigWebhook struct {
 type Config struct {
 	Arcgis   ConfigArcgis
 	Database ConfigDatabase
+	UserFiles ConfigUserFiles
 	Webhook  ConfigWebhook
 }
 
