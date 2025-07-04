@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Top-level guidance
+
+Any time Claude produces code it should be within a git branch. Create a branch name based on the initial request and make all commits to that branch. The goal is to produce a large number of small commits. Each commit starts with a single line in imperative style indicating what the change is. There is then a blank line, then however many lines necessary to explain why the commit is necessary. Expect the commit to be reviewed by a competent senior engineer that understands the mechanics of how it works and is looking to understand the thought process for why a particular approach was chosen. Ideal commits are quite small and fully self-contained.
+
+After a particularly productive session Claude recommends changes to CLAUDE.md itself to improve and refine instructions for future coding agents.
+
 ## Development Environment Setup
 
 Use Nix shell for development environment:
