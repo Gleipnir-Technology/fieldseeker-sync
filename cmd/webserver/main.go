@@ -97,7 +97,8 @@ func main() {
 
 	err := fssync.InitDB()
 	if err != nil {
-		fmt.Println("Failed to init fssync: %v", err)
+		fmt.Printf("Failed to init fssync: %v", err)
+		os.Exit(1)
 	}
 
 	//html.InitializeTemplates()
@@ -114,6 +115,9 @@ func main() {
 		r.Method("GET", "/service-request", NewEnsureAuth(apiServiceRequest))
 		r.Method("GET", "/trap-data", NewEnsureAuth(apiTrapData))
 		r.Method("GET", "/client/ios", NewEnsureAuth(apiClientIos))
+		r.Method("PUT", "/client/ios/note/{uuid}", NewEnsureAuth(apiClientIosNotePut))
+		r.Method("POST", "/audio/{uuid}", NewEnsureAuth(apiAudioPost))
+		r.Method("POST", "/image/{uuid}", NewEnsureAuth(apiImagePost))
 		r.Get("/webhook/fieldseeker", webhookFieldseeker)
 		r.Post("/webhook/fieldseeker", webhookFieldseeker)
 	})

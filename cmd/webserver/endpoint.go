@@ -18,10 +18,18 @@ import (
 )
 
 func apiAudioPost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+	u_str := chi.URLParam(r, "uuid")
+	audioUUID, err := uuid.Parse(u_str)
+	if err != nil {
+		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
+	}
+
+	/*
    // Read first 20 bytes to check for M4A signature
    buffer := make([]byte, 20)
-   _, err := r.Body.Read(buffer)
+   _, err = r.Body.Read(buffer)
    if err != nil {
+	   log.Printf("Failed to read audio request body: %v\n", err)
    	http.Error(w, "Unable to read request body", http.StatusBadRequest)
    	return
    }
@@ -46,22 +54,21 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
    	http.Error(w, "File is not a valid M4A", http.StatusBadRequest)
    	return
    }
-
-   // Generate unique filename using UUID
-   filename := fmt.Sprintf("%s.m4a", uuid.New().String())
+*/
    config := fssync.GetConfig()
-   filepath := fmt.Sprintf("%s/%s", config.UserFiles.Directory, filename)
+   filepath := fmt.Sprintf("%s/%s.m4a", config.UserFiles.Directory, audioUUID.String())
 
    // Create file in configured directory
    dst, err := os.Create(filepath)
    if err != nil {
+	   log.Printf("Failed to create audio file at %s: %v\n", dst, err)
    	http.Error(w, "Unable to create file", http.StatusInternalServerError)
    	return
    }
    defer dst.Close()
 
    // Write the header bytes we already read
-   _, err = dst.Write(buffer)
+   _, err = io.Copy(dst, r.Body)
    if err != nil {
    	http.Error(w, "Unable to save file", http.StatusInternalServerError)
    	return
@@ -75,6 +82,7 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
    }
 
    w.WriteHeader(http.StatusOK)
+   log.Printf("Saved image file %s\n", audioUUID)
    fmt.Fprintf(w, "M4A uploaded successfully to %s", filepath)
 }
 
@@ -134,11 +142,19 @@ func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *fssync.User)
 }
 
 func apiImagePost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+	u_str := chi.URLParam(r, "uuid")
+	imageUUID, err := uuid.Parse(u_str)
+	if err != nil {
+		log.Println("Failed to parse image UUID", u_str)
+		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
+	}
 	// Read first 8 bytes to check PNG signature
+	/*
 	pngSignature := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
 	buffer := make([]byte, 8)
-	_, err := r.Body.Read(buffer)
+	_, err = r.Body.Read(buffer)
 	if err != nil {
+		log.Println("Unable to read image request body", err)
 		http.Error(w, "Unable to read request body", http.StatusBadRequest)
 		return
 	}
@@ -151,10 +167,9 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 		}
 	}
 
-	// Generate unique filename using UUID
-	filename := fmt.Sprintf("%s.png", uuid.New().String())
+	*/
 	config := fssync.GetConfig()
-	filepath := fmt.Sprintf("%s/%s", config.UserFiles.Directory, filename)
+	filepath := fmt.Sprintf("%s/%s.png", config.UserFiles.Directory, imageUUID.String())
 
 	// Create file in configured directory
 	dst, err := os.Create(filepath)
@@ -165,7 +180,7 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	defer dst.Close()
 
 	// Write the header bytes we already read
-	_, err = dst.Write(buffer)
+	_, err = io.Copy(dst, r.Body)
 	if err != nil {
 		http.Error(w, "Unable to save file", http.StatusInternalServerError)
 		return
@@ -179,6 +194,7 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+   	log.Printf("Saved image file %s\n", imageUUID)
 	fmt.Fprintf(w, "PNG uploaded successfully to %s", filepath)
 }
 

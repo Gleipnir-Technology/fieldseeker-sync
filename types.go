@@ -546,3 +546,17 @@ func (tl TrapData) Name() string {
 	}
 	return *tl.data.Name
 }
+
+type Location struct {
+	Latitude float64
+	Longitude float64
+}
+
+type NidusNotePayload struct {
+   UUID      string    `json:"uuid"`
+   Timestamp time.Time `json:"timestamp"`
+   Audio     []string  `json:"audio"`
+   Images    []string  `json:"images"`
+   Location  Location  `json:"location"`
+   Text      string    `json:"text"`
+}
