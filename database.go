@@ -130,6 +130,11 @@ func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
 	return results, nil
 }
 
+func NoteUpdate(noteUUID uuid.UUID, payload NidusNotePayload) {
+	// Make sure we actually need the update first
+	//rows, _ = pgInstance.db.Query(context.Background(), "UPDATE comments,enddatetime,fieldtech,globalid,habitat,product,qty,qtyunit,sitecond,treatacres,treathectares,pointlocid FROM FS_Treatment WHERE pointlocid=ANY(@globalids)", args)
+
+}
 // Pretty big function. Given a set of query results we're going to iterate over each of them.
 // For each one, if the row doesn't exist, we create a row. If it does exist, we check to see
 // if its already correctly represented. If it isn't, we add a new version.
