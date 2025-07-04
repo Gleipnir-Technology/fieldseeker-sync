@@ -111,7 +111,7 @@ async function getMosquitoSourcesForBounds(bounds) {
 	markers.mosquitoSource.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		var m = L.marker([r.location.longitude, r.location.latitude], {icon: markers.types.red})
+		var m = L.marker([r.location.latitude, r.location.longitude], {icon: markers.types.red})
 		m.on("click", function(e) {
 			showMosquitoSource(r);
 		});
@@ -132,7 +132,7 @@ async function getServiceRequestsForBounds(bounds) {
 	markers.serviceRequest.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		var m = L.marker([r.location.longitude, r.location.latitude], {icon: markers.types.blue});
+		var m = L.marker([r.location.latitude, r.location.longitude], {icon: markers.types.blue});
 		m.on("click", function(e) {
 			showServiceRequest(r);
 		});
@@ -153,7 +153,7 @@ async function getTrapDataForBounds(bounds) {
 	markers.trapData.clearLayers();
 	for(let i = 0; i < json.length; i++) {
 		const r = json[i];
-		markers.trapData.addLayer(L.marker([r.location.longitude, r.location.latitude], {icon: markers.types.green}).on("click", function(e) {
+		markers.trapData.addLayer(L.marker([r.location.latitude, r.location.longitude], {icon: markers.types.green}).on("click", function(e) {
 			showTrapData(r);
 		}));
 	}
