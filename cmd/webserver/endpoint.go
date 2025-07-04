@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -137,7 +138,7 @@ func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *fssync.User)
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
-	fssync.NoteUpdate(noteUUID, payload)
+	fssync.NoteUpdate(context.Background(), noteUUID, payload)
 	w.WriteHeader(http.StatusAccepted)
 }
 
