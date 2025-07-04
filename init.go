@@ -45,7 +45,7 @@ func Initialize() error {
 	if err != nil {
 		return err
 	}
-	fieldseeker.Initialize(
+	err = fieldseeker.Initialize(
 		config.Arcgis.ServiceRoot,
 		config.Arcgis.TenantID,
 		config.Arcgis.Token,
