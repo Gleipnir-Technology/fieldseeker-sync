@@ -10,4 +10,4 @@ docker run \
 	--mount "source=cloude-code-config,target=/home/node/.claude,type=volume" \
 	--mount "source=./,target=/workspace,type=bind,consistency=delegated" \
 	--name claude \
-	--rm claudecode:latest /bin/bash
+	--rm claudecode:latest claude --dangerously-skip-permissions
