@@ -1,9 +1,0 @@
-GOARCH = amd64
-GOOS = linux
-
-rule go-compile
-  command = go build -o $out $in
-  description = Go compilation
-
-build bin/webserver: go-compile cmd/webserver/endpoint.go cmd/webserver/main.go cmd/webserver/negotiate.go cmd/webserver/render.go cmd/webserver/types.go | html/templates/base.html html/templates/index.html  html/templates/service-requests.html config.go database.go html/html.go init.go types.go
-
