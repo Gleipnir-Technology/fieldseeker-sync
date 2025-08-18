@@ -1,3 +1,5 @@
+github.com/Gleipnir-Technology/arcgis-go v0.0.2 h1:mmIh8M22rYUTHttX0JQ29CON99izzT43RrQbf/NX4w0=
+github.com/Gleipnir-Technology/arcgis-go v0.0.2/go.mod h1:INOPGfEriR2hcwD4lXIuQOuYigx3OuAnK5PmbKlj9bs=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/ajg/form v1.5.1 h1:t9c7v8JUKu/XxOGBU0yjNpaMloxGEJhUkqFRq0ibGeU=
