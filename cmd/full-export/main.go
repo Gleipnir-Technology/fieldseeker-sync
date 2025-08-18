@@ -8,7 +8,8 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
-	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
+	"github.com/Gleipnir-Technology/fieldseeker-sync"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
 )
 
 func main() {
@@ -92,7 +93,7 @@ func downloadAllRecords(layer arcgis.Layer, offset int) (int, int, error) {
 			log.Println("Failure:", err)
 			os.Exit(6)
 		}
-		i, u, err := fssync.SaveOrUpdateDBRecords(context.Background(), "FS_"+layer.Name, qr)
+		i, u, err := database.SaveOrUpdateDBRecords(context.Background(), "FS_"+layer.Name, qr)
 		if err != nil {
 			log.Println("Failed to save records:", err)
 			saveRawQuery(layer, query, "temp/failure.json")
