@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/Gleipnir-Technology/fieldseeker-sync"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
@@ -26,14 +28,14 @@ func main() {
 	var password string
 	scanValue("Please enter your password : ", &password)
 
-	hash, _ := fssync.HashPassword(password)
+	hash, _ := shared.HashPassword(password)
 
 	fmt.Println("Username:", username)
 	fmt.Println("Display name:", displayname)
 	fmt.Println("Password:", password)
 	fmt.Println("Hash:    ", hash)
 
-	fssync.SaveUser(displayname, hash, username)
+	database.SaveUser(displayname, hash, username)
 }
 
 func scanValue(message string, result *string) {
