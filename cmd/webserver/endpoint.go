@@ -58,7 +58,12 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
    	return
    }
 */
-   config := fssync.GetConfig()
+   config, err := fssync.ReadConfig()
+   if err != nil {
+	log.Printf("Failed to read config", err)
+	http.Error(w, "Unable to create file", http.StatusInternalServerError)
+	return
+   }
    filepath := fmt.Sprintf("%s/%s.m4a", config.UserFiles.Directory, audioUUID.String())
 
    // Create file in configured directory
@@ -171,7 +176,12 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	}
 
 	*/
-	config := fssync.GetConfig()
+	config, err := fssync.ReadConfig()
+	if err != nil {
+		log.Printf("Failed to read config", err)
+		http.Error(w, "Unable to create file", http.StatusInternalServerError)
+		return
+	}
 	filepath := fmt.Sprintf("%s/%s.png", config.UserFiles.Directory, imageUUID.String())
 
 	// Create file in configured directory

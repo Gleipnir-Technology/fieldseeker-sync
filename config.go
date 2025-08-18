@@ -1,7 +1,7 @@
 package fssync
 
 import (
-	"github.com/spf13/viper"
+	"os"
 )
 
 type ConfigArcgis struct {
@@ -27,26 +27,14 @@ type Config struct {
 	Webhook  ConfigWebhook
 }
 
-func GetConfig() *Config {
-	return config
-}
-
 func ReadConfig() (*Config, error) {
-	v := viper.New()
-	v.SetConfigName("fieldseeker-sync") // name of config file (without extension)
-	v.SetConfigType("toml")             // REQUIRED if the config file does not have the extension in the name
-	v.AddConfigPath("/etc/")            // path to look for the config file in
-	v.AddConfigPath("$HOME/.config")    // call multiple times to add many search paths
-	v.AddConfigPath(".")                // optionally look for config in the working directory
-	err := v.ReadInConfig()             // Find and read the config file
-	if err != nil {                     // Handle errors reading the config file
-		return nil, err
-	}
 	var c Config
-
-	err = v.Unmarshal(&c)
-	if err != nil {
-		return nil, err
-	}
+	c.Arcgis.FieldSeekerService = os.Getenv("FIELDSEEKER_SYNC_ARCGIS_FIELDSEEKERSERVICE")
+	c.Arcgis.ServiceRoot = os.Getenv("FIELDSEEKER_SYNC_ARCGIS_SERVICEROOT")
+	c.Arcgis.TenantID = os.Getenv("FIELDSEEKER_SYNC_ARCGIS_TENANTID")
+	c.Arcgis.Token = os.Getenv("FIELDSEEKER_SYNC_ARCGIS_TOKEN")
+	c.Database.URL = os.Getenv("FIELDSEEKER_SYNC_DATABASE_URL")
+	c.UserFiles.Directory = os.Getenv("FIELDSEEKER_SYNC_USERFILES_DIRECTORY")
+	c.Webhook.Secret = os.Getenv("FIELDSEEKER_SYNC_WEBHOOK_SECRET")
 	return &c, nil
 }
