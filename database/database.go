@@ -131,11 +131,92 @@ func MosquitoSourceQuery(q *DBQuery) ([]shared.MosquitoSource, error) {
 	return results, nil
 }
 
-func NoteUpdate(noteUUID uuid.UUID, payload NidusNotePayload) {
-	// Make sure we actually need the update first
-	//rows, _ = pgInstance.db.Query(context.Background(), "UPDATE comments,enddatetime,fieldtech,globalid,habitat,product,qty,qtyunit,sitecond,treatacres,treathectares,pointlocid FROM FS_Treatment WHERE pointlocid=ANY(@globalids)", args)
+func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNotePayload) error {
+	args := pgx.NamedArgs{
+		"uuid": noteUUID,
+	}
+	rows, err := pgInstance.db.Query(ctx, "SELECT note.latitude,note.longitude,note.text,MAX(history_note.version) AS version_max FROM note INNER JOIN history_note ON note.uuid=history_note.note_uuid WHERE note.uuid=@uuid", args)
+	if err != nil {
+		return fmt.Errorf("Failed to query for note: %v\n", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			latitude float64
+			longitude float64
+			text string
+			version_max int
+		)
+		if err = rows.Scan(&latitude, &longitude, &text, &version_max); err != nil {
+			return fmt.Errorf("Failed to scan note: %v\n", err)
+		}
+		if latitude != payload.Location.Latitude || longitude != payload.Location.Longitude || text != payload.Text {
+			var options pgx.TxOptions
+			transaction, err := pgInstance.db.BeginTx(ctx, options)
+			if err != nil {
+				return fmt.Errorf("Failed to begin transaction: %v", err)
+			}
+			query := "INSERT INTO history_note created,latitude,longitude,text,version,uuid VALUES (@created,@latitude,@longitude,@text,@version,@uuid)"
+			args = pgx.NamedArgs{
+				"created": time.Now(),
+				"latitude": payload.Location.Latitude,
+				"longitude": payload.Location.Longitude,
+				"text": payload.Text,
+				"version": version_max + 1,
+				"updated": time.Now(),
+				"uuid": payload.UUID,
+			}
+			if _, err := transaction.Exec(ctx, query, args); err != nil {
+				return fmt.Errorf("Failed to insert note history: %v", err)
+			}
+			query = "UPDATE note SET latitude=@latitude,longitude=@longitude,text=@text,updated=@updated WHERE uuid=@uuid"
+			if _, err := transaction.Exec(ctx, query, args); err != nil {
+				return fmt.Errorf("Failed to update note : %v", err)
+			}
+			err = transaction.Commit(ctx)
+			if err != nil {
+				return fmt.Errorf("Failed to commit transaction: %v", err)
+			}
+		}
+	}
 
+	args = pgx.NamedArgs{
+		"uuid": noteUUID,
+	}
+	rows, err = pgInstance.db.Query(ctx, "SELECT uuid FROM note_audio_recording WHERE note_uuid=@uuid", args)
+	if err != nil {
+		return fmt.Errorf("Failed to query for note audio recordings: %v", err)
+	}
+	var audio_uuids []string
+	if err = pgxscan.ScanAll(&audio_uuids, rows); err != nil {
+		return fmt.Errorf("Failed to scan audio UUIDs: %v", err)
+	}
+	db_audio_set := make(map[string]bool, len(audio_uuids))
+	for _, u := range audio_uuids {
+		db_audio_set[u] = false
+	}
+	has_audio_update := false
+	for _, u := range payload.Audio {
+		_, ok := db_audio_set[u]
+		if !ok {
+			has_audio_update = true
+		}
+		db_audio_set[u] = true
+	}
+	for _, v := range db_audio_set {
+		if !v {
+			has_audio_update = true
+		}
+	}
+	if has_audio_update {
+		//var options pgx.TxOptions
+		//transaction, err := pgInstance.db.BeginTx(ctx, options)
+		//query := "INSERT INTO history_note_audio_recording created,
+	}
+
+	return nil
 }
+
 // Pretty big function. Given a set of query results we're going to iterate over each of them.
 // For each one, if the row doesn't exist, we create a row. If it does exist, we check to see
 // if its already correctly represented. If it isn't, we add a new version.
