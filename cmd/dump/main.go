@@ -5,7 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
+	"github.com/Gleipnir-Technology/fieldseeker-sync"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
 )
 
 func main() {
@@ -25,8 +26,8 @@ func main() {
 
 	for _, type_ := range types {
 		if type_ == "trapdata" {
-			query := fssync.NewQuery()
-			trapdata, err := fssync.TrapDataQuery(&query)
+			query := database.NewQuery()
+			trapdata, err := database.TrapDataQuery(&query)
 			if err != nil {
 				log.Println(err)
 				os.Exit(3)
@@ -36,9 +37,9 @@ func main() {
 				log.Println(trap)
 			}
 		} else if type_ == "mosquitosource" {
-			query := fssync.NewQuery()
+			query := database.NewQuery()
 			query.Limit = *limit
-			sources, err := fssync.MosquitoSourceQuery(&query)
+			sources, err := database.MosquitoSourceQuery(&query)
 			if err != nil {
 				log.Println(err)
 				os.Exit(4)
