@@ -12,7 +12,6 @@ pkgs.buildGoModule rec {
                 "cmd/full-export"
                 "cmd/login"
                 "cmd/registration"
-                "cmd/schema"
                 "cmd/webserver"
         ];
         version = "0.0.1";
