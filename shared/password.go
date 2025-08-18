@@ -1,4 +1,4 @@
-package fssync
+package shared
 
 import (
 	"golang.org/x/crypto/bcrypt"

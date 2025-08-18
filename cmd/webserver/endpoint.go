@@ -14,8 +14,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 
-	"gleipnir.technology/fieldseeker-sync"
-	"gleipnir.technology/fieldseeker-sync/html"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/html"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
 func apiAudioPost(w http.ResponseWriter, r *http.Request, u *fssync.User) {

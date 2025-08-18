@@ -1,4 +1,4 @@
-package fssync
+package shared
 
 import (
 	"log"
@@ -511,6 +511,9 @@ func (sr ServiceRequest) Zip() string {
 	}
 	return *sr.data.ReqZip
 }
+func NewServiceRequest(data *FS_ServiceRequest) ServiceRequest {
+	return ServiceRequest{data: data}
+}
 
 type TrapData struct {
 	data *FS_TrapLocation
@@ -545,6 +548,9 @@ func (tl TrapData) Name() string {
 		return ""
 	}
 	return *tl.data.Name
+}
+func NewTrapData(data *FS_TrapLocation) TrapData {
+	return TrapData{data: data}
 }
 
 type Location struct {

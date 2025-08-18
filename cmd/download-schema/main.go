@@ -8,7 +8,7 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
-	"gleipnir.technology/fieldseeker-sync"
+	"github.com/Gleipnir-Technology/fieldseeker-sync"
 )
 
 func main() {

@@ -17,8 +17,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 
-	"gleipnir.technology/fieldseeker-sync"
-	"gleipnir.technology/fieldseeker-sync/html"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/html"
 )
 
 // authenticatedHandler is a handler function that also requires a user

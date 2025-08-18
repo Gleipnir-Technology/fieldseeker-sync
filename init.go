@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
 )
 
 var config *Config
@@ -28,7 +29,7 @@ func InitDB() error {
 		return err
 	}
 
-	err = ConnectDB(context.Background(), config.Database.URL)
+	err = database.ConnectDB(context.Background(), config.Database.URL)
 	if err != nil {
 		return fmt.Errorf("Failed to initialize connection: %v", err)
 	}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"gleipnir.technology/fieldseeker-sync"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
 // ResponseErr renderer type for handling all sorts of errors.

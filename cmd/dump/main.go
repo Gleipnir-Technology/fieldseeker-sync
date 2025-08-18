@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"gleipnir.technology/fieldseeker-sync"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-package fssync
+package database
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/arcgis-go"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -61,33 +62,33 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 }
 
 type DBQuery struct {
-	Bounds Bounds
+	Bounds shared.Bounds
 	Limit  int
 }
 
 func NewQuery() DBQuery {
 	return DBQuery{
-		Bounds: NewBounds(),
+		Bounds: shared.NewBounds(),
 		Limit:  0,
 	}
 }
 
-func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
-	results := make([]MosquitoSource, 0)
+func MosquitoSourceQuery(q *DBQuery) ([]shared.MosquitoSource, error) {
+	results := make([]shared.MosquitoSource, 0)
 	if pgInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
 	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",accessdesc,active,comments,creationdate,description,habitat,lastinspectdate,name,nextactiondatescheduled,usetype,waterorigin,zone,globalid FROM FS_PointLocation WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
 
 	rows, _ := pgInstance.db.Query(context.Background(), query, args)
-	var locations []*FS_PointLocation
+	var locations []*shared.FS_PointLocation
 
 	if err := pgxscan.ScanAll(&locations, rows); err != nil {
 		log.Println("CollectRows on FS_PointLocation error:", err)
 		return results, err
 	}
 
-	location_by_globalid := make(map[string]*FS_PointLocation, len(locations))
+	location_by_globalid := make(map[string]*shared.FS_PointLocation, len(locations))
 	globalids := make([]string, 0)
 	for _, l := range locations {
 		location_by_globalid[l.GlobalID] = l
@@ -97,14 +98,14 @@ func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
 		"globalids": globalids,
 	}
 	rows, _ = pgInstance.db.Query(context.Background(), "SELECT actiontaken,comments,enddatetime,fieldtech,globalid,locationname,pointlocid,sitecond,zone FROM FS_MosquitoInspection WHERE pointlocid=ANY(@globalids)", args)
-	var inspections []*FS_MosquitoInspection
+	var inspections []*shared.FS_MosquitoInspection
 
 	if err := pgxscan.ScanAll(&inspections, rows); err != nil {
 		log.Println("CollectRows on FS_MosquitoInspection error:", err)
 		return results, err
 	}
 
-	inspections_by_locid := make(map[string][]*FS_MosquitoInspection)
+	inspections_by_locid := make(map[string][]*shared.FS_MosquitoInspection)
 	for _, i := range inspections {
 		x := inspections_by_locid[i.PointLocationID]
 		x = append(x, i)
@@ -112,20 +113,20 @@ func MosquitoSourceQuery(q *DBQuery) ([]MosquitoSource, error) {
 	}
 
 	rows, _ = pgInstance.db.Query(context.Background(), "SELECT comments,enddatetime,fieldtech,globalid,habitat,product,qty,qtyunit,sitecond,treatacres,treathectares,pointlocid FROM FS_Treatment WHERE pointlocid=ANY(@globalids)", args)
-	var treatments []*FS_Treatment
+	var treatments []*shared.FS_Treatment
 
 	if err := pgxscan.ScanAll(&treatments, rows); err != nil {
 		log.Println("CollectRows on FS_Treatment error:", err)
 		return results, err
 	}
-	treatments_by_locid := make(map[string][]*FS_Treatment)
+	treatments_by_locid := make(map[string][]*shared.FS_Treatment)
 	for _, i := range treatments {
 		x := treatments_by_locid[i.PointLocationID]
 		x = append(x, i)
 		treatments_by_locid[i.PointLocationID] = x
 	}
 	for _, pl := range locations {
-		results = append(results, NewMosquitoSource(pl, inspections_by_locid[pl.GlobalID], treatments_by_locid[pl.GlobalID]))
+		results = append(results, shared.NewMosquitoSource(pl, inspections_by_locid[pl.GlobalID], treatments_by_locid[pl.GlobalID]))
 	}
 	return results, nil
 }
@@ -209,29 +210,29 @@ func ServiceRequestCount() (int, error) {
 	return count, nil
 }
 
-func ServiceRequestQuery(q *DBQuery) ([]ServiceRequest, error) {
-	results := make([]ServiceRequest, 0)
+func ServiceRequestQuery(q *DBQuery) ([]shared.ServiceRequest, error) {
+	results := make([]shared.ServiceRequest, 0)
 	if pgInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
 
 	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",ASSIGNEDTECH,CreationDate,DOG,globalid,PRIORITY,REQADDR1,REQCITY,RECDATETIME,REQTARGET,REQZIP,SOURCE,Spanish,STATUS FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
 	rows, _ := pgInstance.db.Query(context.Background(), query, args)
-	var fs_service_requests []*FS_ServiceRequest
+	var fs_service_requests []*shared.FS_ServiceRequest
 
 	if err := pgxscan.ScanAll(&fs_service_requests, rows); err != nil {
 		log.Println("CollectRows error:", err)
 		return results, err
 	}
 	for _, r := range fs_service_requests {
-		results = append(results, ServiceRequest{data: r})
+		results = append(results, shared.NewServiceRequest(r))
 	}
 
 	return results, nil
 }
 
-func TrapDataQuery(q *DBQuery) ([]TrapData, error) {
-	results := make([]TrapData, 0)
+func TrapDataQuery(q *DBQuery) ([]shared.TrapData, error) {
+	results := make([]shared.TrapData, 0)
 	if pgInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
@@ -239,7 +240,7 @@ func TrapDataQuery(q *DBQuery) ([]TrapData, error) {
 	log.Println("Getting FS_TrapLocation")
 	args, query := prepQuery(q, "SELECT geometry_x AS \"geometry.X\",geometry_y AS \"geometry.Y\",creationdate,globalid,name,description,accessdesc,objectid FROM FS_TrapLocation WHERE geometry_x > @west AND geometry_x < @east AND geometry_y > @south AND geometry_y < @north")
 	rows, _ := pgInstance.db.Query(context.Background(), query, args)
-	var fs_trap_locations []*FS_TrapLocation
+	var fs_trap_locations []*shared.FS_TrapLocation
 
 	if err := pgxscan.ScanAll(&fs_trap_locations, rows); err != nil {
 		log.Println("CollectRows error:", err)
@@ -247,13 +248,13 @@ func TrapDataQuery(q *DBQuery) ([]TrapData, error) {
 	}
 	log.Println("Found FS_TrapLocation", len(fs_trap_locations))
 	for _, l := range fs_trap_locations {
-		results = append(results, TrapData{data: l})
+		results = append(results, shared.NewTrapData(l))
 	}
 
 	return results, nil
 }
 
-func ValidateUser(username string, password string) (*User, error) {
+func ValidateUser(username string, password string) (*shared.User, error) {
 	var (
 		display_name string
 		hash         string
@@ -263,10 +264,10 @@ func ValidateUser(username string, password string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !VerifyPassword(password, hash) {
+	if !shared.VerifyPassword(password, hash) {
 		return nil, nil
 	}
-	return &User{
+	return &shared.User{
 		DisplayName: display_name,
 		Username:    username,
 	}, nil
