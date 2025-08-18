@@ -361,6 +361,12 @@ func doMigrations(connection_string string) error {
 		return fmt.Errorf("Failed to open database connection: %w", err)
 	}
 	defer db.Close()
+	row := db.QueryRowContext(context.Background(), "SELECT version()")
+	var val string
+	if err := row.Scan(&val); err != nil {
+		return fmt.Errorf("Failed to get database version query result: %w", err)
+	}
+	log.Printf("Connected to: %s", val);
 
 	goose.SetBaseFS(embedMigrations)
 
