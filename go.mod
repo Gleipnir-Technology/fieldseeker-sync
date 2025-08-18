@@ -85,8 +85,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/Gleipnir-Technology/arcgis-go => ../arcgis-go
-
 replace github.com/Gleipnir-Technology/fieldseeker-sync/html => ./html
 
 replace github.com/Gleipnir-Technology/fieldseeker-sync/shared => ./shared
