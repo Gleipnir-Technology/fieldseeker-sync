@@ -28,7 +28,7 @@ type BuiltTemplate struct {
 type PageDataIndex struct {
 	ServiceRequestCount int
 	Title               string
-	User                *fssync.User
+	User                *shared.User
 }
 
 type PageDataLogin struct {
@@ -36,8 +36,8 @@ type PageDataLogin struct {
 }
 
 type PageDataServiceRequests struct {
-	ServiceRequests []fssync.ServiceRequest
-	User            *fssync.User
+	ServiceRequests []shared.ServiceRequest
+	User            *shared.User
 }
 
 func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
@@ -69,7 +69,7 @@ func ServiceRequests(w io.Writer, sr PageDataServiceRequests) error {
 	return serviceRequests.ExecuteTemplate(w, sr)
 }
 
-func geocode(geo fssync.LatLong) string {
+func geocode(geo shared.LatLong) string {
 	return "foo"
 }
 

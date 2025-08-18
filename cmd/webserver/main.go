@@ -17,12 +17,14 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 
+	"github.com/Gleipnir-Technology/fieldseeker-sync"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/html"
 )
 
 // authenticatedHandler is a handler function that also requires a user
-type AuthenticatedHandler func(http.ResponseWriter, *http.Request, *fssync.User)
+type AuthenticatedHandler func(http.ResponseWriter, *http.Request, *shared.User)
 
 type EnsureAuth struct {
 	handler AuthenticatedHandler
@@ -63,13 +65,13 @@ func errRender(err error) render.Renderer {
 	}
 }
 
-func getAuthenticatedUser(r *http.Request) (*fssync.User, error) {
+func getAuthenticatedUser(r *http.Request) (*shared.User, error) {
 	display_name := sessionManager.GetString(r.Context(), "display_name")
 	username := sessionManager.GetString(r.Context(), "username")
 	if display_name == "" || username == "" {
 		return nil, errors.New("No valid user in session")
 	}
-	return &fssync.User{
+	return &shared.User{
 		DisplayName: display_name,
 		Username:    username,
 	}, nil
@@ -97,7 +99,7 @@ func main() {
 
 	err := fssync.InitDB()
 	if err != nil {
-		fmt.Printf("Failed to init fssync: %v", err)
+		fmt.Printf("Failed to init shared: %v", err)
 		os.Exit(1)
 	}
 
@@ -129,7 +131,7 @@ func main() {
 	http.ListenAndServe(":3000", r)
 }
 
-func parseBounds(r *http.Request) (*fssync.Bounds, error) {
+func parseBounds(r *http.Request) (*shared.Bounds, error) {
 	err := r.ParseForm()
 	if err != nil {
 		return nil, err
@@ -140,7 +142,7 @@ func parseBounds(r *http.Request) (*fssync.Bounds, error) {
 	south := r.FormValue("south")
 	west := r.FormValue("west")
 
-	bounds := fssync.Bounds{}
+	bounds := shared.Bounds{}
 
 	var temp float64
 	temp, err = strconv.ParseFloat(east, 64)
@@ -166,17 +168,17 @@ func parseBounds(r *http.Request) (*fssync.Bounds, error) {
 	return &bounds, nil
 }
 
-func serviceRequestList(w http.ResponseWriter, r *http.Request, u *fssync.User) {
-	bounds := fssync.Bounds{
+func serviceRequestList(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	bounds := shared.Bounds{
 		East:  -180,
 		North: 180,
 		South: -180,
 		West:  180,
 	}
-	query := fssync.NewQuery()
+	query := database.NewQuery()
 	query.Bounds = bounds
 	query.Limit = 100
-	requests, err := fssync.ServiceRequestQuery(&query)
+	requests, err := database.ServiceRequestQuery(&query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -18,7 +18,7 @@ type ResponseClientIos struct {
 func (i ResponseClientIos) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewResponseClientIos(sources []fssync.MosquitoSource, requests []fssync.ServiceRequest, traps []fssync.TrapData) ResponseClientIos {
+func NewResponseClientIos(sources []shared.MosquitoSource, requests []shared.ServiceRequest, traps []shared.TrapData) ResponseClientIos {
 	return ResponseClientIos{
 		MosquitoSources: NewResponseMosquitoSources(sources),
 		ServiceRequests: NewResponseServiceRequests(requests),
@@ -52,7 +52,7 @@ func (rtd ResponseLocation) Render(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-func NewResponseLocation(l fssync.LatLong) ResponseLocation {
+func NewResponseLocation(l shared.LatLong) ResponseLocation {
 	return ResponseLocation{
 		Latitude:  l.Latitude(),
 		Longitude: l.Longitude(),
@@ -74,7 +74,7 @@ type ResponseMosquitoInspection struct {
 func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewResponseMosquitoInspection(i fssync.MosquitoInspection) ResponseMosquitoInspection {
+func NewResponseMosquitoInspection(i shared.MosquitoInspection) ResponseMosquitoInspection {
 	return ResponseMosquitoInspection{
 		ActionTaken:   i.ActionTaken(),
 		Comments:      i.Comments(),
@@ -85,7 +85,7 @@ func NewResponseMosquitoInspection(i fssync.MosquitoInspection) ResponseMosquito
 		SiteCondition: i.SiteCondition(),
 	}
 }
-func NewResponseMosquitoInspections(inspections []fssync.MosquitoInspection) []ResponseMosquitoInspection {
+func NewResponseMosquitoInspections(inspections []shared.MosquitoInspection) []ResponseMosquitoInspection {
 	results := make([]ResponseMosquitoInspection, 0)
 	for _, i := range inspections {
 		results = append(results, NewResponseMosquitoInspection(i))
@@ -116,7 +116,7 @@ func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func NewResponseMosquitoSource(ms fssync.MosquitoSource) ResponseMosquitoSource {
+func NewResponseMosquitoSource(ms shared.MosquitoSource) ResponseMosquitoSource {
 
 	return ResponseMosquitoSource{
 		Active:                  ms.Active(),
@@ -137,7 +137,7 @@ func NewResponseMosquitoSource(ms fssync.MosquitoSource) ResponseMosquitoSource 
 		Zone:                    ms.Zone(),
 	}
 }
-func NewResponseMosquitoSources(sources []fssync.MosquitoSource) []ResponseMosquitoSource {
+func NewResponseMosquitoSources(sources []shared.MosquitoSource) []ResponseMosquitoSource {
 	results := make([]ResponseMosquitoSource, 0)
 	for _, i := range sources {
 		results = append(results, NewResponseMosquitoSource(i))
@@ -163,7 +163,7 @@ type ResponseMosquitoTreatment struct {
 func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewResponseMosquitoTreatment(i fssync.MosquitoTreatment) ResponseMosquitoTreatment {
+func NewResponseMosquitoTreatment(i shared.MosquitoTreatment) ResponseMosquitoTreatment {
 	return ResponseMosquitoTreatment{
 		Comments:        i.Comments(),
 		Created:         i.Created().Format("2006-01-02T15:04:05.000Z"),
@@ -178,7 +178,7 @@ func NewResponseMosquitoTreatment(i fssync.MosquitoTreatment) ResponseMosquitoTr
 		TreatHectares:   i.TreatHectares(),
 	}
 }
-func NewResponseMosquitoTreatments(treatments []fssync.MosquitoTreatment) []ResponseMosquitoTreatment {
+func NewResponseMosquitoTreatments(treatments []shared.MosquitoTreatment) []ResponseMosquitoTreatment {
 	results := make([]ResponseMosquitoTreatment, 0)
 	for _, i := range treatments {
 		results = append(results, NewResponseMosquitoTreatment(i))
@@ -220,7 +220,7 @@ func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func NewResponseServiceRequest(sr fssync.ServiceRequest) ResponseServiceRequest {
+func NewResponseServiceRequest(sr shared.ServiceRequest) ResponseServiceRequest {
 	return ResponseServiceRequest{
 		Address:            sr.Address(),
 		AssignedTechnician: sr.AssignedTechnician(),
@@ -237,7 +237,7 @@ func NewResponseServiceRequest(sr fssync.ServiceRequest) ResponseServiceRequest 
 		Zip:                sr.Zip(),
 	}
 }
-func NewResponseServiceRequests(requests []fssync.ServiceRequest) []ResponseServiceRequest {
+func NewResponseServiceRequests(requests []shared.ServiceRequest) []ResponseServiceRequest {
 	results := make([]ResponseServiceRequest, 0)
 	for _, i := range requests {
 		results = append(results, NewResponseServiceRequest(i))
@@ -256,7 +256,7 @@ type ResponseTrapData struct {
 func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewResponseTrapDatum(td fssync.TrapData) ResponseTrapData {
+func NewResponseTrapDatum(td shared.TrapData) ResponseTrapData {
 	return ResponseTrapData{
 		Created:     td.Created().Format("2006-01-02T15:04:05.000Z"),
 		Description: td.Description(),
@@ -265,7 +265,7 @@ func NewResponseTrapDatum(td fssync.TrapData) ResponseTrapData {
 		Name:        td.Name(),
 	}
 }
-func NewResponseTrapData(data []fssync.TrapData) []ResponseTrapData {
+func NewResponseTrapData(data []shared.TrapData) []ResponseTrapData {
 	results := make([]ResponseTrapData, 0)
 	for _, i := range data {
 		results = append(results, NewResponseTrapDatum(i))

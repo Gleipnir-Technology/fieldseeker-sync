@@ -14,11 +14,13 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 
+	"github.com/Gleipnir-Technology/fieldseeker-sync"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/html"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
-func apiAudioPost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+func apiAudioPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	u_str := chi.URLParam(r, "uuid")
 	audioUUID, err := uuid.Parse(u_str)
 	if err != nil {
@@ -87,20 +89,20 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
    fmt.Fprintf(w, "M4A uploaded successfully to %s", filepath)
 }
 
-func apiClientIos(w http.ResponseWriter, r *http.Request, u *fssync.User) {
-	query := fssync.NewQuery()
+func apiClientIos(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	query := database.NewQuery()
 	query.Limit = 0
-	sources, err := fssync.MosquitoSourceQuery(&query)
+	sources, err := database.MosquitoSourceQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
-	requests, err := fssync.ServiceRequestQuery(&query)
+	requests, err := database.ServiceRequestQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
-	traps, err := fssync.TrapDataQuery(&query)
+	traps, err := database.TrapDataQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -112,14 +114,14 @@ func apiClientIos(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	}
 }
 
-func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	id := chi.URLParam(r, "uuid")
 	noteUUID, err := uuid.Parse(id)
 	if err != nil {
 		http.Error(w, "Failed to decode the uuid", http.StatusBadRequest)
 		return
 	}
-	var payload fssync.NidusNotePayload
+	var payload shared.NidusNotePayload
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read the payload", http.StatusBadRequest)
@@ -138,11 +140,11 @@ func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *fssync.User)
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
-	fssync.NoteUpdate(context.Background(), noteUUID, payload)
+	database.NoteUpdate(context.Background(), noteUUID, payload)
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func apiImagePost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+func apiImagePost(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	u_str := chi.URLParam(r, "uuid")
 	imageUUID, err := uuid.Parse(u_str)
 	if err != nil {
@@ -199,17 +201,17 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	fmt.Fprintf(w, "PNG uploaded successfully to %s", filepath)
 }
 
-func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
 
-	query := fssync.NewQuery()
+	query := database.NewQuery()
 	query.Bounds = *bounds
 	query.Limit = 100
-	sources, err := fssync.MosquitoSourceQuery(&query)
+	sources, err := database.MosquitoSourceQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -224,16 +226,16 @@ func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	}
 }
 
-func apiServiceRequest(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+func apiServiceRequest(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
-	query := fssync.NewQuery()
+	query := database.NewQuery()
 	query.Bounds = *bounds
 	query.Limit = 100
-	requests, err := fssync.ServiceRequestQuery(&query)
+	requests, err := database.ServiceRequestQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -248,17 +250,17 @@ func apiServiceRequest(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	}
 }
 
-func apiTrapData(w http.ResponseWriter, r *http.Request, u *fssync.User) {
+func apiTrapData(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
 
-	query := fssync.NewQuery()
+	query := database.NewQuery()
 	query.Bounds = *bounds
 	query.Limit = 100
-	trap_data, err := fssync.TrapDataQuery(&query)
+	trap_data, err := database.TrapDataQuery(&query)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -273,8 +275,8 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u *fssync.User) {
 	}
 }
 
-func index(w http.ResponseWriter, r *http.Request, u *fssync.User) {
-	count, err := fssync.ServiceRequestCount()
+func index(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	count, err := database.ServiceRequestCount()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -312,7 +314,7 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	user, err := fssync.ValidateUser(username, password)
+	user, err := database.ValidateUser(username, password)
 	if err != nil {
 		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
 		return
