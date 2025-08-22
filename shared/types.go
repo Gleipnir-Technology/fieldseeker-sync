@@ -9,6 +9,8 @@ import (
 	"github.com/google/uuid"
 )
 
+type H3Cell uint64
+
 type hasCreated interface {
 	getCreated() string
 }
@@ -558,10 +560,23 @@ type Location struct {
 	Longitude float64
 }
 
+type NoteAudioPayload struct {
+   UUID      string    `json:"uuid"`
+   Breadcrumbs []NoteAudioBreadcrumbPayload  `json:"breadcrumbs"`
+   Created   time.Time `json:"created"`
+   Duration  int `json:"duration"`
+   Transcription *string `json:"transcription"`
+}
+
+type NoteAudioBreadcrumbPayload struct {
+   Cell   H3Cell `json:"cell"`
+   Created   time.Time `json:"created"`
+	
+}
+
 type NidusNotePayload struct {
    UUID      string    `json:"uuid"`
    Timestamp time.Time `json:"timestamp"`
-   Audio     []string  `json:"audio"`
    Images    []string  `json:"images"`
    Location  Location  `json:"location"`
    Text      string    `json:"text"`

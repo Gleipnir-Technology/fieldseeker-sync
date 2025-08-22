@@ -131,6 +131,54 @@ func MosquitoSourceQuery(q *DBQuery) ([]shared.MosquitoSource, error) {
 	return results, nil
 }
 
+func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteAudioPayload) error {
+	var options pgx.TxOptions
+	transaction, err := pgInstance.db.BeginTx(ctx, options)
+	if err != nil {
+		return fmt.Errorf("Failed to begin transaction: %v", err)
+	}
+
+	VERSION := 1
+	query := `INSERT INTO note_audio (created, deleted, duration, transcription, version, uuid) VALUES (@created, @deleted, @duration, @trascription, @version, @uuid)`
+	args := pgx.NamedArgs{
+		"created":       payload.Created,
+		"deleted": nil,
+		"duration":      payload.Duration,
+		"transcription":           payload.Transcription,
+		"version":           VERSION,
+		"uuid":           noteUUID,
+	}
+	row, err := pgInstance.db.Exec(context.Background(), query, args)
+	if err != nil {
+		return fmt.Errorf("Unable to insert row into user_: %v", err)
+	}
+	log.Println("Saved audio note", noteUUID, row)
+
+	rows := make([][]interface{}, 0, len(payload.Breadcrumbs))
+	for i, b := range payload.Breadcrumbs {
+		rows = append(rows, []interface{}{
+			b.Created,
+			b.Cell,
+			noteUUID,
+			VERSION,
+			i,
+		})
+	}
+
+	pgInstance.db.CopyFrom(
+		ctx,
+		pgx.Identifier{"note_audio_breadcrumb"},
+		[]string{"created", "cell", "note_audio_uuid", "note_audio_version", "position"},
+		pgx.CopyFromRows(rows),
+	)
+
+	err = transaction.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to commit transaction: %v", err)
+	}
+	return nil
+}
+
 func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNotePayload) error {
 	args := pgx.NamedArgs{
 		"uuid": noteUUID,
@@ -196,13 +244,6 @@ func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNot
 		db_audio_set[u] = false
 	}
 	has_audio_update := false
-	for _, u := range payload.Audio {
-		_, ok := db_audio_set[u]
-		if !ok {
-			has_audio_update = true
-		}
-		db_audio_set[u] = true
-	}
 	for _, v := range db_audio_set {
 		if !v {
 			has_audio_update = true

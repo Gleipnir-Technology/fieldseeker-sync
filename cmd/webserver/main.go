@@ -119,6 +119,7 @@ func main() {
 		r.Method("GET", "/client/ios", NewEnsureAuth(apiClientIos))
 		r.Method("PUT", "/client/ios/note/{uuid}", NewEnsureAuth(apiClientIosNotePut))
 		r.Method("POST", "/audio/{uuid}", NewEnsureAuth(apiAudioPost))
+		r.Method("POST", "/audio/{uuid}/content", NewEnsureAuth(apiAudioContentPost))
 		r.Method("POST", "/image/{uuid}", NewEnsureAuth(apiImagePost))
 		r.Get("/webhook/fieldseeker", webhookFieldseeker)
 		r.Post("/webhook/fieldseeker", webhookFieldseeker)
