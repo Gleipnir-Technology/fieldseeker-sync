@@ -179,6 +179,24 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	return nil
 }
 
+func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteImagePayload) error {
+	VERSION := 1
+	query := `INSERT INTO note_image (created, deleted, version, uuid) VALUES (@created, @deleted, @version, @uuid)`
+	args := pgx.NamedArgs{
+		"created":       payload.Created,
+		"deleted": nil,
+		"version":           VERSION,
+		"uuid":           noteUUID,
+	}
+	row, err := pgInstance.db.Exec(context.Background(), query, args)
+	if err != nil {
+		return fmt.Errorf("Unable to insert row into note_image: %v", err)
+	}
+	log.Println("Saved image note", noteUUID, row)
+
+	return nil
+}
+
 func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNotePayload) error {
 	args := pgx.NamedArgs{
 		"uuid": noteUUID,

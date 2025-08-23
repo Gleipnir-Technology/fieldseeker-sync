@@ -121,6 +121,7 @@ func main() {
 		r.Method("POST", "/audio/{uuid}", NewEnsureAuth(apiAudioPost))
 		r.Method("POST", "/audio/{uuid}/content", NewEnsureAuth(apiAudioContentPost))
 		r.Method("POST", "/image/{uuid}", NewEnsureAuth(apiImagePost))
+		r.Method("POST", "/image/{uuid}/content", NewEnsureAuth(apiImageContentPost))
 		r.Get("/webhook/fieldseeker", webhookFieldseeker)
 		r.Post("/webhook/fieldseeker", webhookFieldseeker)
 	})

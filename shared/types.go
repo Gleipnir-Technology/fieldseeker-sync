@@ -560,6 +560,12 @@ type Location struct {
 	Longitude float64
 }
 
+type NoteImagePayload struct {
+   UUID      string    `json:"uuid"`
+   Cell H3Cell  `json:"cell"`
+   Created   time.Time `json:"created"`
+}
+
 type NoteAudioPayload struct {
    UUID      string    `json:"uuid"`
    Breadcrumbs []NoteAudioBreadcrumbPayload  `json:"breadcrumbs"`

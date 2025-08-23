@@ -150,6 +150,37 @@ func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *shared.User)
 }
 
 func apiImagePost(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	id := chi.URLParam(r, "uuid")
+	noteUUID, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "Failed to decode the uuid", http.StatusBadRequest)
+		return
+	}
+
+	var payload shared.NoteImagePayload
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read the payload", http.StatusBadRequest)
+		return
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		log.Println("Image note POST JSON decode error: ", err)
+		output, err := os.OpenFile("/tmp/request.body", os.O_RDWR|os.O_CREATE, 0666)
+		if err != nil {
+			log.Println("Failed to open temp request.bady")
+		}
+		defer output.Close()
+		output.Write(body)
+		log.Println("Wrote request to /tmp/request.body")
+
+		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
+		return
+	}
+	database.NoteImageCreate(context.Background(), noteUUID, payload)
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	u_str := chi.URLParam(r, "uuid")
 	imageUUID, err := uuid.Parse(u_str)
 	if err != nil {
