@@ -90,7 +90,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
    }
 
    w.WriteHeader(http.StatusOK)
-   log.Printf("Saved image file %s\n", audioUUID)
+   log.Printf("Saved audio file %s.m4a\n", audioUUID)
    fmt.Fprintf(w, "M4A uploaded successfully to %s", filepath)
 }
 
