@@ -142,11 +142,11 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	query := `INSERT INTO note_audio (created, deleted, duration, transcription, version, uuid) VALUES (@created, @deleted, @duration, @trascription, @version, @uuid)`
 	args := pgx.NamedArgs{
 		"created":       payload.Created,
-		"deleted": nil,
+		"deleted":       nil,
 		"duration":      payload.Duration,
-		"transcription":           payload.Transcription,
-		"version":           VERSION,
-		"uuid":           noteUUID,
+		"transcription": payload.Transcription,
+		"version":       VERSION,
+		"uuid":          noteUUID,
 	}
 	row, err := pgInstance.db.Exec(context.Background(), query, args)
 	if err != nil {
@@ -183,10 +183,10 @@ func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	VERSION := 1
 	query := `INSERT INTO note_image (created, deleted, version, uuid) VALUES (@created, @deleted, @version, @uuid)`
 	args := pgx.NamedArgs{
-		"created":       payload.Created,
+		"created": payload.Created,
 		"deleted": nil,
-		"version":           VERSION,
-		"uuid":           noteUUID,
+		"version": VERSION,
+		"uuid":    noteUUID,
 	}
 	row, err := pgInstance.db.Exec(context.Background(), query, args)
 	if err != nil {
@@ -208,9 +208,9 @@ func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNot
 	defer rows.Close()
 	for rows.Next() {
 		var (
-			latitude float64
-			longitude float64
-			text string
+			latitude    float64
+			longitude   float64
+			text        string
 			version_max int
 		)
 		if err = rows.Scan(&latitude, &longitude, &text, &version_max); err != nil {
@@ -224,13 +224,13 @@ func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNot
 			}
 			query := "INSERT INTO history_note created,latitude,longitude,text,version,uuid VALUES (@created,@latitude,@longitude,@text,@version,@uuid)"
 			args = pgx.NamedArgs{
-				"created": time.Now(),
-				"latitude": payload.Location.Latitude,
+				"created":   time.Now(),
+				"latitude":  payload.Location.Latitude,
 				"longitude": payload.Location.Longitude,
-				"text": payload.Text,
-				"version": version_max + 1,
-				"updated": time.Now(),
-				"uuid": payload.UUID,
+				"text":      payload.Text,
+				"version":   version_max + 1,
+				"updated":   time.Now(),
+				"uuid":      payload.UUID,
 			}
 			if _, err := transaction.Exec(ctx, query, args); err != nil {
 				return fmt.Errorf("Failed to insert note history: %v", err)
@@ -425,7 +425,7 @@ func doMigrations(connection_string string) error {
 	if err := row.Scan(&val); err != nil {
 		return fmt.Errorf("Failed to get database version query result: %w", err)
 	}
-	log.Printf("Connected to: %s", val);
+	log.Printf("Connected to: %s", val)
 
 	goose.SetBaseFS(embedMigrations)
 

@@ -8,10 +8,10 @@ import (
 
 // acceptValue represents a parsed accept header value
 type acceptValue struct {
-	value      string  // the media type or value
-	quality    float64 // quality factor (0.0 to 1.0)
-	specificity int    // specificity level for sorting
-	order      int     // original order in the accept header
+	value       string  // the media type or value
+	quality     float64 // quality factor (0.0 to 1.0)
+	specificity int     // specificity level for sorting
+	order       int     // original order in the accept header
 }
 
 // NegotiateContent returns the best content to offer from a set of possible
@@ -40,7 +40,7 @@ func NegotiateContent(accepts []string, offers []string) string {
 
 	for offerIdx, offer := range offers {
 		score, specificity := calculateScore(offer, acceptValues)
-		
+
 		// Check if this is a better match
 		if score > bestScore ||
 			(score == bestScore && specificity > bestSpecificity) ||
@@ -143,14 +143,14 @@ func matches(offer, accept string) bool {
 	if accept == "*/*" {
 		return true
 	}
-	
+
 	if strings.HasSuffix(accept, "/*") {
 		// Type wildcard (e.g., "text/*")
 		offerType := strings.Split(offer, "/")[0]
 		acceptType := strings.Split(accept, "/")[0]
 		return offerType == acceptType
 	}
-	
+
 	// Exact match
 	return offer == accept
 }

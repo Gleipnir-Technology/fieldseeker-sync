@@ -21,10 +21,10 @@ type ConfigWebhook struct {
 }
 
 type Config struct {
-	Arcgis   ConfigArcgis
-	Database ConfigDatabase
+	Arcgis    ConfigArcgis
+	Database  ConfigDatabase
 	UserFiles ConfigUserFiles
-	Webhook  ConfigWebhook
+	Webhook   ConfigWebhook
 }
 
 func ReadConfig() (*Config, error) {

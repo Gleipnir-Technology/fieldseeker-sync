@@ -556,34 +556,33 @@ func NewTrapData(data *FS_TrapLocation) TrapData {
 }
 
 type Location struct {
-	Latitude float64
+	Latitude  float64
 	Longitude float64
 }
 
 type NoteImagePayload struct {
-   UUID      string    `json:"uuid"`
-   Cell H3Cell  `json:"cell"`
-   Created   time.Time `json:"created"`
+	UUID    string    `json:"uuid"`
+	Cell    H3Cell    `json:"cell"`
+	Created time.Time `json:"created"`
 }
 
 type NoteAudioPayload struct {
-   UUID      string    `json:"uuid"`
-   Breadcrumbs []NoteAudioBreadcrumbPayload  `json:"breadcrumbs"`
-   Created   time.Time `json:"created"`
-   Duration  int `json:"duration"`
-   Transcription *string `json:"transcription"`
+	UUID          string                       `json:"uuid"`
+	Breadcrumbs   []NoteAudioBreadcrumbPayload `json:"breadcrumbs"`
+	Created       time.Time                    `json:"created"`
+	Duration      int                          `json:"duration"`
+	Transcription *string                      `json:"transcription"`
 }
 
 type NoteAudioBreadcrumbPayload struct {
-   Cell   H3Cell `json:"cell"`
-   Created   time.Time `json:"created"`
-	
+	Cell    H3Cell    `json:"cell"`
+	Created time.Time `json:"created"`
 }
 
 type NidusNotePayload struct {
-   UUID      string    `json:"uuid"`
-   Timestamp time.Time `json:"timestamp"`
-   Images    []string  `json:"images"`
-   Location  Location  `json:"location"`
-   Text      string    `json:"text"`
+	UUID      string    `json:"uuid"`
+	Timestamp time.Time `json:"timestamp"`
+	Images    []string  `json:"images"`
+	Location  Location  `json:"location"`
+	Text      string    `json:"text"`
 }

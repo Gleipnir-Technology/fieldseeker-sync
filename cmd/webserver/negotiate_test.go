@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-
 )
 
 func TestContentType(t *testing.T) {

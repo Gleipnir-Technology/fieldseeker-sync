@@ -172,7 +172,6 @@ func renderer(w http.ResponseWriter, r *http.Request, v render.Renderer) error {
 	return nil
 }
 
-
 func isNil(f reflect.Value) bool {
 	switch f.Kind() {
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
@@ -200,4 +199,3 @@ func JSON(w http.ResponseWriter, r *http.Request, v interface{}) {
 	}
 	w.Write(buf.Bytes()) //nolint:errcheck
 }
-

@@ -19,8 +19,8 @@ import (
 
 	"github.com/Gleipnir-Technology/fieldseeker-sync"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
-	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/html"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
 // authenticatedHandler is a handler function that also requires a user

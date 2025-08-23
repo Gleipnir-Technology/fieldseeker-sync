@@ -5,6 +5,7 @@ pkgs.mkShell {
     pkgs.go
     pkgs.goose
     pkgs.gotools
+    pkgs.lefthook
     pkgs.watchexec
   ];
 }
