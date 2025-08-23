@@ -75,13 +75,6 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 	}
 	defer dst.Close()
 
-	// Write the header bytes we already read
-	_, err = io.Copy(dst, r.Body)
-	if err != nil {
-		http.Error(w, "Unable to save file", http.StatusInternalServerError)
-		return
-	}
-
 	// Copy rest of request body to file
 	_, err = io.Copy(dst, r.Body)
 	if err != nil {
@@ -188,25 +181,6 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 	}
 	// Read first 8 bytes to check PNG signature
-	/*
-		pngSignature := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
-		buffer := make([]byte, 8)
-		_, err = r.Body.Read(buffer)
-		if err != nil {
-			log.Println("Unable to read image request body", err)
-			http.Error(w, "Unable to read request body", http.StatusBadRequest)
-			return
-		}
-
-		// Verify PNG signature
-		for i, b := range pngSignature {
-			if buffer[i] != b {
-				http.Error(w, "File is not a valid PNG", http.StatusBadRequest)
-				return
-			}
-		}
-
-	*/
 	config, err := fssync.ReadConfig()
 	if err != nil {
 		log.Printf("Failed to read config", err)
@@ -222,13 +196,6 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 		return
 	}
 	defer dst.Close()
-
-	// Write the header bytes we already read
-	_, err = io.Copy(dst, r.Body)
-	if err != nil {
-		http.Error(w, "Unable to save file", http.StatusInternalServerError)
-		return
-	}
 
 	// Copy rest of request body to file
 	_, err = io.Copy(dst, r.Body)
