@@ -58,37 +58,6 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 	}
 
-	/*
-   // Read first 20 bytes to check for M4A signature
-   buffer := make([]byte, 20)
-   _, err = r.Body.Read(buffer)
-   if err != nil {
-	   log.Printf("Failed to read audio request body: %v\n", err)
-   	http.Error(w, "Unable to read request body", http.StatusBadRequest)
-   	return
-   }
-
-   // Check for M4A file signature (ftyp at offset 4, followed by M4A identifiers)
-   if string(buffer[4:8]) != "ftyp" {
-   	http.Error(w, "File is not a valid M4A", http.StatusBadRequest)
-   	return
-   }
-
-   // Check for M4A brand identifiers
-   brandValid := false
-   brands := []string{"M4A ", "mp41", "mp42", "isom"}
-   for _, brand := range brands {
-   	if string(buffer[8:12]) == brand {
-   		brandValid = true
-   		break
-   	}
-   }
-
-   if !brandValid {
-   	http.Error(w, "File is not a valid M4A", http.StatusBadRequest)
-   	return
-   }
-*/
    config, err := fssync.ReadConfig()
    if err != nil {
 	log.Printf("Failed to read config", err)
