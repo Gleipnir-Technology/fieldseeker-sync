@@ -187,7 +187,7 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 		http.Error(w, "Unable to create file", http.StatusInternalServerError)
 		return
 	}
-	filepath := fmt.Sprintf("%s/%s.png", config.UserFiles.Directory, imageUUID.String())
+	filepath := fmt.Sprintf("%s/%s.photo", config.UserFiles.Directory, imageUUID.String())
 
 	// Create file in configured directory
 	dst, err := os.Create(filepath)
