@@ -35,6 +35,9 @@ func ReadConfig() (*Config, error) {
 	c.Arcgis.Token = os.Getenv("FIELDSEEKER_SYNC_ARCGIS_TOKEN")
 	c.Database.URL = os.Getenv("FIELDSEEKER_SYNC_DATABASE_URL")
 	c.UserFiles.Directory = os.Getenv("FIELDSEEKER_SYNC_USERFILES_DIRECTORY")
+	if len(c.UserFiles.Directory) == 0 {
+		c.UserFiles.Directory = "/opt/fieldseeker-sync/data"
+	}
 	c.Webhook.Secret = os.Getenv("FIELDSEEKER_SYNC_WEBHOOK_SECRET")
 	return &c, nil
 }
