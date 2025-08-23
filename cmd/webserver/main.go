@@ -129,8 +129,12 @@ func main() {
 	filesDir := http.Dir(filepath.Join(workDir, "static"))
 	FileServer(r, "/static", filesDir)
 
-	log.Println("Serving web requests on :3000")
-	http.ListenAndServe(":3000", r)
+	bind := os.Getenv("FIELDSEEKER_SYNC_WEBSERVER_BIND")
+	if len(bind) == 0 {
+		bind = ":3000"
+	}
+	log.Println("Serving web requests on", bind)
+	http.ListenAndServe(bind, r)
 }
 
 func parseBounds(r *http.Request) (*shared.Bounds, error) {
