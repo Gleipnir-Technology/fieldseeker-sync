@@ -131,7 +131,7 @@ func MosquitoSourceQuery(q *DBQuery) ([]shared.MosquitoSource, error) {
 	return results, nil
 }
 
-func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteAudioPayload) error {
+func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteAudioPayload, userID int) error {
 	var options pgx.TxOptions
 	transaction, err := pgInstance.db.BeginTx(ctx, options)
 	if err != nil {
@@ -139,9 +139,10 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	}
 
 	VERSION := 1
-	query := `INSERT INTO note_audio (created, deleted, duration, transcription, version, uuid) VALUES (@created, @deleted, @duration, @trascription, @version, @uuid)`
+	query := `INSERT INTO note_audio (created, creator, deleted, duration, transcription, version, uuid) VALUES (@created, @deleted, @duration, @trascription, @version, @uuid)`
 	args := pgx.NamedArgs{
 		"created":       payload.Created,
+		"creator":       userID,
 		"deleted":       nil,
 		"duration":      payload.Duration,
 		"transcription": payload.Transcription,
@@ -179,11 +180,12 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	return nil
 }
 
-func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteImagePayload) error {
+func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteImagePayload, userID int) error {
 	VERSION := 1
 	query := `INSERT INTO note_image (created, deleted, version, uuid) VALUES (@created, @deleted, @version, @uuid)`
 	args := pgx.NamedArgs{
 		"created": payload.Created,
+		"creator": userID,
 		"deleted": nil,
 		"version": VERSION,
 		"uuid":    noteUUID,
@@ -397,10 +399,11 @@ func TrapDataQuery(q *DBQuery) ([]shared.TrapData, error) {
 func ValidateUser(username string, password string) (*shared.User, error) {
 	var (
 		display_name string
+		id           int
 		hash         string
 	)
-	query := `SELECT display_name,password_hash FROM user_ WHERE username=$1`
-	err := pgInstance.db.QueryRow(context.Background(), query, username).Scan(&display_name, &hash)
+	query := `SELECT display_name,id,password_hash FROM user_ WHERE username=$1`
+	err := pgInstance.db.QueryRow(context.Background(), query, username).Scan(&display_name, &hash, &id)
 	if err != nil {
 		return nil, err
 	}
@@ -409,6 +412,7 @@ func ValidateUser(username string, password string) (*shared.User, error) {
 	}
 	return &shared.User{
 		DisplayName: display_name,
+		ID:          id,
 		Username:    username,
 	}, nil
 }

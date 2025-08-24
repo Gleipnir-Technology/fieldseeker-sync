@@ -47,7 +47,7 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
-	database.NoteAudioCreate(context.Background(), noteUUID, payload)
+	database.NoteAudioCreate(context.Background(), noteUUID, payload, u.ID)
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -169,7 +169,7 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
-	database.NoteImageCreate(context.Background(), noteUUID, payload)
+	database.NoteImageCreate(context.Background(), noteUUID, payload, u.ID)
 	w.WriteHeader(http.StatusAccepted)
 }
 

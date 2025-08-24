@@ -123,6 +123,7 @@ type FS_Treatment struct {
 
 type User struct {
 	DisplayName      string `db:"display_name"`
+	ID               int    `db:"id"`
 	PasswordHashType string `db:"password_hash_type"`
 	PasswordHash     string `db:"password_hash"`
 	Username         string `db:"username"`
