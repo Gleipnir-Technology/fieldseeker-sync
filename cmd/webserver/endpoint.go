@@ -47,7 +47,10 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
-	database.NoteAudioCreate(context.Background(), noteUUID, payload, u.ID)
+	if err := database.NoteAudioCreate(context.Background(), noteUUID, payload, u.ID); err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -56,6 +59,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 	audioUUID, err := uuid.Parse(u_str)
 	if err != nil {
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
+		return
 	}
 
 	config, err := fssync.ReadConfig()
@@ -109,6 +113,7 @@ func apiClientIos(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	response := NewResponseClientIos(sources, requests, traps)
 	if err := render.Render(w, r, response); err != nil {
 		render.Render(w, r, errRender(err))
+		return
 	}
 }
 
@@ -138,7 +143,10 @@ func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *shared.User)
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
-	database.NoteUpdate(context.Background(), noteUUID, payload)
+	if err := database.NoteUpdate(context.Background(), noteUUID, payload); err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -169,7 +177,11 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
-	database.NoteImageCreate(context.Background(), noteUUID, payload, u.ID)
+	err = database.NoteImageCreate(context.Background(), noteUUID, payload, u.ID)
+	if err != nil {
+		render.Render(w, r, errRender(err))
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
 }
 
