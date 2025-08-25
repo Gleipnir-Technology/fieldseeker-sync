@@ -85,7 +85,6 @@ func getAuthenticatedUser(r *http.Request) (*shared.User, error) {
 	if !ok {
 		return nil, errors.New("No valid user in session or authentication headers")
 	}
-	fmt.Println("Basic auth provided", username, password)
 	user, err := database.ValidateUser(username, password)
 	if err != nil {
 		fmt.Println("ValidateUser error:", err)
