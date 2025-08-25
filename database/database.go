@@ -139,7 +139,7 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	}
 
 	VERSION := 1
-	query := `INSERT INTO note_audio (created, creator, deleted, duration, transcription, version, uuid) VALUES (@created, @deleted, @duration, @trascription, @version, @uuid)`
+	query := `INSERT INTO note_audio (created, creator, deleted, duration, transcription, version, uuid) VALUES (@created, @creator, @deleted, @duration, @trascription, @version, @uuid)`
 	args := pgx.NamedArgs{
 		"created":       payload.Created,
 		"creator":       userID,
@@ -182,7 +182,7 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 
 func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteImagePayload, userID int) error {
 	VERSION := 1
-	query := `INSERT INTO note_image (created, deleted, version, uuid) VALUES (@created, @deleted, @version, @uuid)`
+	query := `INSERT INTO note_image (created, creator, deleted, version, uuid) VALUES (@created, @creator, @deleted, @version, @uuid)`
 	args := pgx.NamedArgs{
 		"created": payload.Created,
 		"creator": userID,
