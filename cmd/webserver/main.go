@@ -73,10 +73,17 @@ func errRender(err error) render.Renderer {
 func getAuthenticatedUser(r *http.Request) (*shared.User, error) {
 	// See if we can get the user from the session first
 	display_name := sessionManager.GetString(r.Context(), "display_name")
+	user_id_str := sessionManager.GetString(r.Context(), "user_id")
 	username := sessionManager.GetString(r.Context(), "username")
+	user_id, err := strconv.Atoi(user_id_str)
+    	if err != nil {
+		return nil, errors.New("Invalid user ID in the session")
+    	}
 	if len(display_name) > 0 && len(username) > 0 {
+
 		return &shared.User{
 			DisplayName: display_name,
+			ID: user_id,
 			Username:    username,
 		}, nil
 	}
