@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -101,11 +103,27 @@ func getAuthenticatedUser(r *http.Request) (*shared.User, error) {
 }
 
 func main() {
+	log.Fatal(run())
+}
+
+func run() error {
+	err := sentry.Init(sentry.ClientOptions{
+		EnableTracing: true,
+		TracesSampleRate: 1.0,
+	})
+	if err != nil {
+		return err
+	}
+	defer sentry.Flush(2 * time.Second)
+
 	sessionManager = scs.New()
 	sessionManager.Lifetime = 24 * time.Hour
 
 	// Set our own responder so that we can set headers ourselves
 	render.Respond = Responder
+	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
+		Repanic: true,
+	})
 	r := chi.NewRouter()
 
 	// A good base middleware stack
@@ -113,6 +131,8 @@ func main() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	// Sentry goes after recoverer with repanic
+	r.Use(sentryMiddleware.Handle)
 	r.Use(sessionManager.LoadAndSave)
 
 	// Set a timeout value on the request context (ctx), that will signal
@@ -120,7 +140,7 @@ func main() {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	err := fssync.InitDB()
+	err = fssync.InitDB()
 	if err != nil {
 		fmt.Printf("Failed to init shared: %v", err)
 		os.Exit(1)
@@ -157,7 +177,7 @@ func main() {
 		bind = ":3000"
 	}
 	log.Println("Serving web requests on", bind)
-	http.ListenAndServe(bind, r)
+	return http.ListenAndServe(bind, r)
 }
 
 func parseBounds(r *http.Request) (*shared.Bounds, error) {
