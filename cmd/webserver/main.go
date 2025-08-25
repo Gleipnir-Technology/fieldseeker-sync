@@ -48,7 +48,10 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/login?next="+r.URL.Path, http.StatusSeeOther)
 			return
 		} else {
-			http.Error(w, "Login required", http.StatusUnauthorized)
+			fmt.Println("Responding with login required on error:", err)
+			w.Header().Set("WWW-Authenticate", `Basic realm="Nidus Sync"`)
+			w.WriteHeader(401)
+			w.Write([]byte("Unauthorized.\n"))
 			return
 		}
 	}
@@ -66,15 +69,36 @@ func errRender(err error) render.Renderer {
 }
 
 func getAuthenticatedUser(r *http.Request) (*shared.User, error) {
+	// See if we can get the user from the session first
 	display_name := sessionManager.GetString(r.Context(), "display_name")
 	username := sessionManager.GetString(r.Context(), "username")
-	if display_name == "" || username == "" {
-		return nil, errors.New("No valid user in session")
+	if len(display_name) > 0 && len(username) > 0 {
+		return &shared.User{
+			DisplayName: display_name,
+			Username:    username,
+		}, nil
 	}
-	return &shared.User{
-		DisplayName: display_name,
-		Username:    username,
-	}, nil
+
+	// If we can't get it from the session, let's see if we can authenticate from
+	// the header
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		return nil, errors.New("No valid user in session or authentication headers")
+	}
+	fmt.Println("Basic auth provided", username, password)
+	user, err := database.ValidateUser(username, password)
+	if err != nil {
+		fmt.Println("ValidateUser error:", err)
+		return nil, errors.New("Invalid username/password combination")
+	} else if user == nil {
+		return nil, errors.New("Invalid username/password pair")
+	}
+
+	sessionManager.Put(r.Context(), "display_name", user.DisplayName)
+	sessionManager.Put(r.Context(), "user_id", user.ID)
+	sessionManager.Put(r.Context(), "username", username)
+
+	return user, nil
 }
 
 func main() {

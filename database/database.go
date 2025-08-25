@@ -403,7 +403,7 @@ func ValidateUser(username string, password string) (*shared.User, error) {
 		hash         string
 	)
 	query := `SELECT display_name,id,password_hash FROM user_ WHERE username=$1`
-	err := pgInstance.db.QueryRow(context.Background(), query, username).Scan(&display_name, &hash, &id)
+	err := pgInstance.db.QueryRow(context.Background(), query, username).Scan(&display_name, &id, &hash)
 	if err != nil {
 		return nil, err
 	}
