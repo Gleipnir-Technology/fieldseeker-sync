@@ -151,7 +151,8 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	}
 	row, err := pgInstance.db.Exec(context.Background(), query, args)
 	if err != nil {
-		return fmt.Errorf("Unable to insert row into user_: %v", err)
+		transaction.Rollback(ctx)
+		return fmt.Errorf("Unable to insert row into note_audio: %v", err)
 	}
 	log.Println("Saved audio note", noteUUID, row)
 
@@ -235,10 +236,12 @@ func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNot
 				"uuid":      payload.UUID,
 			}
 			if _, err := transaction.Exec(ctx, query, args); err != nil {
+				transaction.Rollback(ctx)
 				return fmt.Errorf("Failed to insert note history: %v", err)
 			}
 			query = "UPDATE note SET latitude=@latitude,longitude=@longitude,text=@text,updated=@updated WHERE uuid=@uuid"
 			if _, err := transaction.Exec(ctx, query, args); err != nil {
+				transaction.Rollback(ctx)
 				return fmt.Errorf("Failed to update note : %v", err)
 			}
 			err = transaction.Commit(ctx)
@@ -379,7 +382,6 @@ func TrapDataQuery(q *DBQuery) ([]shared.TrapData, error) {
 		return results, errors.New("You must initialize the DB first")
 	}
 
-	log.Println("Getting FS_TrapLocation")
 	args, query := prepQuery(q, "SELECT geometry_x AS \"geometry.X\",geometry_y AS \"geometry.Y\",creationdate,globalid,name,description,accessdesc,objectid FROM FS_TrapLocation WHERE geometry_x > @west AND geometry_x < @east AND geometry_y > @south AND geometry_y < @north")
 	rows, _ := pgInstance.db.Query(context.Background(), query, args)
 	var fs_trap_locations []*shared.FS_TrapLocation
@@ -388,7 +390,6 @@ func TrapDataQuery(q *DBQuery) ([]shared.TrapData, error) {
 		log.Println("CollectRows error:", err)
 		return results, err
 	}
-	log.Println("Found FS_TrapLocation", len(fs_trap_locations))
 	for _, l := range fs_trap_locations {
 		results = append(results, shared.NewTrapData(l))
 	}
@@ -569,11 +570,13 @@ func insertRowFromFeature(ctx context.Context, table string, sorted_columns []st
 
 	err = insertRowFromFeatureFS(ctx, transaction, table, sorted_columns, feature)
 	if err != nil {
+		transaction.Rollback(ctx)
 		return fmt.Errorf("Unable to insert FS: %v", err)
 	}
 
 	err = insertRowFromFeatureHistory(ctx, transaction, table, sorted_columns, feature, 1)
 	if err != nil {
+		transaction.Rollback(ctx)
 		return fmt.Errorf("Failed to insert history: %v", err)
 	}
 
@@ -703,10 +706,12 @@ func updateRowFromFeature(ctx context.Context, table string, sorted_columns []st
 
 	err = insertRowFromFeatureHistory(ctx, transaction, table, sorted_columns, feature, version+1)
 	if err != nil {
+		transaction.Rollback(ctx)
 		return fmt.Errorf("Failed to insert history: %v", err)
 	}
 	err = updateRowFromFeatureFS(ctx, transaction, table, sorted_columns, feature)
 	if err != nil {
+		transaction.Rollback(ctx)
 		return fmt.Errorf("Failed to update row from feature: %v", err)
 	}
 
