@@ -345,6 +345,7 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionManager.Put(r.Context(), "display_name", user.DisplayName)
+	sessionManager.Put(r.Context(), "user_id", user.ID)
 	sessionManager.Put(r.Context(), "username", username)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
