@@ -51,13 +51,13 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 		return fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
-	var version string
-	query := `SELECT version()`
-	err = pgInstance.db.QueryRow(context.Background(), query).Scan(&version)
+	var current string
+	query := `SELECT current_database()`
+	err = pgInstance.db.QueryRow(context.Background(), query).Scan(&current)
 	if err != nil {
-		return fmt.Errorf("Failed to get database version: %w", err)
+		return fmt.Errorf("Failed to get database current: %w", err)
 	}
-	log.Println("Connected to", version)
+	log.Println("Connected to", current)
 	return nil
 }
 
