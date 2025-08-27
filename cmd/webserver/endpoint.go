@@ -337,17 +337,25 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := database.ValidateUser(username, password)
 	if err != nil {
+		w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
 		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
 		return
 	} else if user == nil {
+		w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
 		log.Println("Login for", username, "is invalid")
 		http.Error(w, "Invalid username/password pair", http.StatusUnauthorized)
 	}
 
+	fmt.Println("Setting user session via login", user.DisplayName, user.ID, username)
 	sessionManager.Put(r.Context(), "display_name", user.DisplayName)
 	sessionManager.Put(r.Context(), "user_id", user.ID)
 	sessionManager.Put(r.Context(), "username", username)
-	http.Redirect(w, r, "/", http.StatusFound)
+	next := chi.URLParam(r, "next")
+	if next == "" {
+		w.WriteHeader(202)
+	} else {
+		http.Redirect(w, r, "/" + next, http.StatusFound)
+	}
 }
 
 func logoutGet(w http.ResponseWriter, r *http.Request) {

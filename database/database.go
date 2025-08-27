@@ -32,6 +32,12 @@ var (
 	pgOnce     sync.Once
 )
 
+type NoUserError struct {}
+func (e NoUserError) Error() string { return "That user does not exist" }
+
+type PasswordVerificationError struct {}
+func (e PasswordVerificationError) Error() string { return "Password verification failed" }
+
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
@@ -406,10 +412,12 @@ func ValidateUser(username string, password string) (*shared.User, error) {
 	query := `SELECT display_name,id,password_hash FROM user_ WHERE username=$1`
 	err := pgInstance.db.QueryRow(context.Background(), query, username).Scan(&display_name, &id, &hash)
 	if err != nil {
-		return nil, err
+		fmt.Printf("ValidateUser failed for '%s': %w\n", username, err)
+		return nil, NoUserError{}
 	}
 	if !shared.VerifyPassword(password, hash) {
-		return nil, nil
+		fmt.Printf("ValidateUser failed to validate password for '%s'", username)
+		return nil, PasswordVerificationError{}
 	}
 	return &shared.User{
 		DisplayName: display_name,

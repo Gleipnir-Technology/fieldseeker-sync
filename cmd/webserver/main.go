@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -25,88 +24,16 @@ import (
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
-// authenticatedHandler is a handler function that also requires a user
-type AuthenticatedHandler func(http.ResponseWriter, *http.Request, *shared.User)
-
-type EnsureAuth struct {
-	handler AuthenticatedHandler
-}
-
-func NewEnsureAuth(handlerToWrap AuthenticatedHandler) *EnsureAuth {
-	return &EnsureAuth{handlerToWrap}
-}
-
 var sessionManager *scs.SessionManager
 
-func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// If this is an API request respond with a more machine-readable error state
-	accept := r.Header.Values("Accept")
-	offers := []string{"application/json", "text/html"}
-
-	content_type := NegotiateContent(accept, offers)
-	user, err := getAuthenticatedUser(r)
-	if err != nil {
-		if content_type == "text/html" {
-			http.Redirect(w, r, "/login?next="+r.URL.Path, http.StatusSeeOther)
-			return
-		} else {
-			fmt.Println("Responding with login required on error:", err)
-			w.Header().Set("WWW-Authenticate", `Basic realm="Nidus Sync"`)
-			w.WriteHeader(401)
-			w.Write([]byte("Unauthorized.\n"))
-			return
-		}
-	}
-
-	ea.handler(w, r, user)
-}
-
 func errRender(err error) render.Renderer {
+	fmt.Println("Rendering error:", err)
 	return &ResponseErr{
 		Error:          err,
 		HTTPStatusCode: 500,
 		StatusText:     "Error rendering response",
 		ErrorText:      err.Error(),
 	}
-}
-
-func getAuthenticatedUser(r *http.Request) (*shared.User, error) {
-	// See if we can get the user from the session first
-	display_name := sessionManager.GetString(r.Context(), "display_name")
-	user_id_str := sessionManager.GetString(r.Context(), "user_id")
-	username := sessionManager.GetString(r.Context(), "username")
-	if len(user_id_str) > 0 && len(display_name) > 0 && len(username) > 0 {
-		user_id, err := strconv.Atoi(user_id_str)
-		if err != nil {
-			return nil, errors.New(fmt.Sprintf("Invalid user ID '%s' in the session", user_id_str))
-		}
-
-		return &shared.User{
-			DisplayName: display_name,
-			ID: user_id,
-			Username:    username,
-		}, nil
-	}
-
-	// If we can't get it from the session, let's see if we can authenticate from
-	// the header
-	username, password, ok := r.BasicAuth()
-	if !ok {
-		return nil, errors.New("No valid user in session or authentication headers")
-	}
-	user, err := database.ValidateUser(username, password)
-	if err != nil {
-		fmt.Println("ValidateUser error:", err)
-		return nil, errors.New("Invalid username/password combination")
-	} else if user == nil {
-		return nil, errors.New("Invalid username/password pair")
-	}
-
-	sessionManager.Put(r.Context(), "display_name", user.DisplayName)
-	sessionManager.Put(r.Context(), "user_id", user.ID)
-	sessionManager.Put(r.Context(), "username", username)
-
-	return user, nil
 }
 
 func main() {
