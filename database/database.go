@@ -24,11 +24,11 @@ import (
 )
 
 type postgres struct {
-	db *pgxpool.Pool
+	DB *pgxpool.Pool
 }
 
 var (
-	pgInstance *postgres
+	PGInstance *postgres
 	pgOnce     sync.Once
 )
 
@@ -50,7 +50,7 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 	err = nil
 	pgOnce.Do(func() {
 		db, e := pgxpool.New(ctx, connection_string)
-		pgInstance = &postgres{db}
+		PGInstance = &postgres{db}
 		err = e
 	})
 	if err != nil {
@@ -59,7 +59,7 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 
 	var current string
 	query := `SELECT current_database()`
-	err = pgInstance.db.QueryRow(context.Background(), query).Scan(&current)
+	err = PGInstance.DB.QueryRow(context.Background(), query).Scan(&current)
 	if err != nil {
 		return fmt.Errorf("Failed to get database current: %w", err)
 	}
@@ -81,12 +81,12 @@ func NewQuery() DBQuery {
 
 func MosquitoSourceQuery(q *DBQuery) ([]shared.MosquitoSource, error) {
 	results := make([]shared.MosquitoSource, 0)
-	if pgInstance == nil {
+	if PGInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
 	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",accessdesc,active,comments,creationdate,description,habitat,lastinspectdate,name,nextactiondatescheduled,usetype,waterorigin,zone,globalid FROM FS_PointLocation WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
 
-	rows, _ := pgInstance.db.Query(context.Background(), query, args)
+	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
 	var locations []*shared.FS_PointLocation
 
 	if err := pgxscan.ScanAll(&locations, rows); err != nil {
@@ -103,7 +103,7 @@ func MosquitoSourceQuery(q *DBQuery) ([]shared.MosquitoSource, error) {
 	args = pgx.NamedArgs{
 		"globalids": globalids,
 	}
-	rows, _ = pgInstance.db.Query(context.Background(), "SELECT actiontaken,comments,enddatetime,fieldtech,globalid,locationname,pointlocid,sitecond,zone FROM FS_MosquitoInspection WHERE pointlocid=ANY(@globalids)", args)
+	rows, _ = PGInstance.DB.Query(context.Background(), "SELECT actiontaken,comments,enddatetime,fieldtech,globalid,locationname,pointlocid,sitecond,zone FROM FS_MosquitoInspection WHERE pointlocid=ANY(@globalids)", args)
 	var inspections []*shared.FS_MosquitoInspection
 
 	if err := pgxscan.ScanAll(&inspections, rows); err != nil {
@@ -118,7 +118,7 @@ func MosquitoSourceQuery(q *DBQuery) ([]shared.MosquitoSource, error) {
 		inspections_by_locid[i.PointLocationID] = x
 	}
 
-	rows, _ = pgInstance.db.Query(context.Background(), "SELECT comments,enddatetime,fieldtech,globalid,habitat,product,qty,qtyunit,sitecond,treatacres,treathectares,pointlocid FROM FS_Treatment WHERE pointlocid=ANY(@globalids)", args)
+	rows, _ = PGInstance.DB.Query(context.Background(), "SELECT comments,enddatetime,fieldtech,globalid,habitat,product,qty,qtyunit,sitecond,treatacres,treathectares,pointlocid FROM FS_Treatment WHERE pointlocid=ANY(@globalids)", args)
 	var treatments []*shared.FS_Treatment
 
 	if err := pgxscan.ScanAll(&treatments, rows); err != nil {
@@ -139,7 +139,7 @@ func MosquitoSourceQuery(q *DBQuery) ([]shared.MosquitoSource, error) {
 
 func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteAudioPayload, userID int) error {
 	var options pgx.TxOptions
-	transaction, err := pgInstance.db.BeginTx(ctx, options)
+	transaction, err := PGInstance.DB.BeginTx(ctx, options)
 	if err != nil {
 		return fmt.Errorf("Failed to begin transaction: %v", err)
 	}
@@ -155,7 +155,7 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		"version":       VERSION,
 		"uuid":          noteUUID,
 	}
-	row, err := pgInstance.db.Exec(context.Background(), query, args)
+	row, err := PGInstance.DB.Exec(context.Background(), query, args)
 	if err != nil {
 		transaction.Rollback(ctx)
 		return fmt.Errorf("Unable to insert row into note_audio: %v", err)
@@ -173,7 +173,7 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		})
 	}
 
-	pgInstance.db.CopyFrom(
+	PGInstance.DB.CopyFrom(
 		ctx,
 		pgx.Identifier{"note_audio_breadcrumb"},
 		[]string{"created", "cell", "note_audio_uuid", "note_audio_version", "position"},
@@ -197,7 +197,7 @@ func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		"version": VERSION,
 		"uuid":    noteUUID,
 	}
-	row, err := pgInstance.db.Exec(context.Background(), query, args)
+	row, err := PGInstance.DB.Exec(context.Background(), query, args)
 	if err != nil {
 		return fmt.Errorf("Unable to insert row into note_image: %v", err)
 	}
@@ -210,7 +210,7 @@ func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNot
 	args := pgx.NamedArgs{
 		"uuid": noteUUID,
 	}
-	rows, err := pgInstance.db.Query(ctx, "SELECT note.latitude,note.longitude,note.text,MAX(history_note.version) AS version_max FROM note INNER JOIN history_note ON note.uuid=history_note.note_uuid WHERE note.uuid=@uuid", args)
+	rows, err := PGInstance.DB.Query(ctx, "SELECT note.latitude,note.longitude,note.text,MAX(history_note.version) AS version_max FROM note INNER JOIN history_note ON note.uuid=history_note.note_uuid WHERE note.uuid=@uuid", args)
 	if err != nil {
 		return fmt.Errorf("Failed to query for note: %v\n", err)
 	}
@@ -227,7 +227,7 @@ func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNot
 		}
 		if latitude != payload.Location.Latitude || longitude != payload.Location.Longitude || text != payload.Text {
 			var options pgx.TxOptions
-			transaction, err := pgInstance.db.BeginTx(ctx, options)
+			transaction, err := PGInstance.DB.BeginTx(ctx, options)
 			if err != nil {
 				return fmt.Errorf("Failed to begin transaction: %v", err)
 			}
@@ -260,7 +260,7 @@ func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNot
 	args = pgx.NamedArgs{
 		"uuid": noteUUID,
 	}
-	rows, err = pgInstance.db.Query(ctx, "SELECT uuid FROM note_audio_recording WHERE note_uuid=@uuid", args)
+	rows, err = PGInstance.DB.Query(ctx, "SELECT uuid FROM note_audio_recording WHERE note_uuid=@uuid", args)
 	if err != nil {
 		return fmt.Errorf("Failed to query for note audio recordings: %v", err)
 	}
@@ -280,7 +280,7 @@ func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload shared.NidusNot
 	}
 	if has_audio_update {
 		//var options pgx.TxOptions
-		//transaction, err := pgInstance.db.BeginTx(ctx, options)
+		//transaction, err := PGInstance.DB.BeginTx(ctx, options)
 		//query := "INSERT INTO history_note_audio_recording created,
 	}
 
@@ -340,7 +340,7 @@ func SaveUser(displayname string, hash string, username string) error {
 		"password_hash":      hash,
 		"username":           username,
 	}
-	row, err := pgInstance.db.Exec(context.Background(), query, args)
+	row, err := PGInstance.DB.Exec(context.Background(), query, args)
 	if err != nil {
 		return fmt.Errorf("Unable to insert row into user_: %v", err)
 	}
@@ -349,12 +349,12 @@ func SaveUser(displayname string, hash string, username string) error {
 }
 
 func ServiceRequestCount() (int, error) {
-	if pgInstance == nil {
+	if PGInstance == nil {
 		return 0, errors.New("You must initialize the DB first")
 	}
 
 	var count int
-	err := pgInstance.db.QueryRow(context.Background(), "SELECT COUNT(*) FROM FS_SERVICEREQUEST").Scan(&count)
+	err := PGInstance.DB.QueryRow(context.Background(), "SELECT COUNT(*) FROM FS_SERVICEREQUEST").Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -363,12 +363,12 @@ func ServiceRequestCount() (int, error) {
 
 func ServiceRequestQuery(q *DBQuery) ([]shared.ServiceRequest, error) {
 	results := make([]shared.ServiceRequest, 0)
-	if pgInstance == nil {
+	if PGInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
 
 	args, query := prepQuery(q, "SELECT GEOMETRY_X AS \"geometry.X\",GEOMETRY_Y AS \"geometry.Y\",ASSIGNEDTECH,CreationDate,DOG,globalid,PRIORITY,REQADDR1,REQCITY,RECDATETIME,REQTARGET,REQZIP,SOURCE,Spanish,STATUS FROM FS_ServiceRequest WHERE GEOMETRY_X > @west AND GEOMETRY_X < @east AND GEOMETRY_Y > @south AND GEOMETRY_Y < @north")
-	rows, _ := pgInstance.db.Query(context.Background(), query, args)
+	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
 	var fs_service_requests []*shared.FS_ServiceRequest
 
 	if err := pgxscan.ScanAll(&fs_service_requests, rows); err != nil {
@@ -384,12 +384,12 @@ func ServiceRequestQuery(q *DBQuery) ([]shared.ServiceRequest, error) {
 
 func TrapDataQuery(q *DBQuery) ([]shared.TrapData, error) {
 	results := make([]shared.TrapData, 0)
-	if pgInstance == nil {
+	if PGInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
 
 	args, query := prepQuery(q, "SELECT geometry_x AS \"geometry.X\",geometry_y AS \"geometry.Y\",creationdate,globalid,name,description,accessdesc,objectid FROM FS_TrapLocation WHERE geometry_x > @west AND geometry_x < @east AND geometry_y > @south AND geometry_y < @north")
-	rows, _ := pgInstance.db.Query(context.Background(), query, args)
+	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
 	var fs_trap_locations []*shared.FS_TrapLocation
 
 	if err := pgxscan.ScanAll(&fs_trap_locations, rows); err != nil {
@@ -410,7 +410,7 @@ func ValidateUser(username string, password string) (*shared.User, error) {
 		hash         string
 	)
 	query := `SELECT display_name,id,password_hash FROM user_ WHERE username=$1`
-	err := pgInstance.db.QueryRow(context.Background(), query, username).Scan(&display_name, &id, &hash)
+	err := PGInstance.DB.QueryRow(context.Background(), query, username).Scan(&display_name, &id, &hash)
 	if err != nil {
 		fmt.Printf("ValidateUser failed for '%s': %w\n", username, err)
 		return nil, NoUserError{}
@@ -571,7 +571,7 @@ func insertRowFromFeatureHistory(ctx context.Context, transaction pgx.Tx, table 
 
 func insertRowFromFeature(ctx context.Context, table string, sorted_columns []string, feature *arcgis.Feature) error {
 	var options pgx.TxOptions
-	transaction, err := pgInstance.db.BeginTx(ctx, options)
+	transaction, err := PGInstance.DB.BeginTx(ctx, options)
 	if err != nil {
 		return fmt.Errorf("Unable to start transaction")
 	}
@@ -623,7 +623,7 @@ func rowmapViaQuery(ctx context.Context, table string, sorted_columns []string, 
 	args := pgx.NamedArgs{
 		"objectids": objectids,
 	}
-	rows, err := pgInstance.db.Query(ctx, query, args)
+	rows, err := PGInstance.DB.Query(ctx, query, args)
 	if err != nil {
 		return result, fmt.Errorf("Failed to query rows: %v", err)
 	}
@@ -702,12 +702,12 @@ func updateRowFromFeature(ctx context.Context, table string, sorted_columns []st
 	args["objectid"] = int(o)
 
 	var version int
-	if err := pgInstance.db.QueryRow(ctx, sb.String(), args).Scan(&version); err != nil {
+	if err := PGInstance.DB.QueryRow(ctx, sb.String(), args).Scan(&version); err != nil {
 		return fmt.Errorf("Failed to query for version: %v", err)
 	}
 
 	var options pgx.TxOptions
-	transaction, err := pgInstance.db.BeginTx(ctx, options)
+	transaction, err := PGInstance.DB.BeginTx(ctx, options)
 	if err != nil {
 		return fmt.Errorf("Unable to start transaction")
 	}

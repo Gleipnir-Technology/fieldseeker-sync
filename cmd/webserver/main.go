@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alexedwards/scs/pgxstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -50,7 +51,14 @@ func run() error {
 	}
 	defer sentry.Flush(2 * time.Second)
 
+	err = fssync.InitDB()
+	if err != nil {
+		fmt.Printf("Failed to init database: %v", err)
+		os.Exit(1)
+	}
+
 	sessionManager = scs.New()
+	sessionManager.Store = pgxstore.New(database.PGInstance.DB)
 	sessionManager.Lifetime = 24 * time.Hour
 
 	// Set our own responder so that we can set headers ourselves
@@ -73,12 +81,6 @@ func run() error {
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
-
-	err = fssync.InitDB()
-	if err != nil {
-		fmt.Printf("Failed to init shared: %v", err)
-		os.Exit(1)
-	}
 
 	//html.InitializeTemplates()
 	r.Method("GET", "/", NewEnsureAuth(index))
