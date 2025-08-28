@@ -144,15 +144,14 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		return fmt.Errorf("Failed to begin transaction: %v", err)
 	}
 
-	VERSION := 1
-	query := `INSERT INTO note_audio (created, creator, deleted, duration, transcription, version, uuid) VALUES (@created, @creator, @deleted, @duration, @trascription, @version, @uuid)`
+	query := `INSERT INTO note_audio (created, creator, deleted, duration, transcription, version, uuid) VALUES (@created, @creator, @deleted, @duration, @transcription, @version, @uuid)`
 	args := pgx.NamedArgs{
 		"created":       payload.Created,
 		"creator":       userID,
 		"deleted":       nil,
 		"duration":      payload.Duration,
 		"transcription": payload.Transcription,
-		"version":       VERSION,
+		"version":       payload.Version,
 		"uuid":          noteUUID,
 	}
 	row, err := PGInstance.DB.Exec(context.Background(), query, args)
@@ -168,7 +167,7 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 			b.Created,
 			b.Cell,
 			noteUUID,
-			VERSION,
+			payload.Version,
 			i,
 		})
 	}

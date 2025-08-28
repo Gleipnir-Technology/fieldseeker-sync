@@ -573,6 +573,8 @@ type NoteAudioPayload struct {
 	Created       time.Time                    `json:"created"`
 	Duration      int                          `json:"duration"`
 	Transcription *string                      `json:"transcription"`
+	TranscriptionUserEdited bool `json:"transcriptionUserEdited"`
+	Version   int    `json:"version"`
 }
 
 type NoteAudioBreadcrumbPayload struct {
