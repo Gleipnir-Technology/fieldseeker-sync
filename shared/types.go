@@ -568,24 +568,25 @@ type NoteImagePayload struct {
 }
 
 type NoteAudio struct {
-	UUID          string                       `db:"uuid"`
-	Breadcrumbs   []NoteAudioBreadcrumbPayload
-	Created       time.Time                    `db:"created"`
-	Creator       int                          `db:"creator"`
-	Duration      int                          `db:"duration"`
-	Transcription *string                      `db:"transcription"`
-	TranscriptionUserEdited bool               `db:"transcription_user_edited"`
-	Version   int                              `db:"version"`
+	UUID                    string `db:"uuid"`
+	Breadcrumbs             []NoteAudioBreadcrumbPayload
+	Created                 time.Time  `db:"created"`
+	Creator                 int        `db:"creator"`
+	Deleted                 *time.Time `db:"deleted"`
+	Duration                int        `db:"duration"`
+	Transcription           *string    `db:"transcription"`
+	TranscriptionUserEdited bool       `db:"transcription_user_edited"`
+	Version                 int        `db:"version"`
 }
 
 type NoteAudioPayload struct {
-	UUID          string                       `json:"uuid"`
-	Breadcrumbs   []NoteAudioBreadcrumbPayload `json:"breadcrumbs"`
-	Created       time.Time                    `json:"created"`
-	Duration      int                          `json:"duration"`
-	Transcription *string                      `json:"transcription"`
-	TranscriptionUserEdited bool `json:"transcriptionUserEdited"`
-	Version   int    `json:"version"`
+	UUID                    string                       `json:"uuid"`
+	Breadcrumbs             []NoteAudioBreadcrumbPayload `json:"breadcrumbs"`
+	Created                 time.Time                    `json:"created"`
+	Duration                int                          `json:"duration"`
+	Transcription           *string                      `json:"transcription"`
+	TranscriptionUserEdited bool                         `json:"transcriptionUserEdited"`
+	Version                 int                          `json:"version"`
 }
 
 type NoteAudioBreadcrumbPayload struct {

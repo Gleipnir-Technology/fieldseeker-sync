@@ -356,7 +356,7 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	if next == "" {
 		w.WriteHeader(202)
 	} else {
-		http.Redirect(w, r, "/" + next, http.StatusFound)
+		http.Redirect(w, r, "/"+next, http.StatusFound)
 	}
 }
 
@@ -376,8 +376,8 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	}
 
 	data := html.PageDataProcessAudio{
-		AudioNotes:  audioNotes,
-		User:                u,
+		AudioNotes: audioNotes,
+		User:       u,
 	}
 
 	err = html.ProcessAudio(w, data)
@@ -386,3 +386,21 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	}
 }
 
+func processAudioIdGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	uuid := chi.URLParam(r, "uuid")
+	audioNote, err := database.NoteAudioGet(context.Background(), uuid)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := html.PageDataProcessAudioId{
+		AudioNote: audioNote,
+		User:      u,
+	}
+
+	err = html.ProcessAudioId(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}

@@ -1,0 +1,53 @@
+{{template "base.html" .}}
+
+{{define "title"}}Nidus Audio{{end}}
+
+{{define "style"}}
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+{{end}}
+{{define "content"}}
+<div class="container">
+	<table>
+		<tbody>
+			<tr>
+				<td>Created</td>
+				<td>{{ .AudioNote.Created }}</td>
+			</tr>
+			<tr>
+				<td>Creator</td>
+				<td>{{ .AudioNote.Creator }}</td>
+			</tr>
+			<tr>
+				<td>Deleted</td>
+				<td>{{ .AudioNote.Deleted }}</td>
+			</tr>
+			<tr>
+				<td>Duration</td>
+				<td>{{ .AudioNote.Duration }}</td>
+			</tr>
+			<tr>
+				<td>Transcription</td>
+				<td>{{ .AudioNote.Transcription }}</td>
+			</tr>
+			<tr>
+				<td>Transcription user edited</td>
+				<td>{{ .AudioNote.TranscriptionUserEdited }}</td>
+			</tr>
+			<tr>
+				<td>Version</td>
+				<td>{{ .AudioNote.Version }}</td>
+			</tr>
+			<tr>
+				<td>UUID</td>
+				<td>{{ .AudioNote.UUID }}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+{{end}}
+
+{{define "script"}}
+{{end}}

@@ -32,10 +32,12 @@ var (
 	pgOnce     sync.Once
 )
 
-type NoUserError struct {}
+type NoUserError struct{}
+
 func (e NoUserError) Error() string { return "That user does not exist" }
 
-type PasswordVerificationError struct {}
+type PasswordVerificationError struct{}
+
 func (e PasswordVerificationError) Error() string { return "Password verification failed" }
 
 //go:embed migrations/*.sql
@@ -146,14 +148,14 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 
 	query := `INSERT INTO note_audio (created, creator, deleted, duration, transcription, transcription_user_edited, version, uuid) VALUES (@created, @creator, @deleted, @duration, @transcription, @transcription_user_edited, @version, @uuid)`
 	args := pgx.NamedArgs{
-		"created":       payload.Created,
-		"creator":       userID,
-		"deleted":       nil,
-		"duration":      payload.Duration,
-		"transcription": payload.Transcription,
+		"created":                   payload.Created,
+		"creator":                   userID,
+		"deleted":                   nil,
+		"duration":                  payload.Duration,
+		"transcription":             payload.Transcription,
 		"transcription_user_edited": payload.TranscriptionUserEdited,
-		"version":       payload.Version,
-		"uuid":          noteUUID,
+		"version":                   payload.Version,
+		"uuid":                      noteUUID,
 	}
 	row, err := PGInstance.DB.Exec(context.Background(), query, args)
 	if err != nil {
@@ -187,6 +189,28 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	return nil
 }
 
+func NoteAudioGet(ctx context.Context, uuid string) (*shared.NoteAudio, error) {
+	if PGInstance == nil {
+		return nil, errors.New("You must initialize the DB first")
+	}
+	args := pgx.NamedArgs{
+		"uuid": uuid,
+	}
+	row, err := PGInstance.DB.Query(ctx, "SELECT created, creator, duration, transcription, transcription_user_edited, version, uuid FROM note_audio WHERE uuid=@uuid ORDER BY version DESC LIMIT 1", args)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+	for row.Next() {
+		var result shared.NoteAudio
+		if err := pgxscan.ScanRow(&result, row); err != nil {
+			log.Println("Scan on note_audio error:", err)
+			return nil, err
+		}
+		return &result, nil
+	}
+	return nil, errors.New("Should have returned earlier")
+}
 func NoteAudioQuery(q *DBQuery) ([]*shared.NoteAudio, error) {
 	results := make([]*shared.NoteAudio, 0)
 	if PGInstance == nil {
@@ -202,7 +226,6 @@ func NoteAudioQuery(q *DBQuery) ([]*shared.NoteAudio, error) {
 	}
 	return results, nil
 }
-
 
 func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteImagePayload, userID int) error {
 	VERSION := 1

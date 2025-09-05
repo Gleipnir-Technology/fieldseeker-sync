@@ -43,7 +43,7 @@ func main() {
 
 func run() error {
 	err := sentry.Init(sentry.ClientOptions{
-		EnableTracing: true,
+		EnableTracing:    true,
 		TracesSampleRate: 1.0,
 	})
 	if err != nil {
@@ -85,6 +85,7 @@ func run() error {
 	//html.InitializeTemplates()
 	r.Method("GET", "/", NewEnsureAuth(index))
 	r.Method("GET", "/process-audio", NewEnsureAuth(processAudioGet))
+	r.Method("GET", "/process-audio/{uuid}", NewEnsureAuth(processAudioIdGet))
 	r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestList))
 
 	r.Get("/login", loginGet)

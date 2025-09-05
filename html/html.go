@@ -17,6 +17,7 @@ var (
 	index           = newBuiltTemplate("index", "base")
 	login           = newBuiltTemplate("login", "base")
 	processAudio    = newBuiltTemplate("process-audio", "base")
+	processAudioId  = newBuiltTemplate("process-audio-id", "base")
 	serviceRequests = newBuiltTemplate("service-requests", "base")
 )
 var components = [...]string{"navbar"}
@@ -33,14 +34,19 @@ type PageDataIndex struct {
 }
 
 type PageDataLogin struct {
-	Next                string
+	Next  string
 	Title string
-	User                *shared.User
+	User  *shared.User
 }
 
 type PageDataProcessAudio struct {
-	AudioNotes  []*shared.NoteAudio
-	User                *shared.User
+	AudioNotes []*shared.NoteAudio
+	User       *shared.User
+}
+
+type PageDataProcessAudioId struct {
+	AudioNote *shared.NoteAudio
+	User      *shared.User
 }
 
 type PageDataServiceRequests struct {
@@ -67,15 +73,19 @@ func Index(w io.Writer, d PageDataIndex) error {
 
 func Login(w io.Writer, next string) error {
 	d := PageDataLogin{
-		Next: next,
-		Title:               "Login",
-		User: nil,
+		Next:  next,
+		Title: "Login",
+		User:  nil,
 	}
 	return login.ExecuteTemplate(w, d)
 }
 
 func ProcessAudio(w io.Writer, d PageDataProcessAudio) error {
 	return processAudio.ExecuteTemplate(w, d)
+}
+
+func ProcessAudioId(w io.Writer, d PageDataProcessAudioId) error {
+	return processAudioId.ExecuteTemplate(w, d)
 }
 
 func ServiceRequests(w io.Writer, sr PageDataServiceRequests) error {
