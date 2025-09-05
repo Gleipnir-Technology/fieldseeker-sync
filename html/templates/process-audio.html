@@ -10,11 +10,22 @@
 {{end}}
 {{define "content"}}
 <div class="container">
-	{{range $note := .AudioNotes}}
-	<div class="row">
-		<a href="/process-audio/{{ $note.UUID }}">{{ $note.UUID }}</a>
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">Created</th>
+				<th scope="col">UUID</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{range $note := .AudioNotes}}
+			<tr>
+				<td>{{ $note.Created }}</td>
+				<td><a href="/process-audio/{{ $note.UUID }}">{{ $note.UUID }}</a></td>
+			</tr>
+			{{end}}
+		</tbody>
 	</div>
-	{{end}}
 </div>
 {{end}}
 
