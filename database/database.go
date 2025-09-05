@@ -187,6 +187,23 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	return nil
 }
 
+func NoteAudioQuery(q *DBQuery) ([]*shared.NoteAudio, error) {
+	results := make([]*shared.NoteAudio, 0)
+	if PGInstance == nil {
+		return results, errors.New("You must initialize the DB first")
+	}
+	args, query := prepQuery(q, "SELECT created, creator, duration, transcription, transcription_user_edited, version, uuid FROM note_audio")
+
+	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
+
+	if err := pgxscan.ScanAll(&results, rows); err != nil {
+		log.Println("ScanAll on note_audio error:", err)
+		return results, err
+	}
+	return results, nil
+}
+
+
 func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteImagePayload, userID int) error {
 	VERSION := 1
 	query := `INSERT INTO note_image (created, creator, deleted, version, uuid) VALUES (@created, @creator, @deleted, @version, @uuid)`

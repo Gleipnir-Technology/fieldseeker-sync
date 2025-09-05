@@ -567,6 +567,17 @@ type NoteImagePayload struct {
 	Created time.Time `json:"created"`
 }
 
+type NoteAudio struct {
+	UUID          string                       `db:"uuid"`
+	Breadcrumbs   []NoteAudioBreadcrumbPayload
+	Created       time.Time                    `db:"created"`
+	Creator       int                          `db:"creator"`
+	Duration      int                          `db:"duration"`
+	Transcription *string                      `db:"transcription"`
+	TranscriptionUserEdited bool               `db:"transcription_user_edited"`
+	Version   int                              `db:"version"`
+}
+
 type NoteAudioPayload struct {
 	UUID          string                       `json:"uuid"`
 	Breadcrumbs   []NoteAudioBreadcrumbPayload `json:"breadcrumbs"`

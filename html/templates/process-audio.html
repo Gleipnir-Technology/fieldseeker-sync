@@ -1,0 +1,22 @@
+{{template "base.html" .}}
+
+{{define "title"}}Nidus Audio{{end}}
+
+{{define "style"}}
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+{{end}}
+{{define "content"}}
+<div class="container">
+	{{range $note := .AudioNotes}}
+	<div class="row">
+		<a href="/process-audio/{{ $note.UUID }}">{{ $note.UUID }}</a>
+	</div>
+	{{end}}
+</div>
+{{end}}
+
+{{define "script"}}
+{{end}}

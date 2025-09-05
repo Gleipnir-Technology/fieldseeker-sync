@@ -365,3 +365,24 @@ func logoutGet(w http.ResponseWriter, r *http.Request) {
 	sessionManager.Put(r.Context(), "username", "")
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
+
+func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	query := database.NewQuery()
+	query.Limit = 0
+	audioNotes, err := database.NoteAudioQuery(&query)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := html.PageDataProcessAudio{
+		AudioNotes:  audioNotes,
+		User:                u,
+	}
+
+	err = html.ProcessAudio(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+

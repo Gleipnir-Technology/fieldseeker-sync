@@ -84,6 +84,7 @@ func run() error {
 
 	//html.InitializeTemplates()
 	r.Method("GET", "/", NewEnsureAuth(index))
+	r.Method("GET", "/process-audio", NewEnsureAuth(processAudioGet))
 	r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestList))
 
 	r.Get("/login", loginGet)

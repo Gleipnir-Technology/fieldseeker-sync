@@ -16,6 +16,7 @@ var embeddedFiles embed.FS
 var (
 	index           = newBuiltTemplate("index", "base")
 	login           = newBuiltTemplate("login", "base")
+	processAudio    = newBuiltTemplate("process-audio", "base")
 	serviceRequests = newBuiltTemplate("service-requests", "base")
 )
 var components = [...]string{"navbar"}
@@ -34,6 +35,11 @@ type PageDataIndex struct {
 type PageDataLogin struct {
 	Next                string
 	Title string
+	User                *shared.User
+}
+
+type PageDataProcessAudio struct {
+	AudioNotes  []*shared.NoteAudio
 	User                *shared.User
 }
 
@@ -66,6 +72,10 @@ func Login(w io.Writer, next string) error {
 		User: nil,
 	}
 	return login.ExecuteTemplate(w, d)
+}
+
+func ProcessAudio(w io.Writer, d PageDataProcessAudio) error {
+	return processAudio.ExecuteTemplate(w, d)
 }
 
 func ServiceRequests(w io.Writer, sr PageDataServiceRequests) error {
