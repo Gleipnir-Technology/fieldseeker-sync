@@ -316,13 +316,16 @@ func index(w http.ResponseWriter, r *http.Request, u *shared.User) {
 }
 
 func loginGet(w http.ResponseWriter, r *http.Request) {
-	err := html.Login(w)
+	next := r.URL.Query().Get("next")
+	fmt.Println("urlparam next:", next)
+	err := html.Login(w, next)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 	}
 }
 
 func loginPost(w http.ResponseWriter, r *http.Request) {
+	next := r.URL.Query().Get("next")
 	r.ParseForm()
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
@@ -350,7 +353,6 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	sessionManager.Put(r.Context(), "display_name", user.DisplayName)
 	sessionManager.Put(r.Context(), "user_id", user.ID)
 	sessionManager.Put(r.Context(), "username", username)
-	next := chi.URLParam(r, "next")
 	if next == "" {
 		w.WriteHeader(202)
 	} else {

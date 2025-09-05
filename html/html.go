@@ -32,7 +32,9 @@ type PageDataIndex struct {
 }
 
 type PageDataLogin struct {
+	Next                string
 	Title string
+	User                *shared.User
 }
 
 type PageDataServiceRequests struct {
@@ -57,10 +59,11 @@ func Index(w io.Writer, d PageDataIndex) error {
 	return index.ExecuteTemplate(w, d)
 }
 
-func Login(w io.Writer) error {
-	d := PageDataIndex{
-		ServiceRequestCount: 0,
+func Login(w io.Writer, next string) error {
+	d := PageDataLogin{
+		Next: next,
 		Title:               "Login",
+		User: nil,
 	}
 	return login.ExecuteTemplate(w, d)
 }
