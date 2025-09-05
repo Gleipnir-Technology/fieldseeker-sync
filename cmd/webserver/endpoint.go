@@ -289,7 +289,7 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u *shared.User) {
 func audioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	uuid := chi.URLParam(r, "uuid")
 	config := fssync.ReadConfig()
-	filePath := fmt.Sprintf("%s/%s.m4a", config.UserFiles, uuid)
+	filePath := fmt.Sprintf("%s/%s.m4a", config.UserFiles.Directory, uuid)
 	// Check if file exists
 	if _, err := os.Stat(filePath); err != nil {
 		if os.IsNotExist(err) {
