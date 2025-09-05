@@ -62,12 +62,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 		return
 	}
 
-	config, err := fssync.ReadConfig()
-	if err != nil {
-		log.Printf("Failed to read config", err)
-		http.Error(w, "Unable to create file", http.StatusInternalServerError)
-		return
-	}
+	config := fssync.ReadConfig()
 	filepath := fmt.Sprintf("%s/%s.m4a", config.UserFiles.Directory, audioUUID.String())
 
 	// Create file in configured directory
@@ -193,12 +188,7 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 	}
 	// Read first 8 bytes to check PNG signature
-	config, err := fssync.ReadConfig()
-	if err != nil {
-		log.Printf("Failed to read config", err)
-		http.Error(w, "Unable to create file", http.StatusInternalServerError)
-		return
-	}
+	config := fssync.ReadConfig()
 	filepath := fmt.Sprintf("%s/%s.photo", config.UserFiles.Directory, imageUUID.String())
 
 	// Create file in configured directory
@@ -293,6 +283,38 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	}
 	if err := render.RenderList(w, r, data); err != nil {
 		render.Render(w, r, errRender(err))
+	}
+}
+
+func audioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	uuid := chi.URLParam(r, "uuid")
+	config := fssync.ReadConfig()
+	filePath := fmt.Sprintf("%s/%s.m4a", config.UserFiles, uuid)
+	// Check if file exists
+	if _, err := os.Stat(filePath); err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "Audio file not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	// Set the content type header
+	w.Header().Set("Content-Type", "audio/mp4")
+
+	// Copy the file to the response writer
+	if _, err := io.Copy(w, file); err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 }
 

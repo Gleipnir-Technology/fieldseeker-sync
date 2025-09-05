@@ -10,6 +10,10 @@
 {{end}}
 {{define "content"}}
 <div class="container">
+	<figure>
+		<figcaption>Listen to the Note:</figcaption>
+		<audio controls src="/audio/{{ .AudioNote.UUID }}"></audio>
+	</figure>
 	<table>
 		<tbody>
 			<tr>

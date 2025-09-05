@@ -12,11 +12,7 @@ import (
 var config *Config
 
 func ensureConfig() error {
-	var err error
-	config, err = ReadConfig()
-	if err != nil {
-		return fmt.Errorf("Failed to read config: %v", err)
-	}
+	config = ReadConfig()
 	if len(config.Database.URL) == 0 {
 		return errors.New("You must specify a database URL")
 	}

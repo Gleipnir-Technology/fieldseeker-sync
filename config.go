@@ -27,7 +27,7 @@ type Config struct {
 	Webhook   ConfigWebhook
 }
 
-func ReadConfig() (*Config, error) {
+func ReadConfig() *Config {
 	var c Config
 	c.Arcgis.FieldSeekerService = os.Getenv("FIELDSEEKER_SYNC_ARCGIS_FIELDSEEKERSERVICE")
 	c.Arcgis.ServiceRoot = os.Getenv("FIELDSEEKER_SYNC_ARCGIS_SERVICEROOT")
@@ -39,5 +39,5 @@ func ReadConfig() (*Config, error) {
 		c.UserFiles.Directory = "/opt/fieldseeker-sync/data"
 	}
 	c.Webhook.Secret = os.Getenv("FIELDSEEKER_SYNC_WEBHOOK_SECRET")
-	return &c, nil
+	return &c
 }
