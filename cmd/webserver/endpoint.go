@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -523,6 +524,7 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	sort.Sort(byReviewedAndAge(audioNotes))
 	usersById, err := usersById()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -575,4 +577,14 @@ func usersById() (map[int]*shared.User, error) {
 		usersById[u.ID] = u
 	}
 	return usersById, nil
+}
+
+type byReviewedAndAge []*shared.NoteAudio
+func (a byReviewedAndAge) Len() int { return len(a) }
+func (a byReviewedAndAge) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byReviewedAndAge) Less(i, j int) bool {
+	if a[i].HasBeenReviewed == a[j].HasBeenReviewed {
+		return a[i].Created.Before(a[j].Created);
+	}
+	return !a[i].HasBeenReviewed
 }
