@@ -28,3 +28,13 @@ Check on the status of migrations
 ```
 env GOOSE_DRIVER=postgres GOOSE_DBSTRING="user=fieldseeker dbname=fieldseeker password=letmein" goose status
 ```
+
+### Hot reloading
+
+Hot reloading is done via [air](https://github.com/air-verse/air):
+
+```shell
+$ air
+```
+
+you'll need to make sure your session has the necessary environment variables to connect to the database
