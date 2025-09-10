@@ -213,7 +213,6 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 	fmt.Fprintf(w, "PNG uploaded successfully to %s", filepath)
 }
 
-// / Test
 func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
@@ -366,7 +365,7 @@ func audioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 			}
 			return
 		}
-        }
+	}
 
 	// If no range, serve the whole file
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", fileSize))
@@ -440,7 +439,7 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	if next == "" {
 		w.WriteHeader(202)
 	} else {
-		http.Redirect(w, r, "/"+next, http.StatusFound)
+		http.Redirect(w, r, next, http.StatusFound)
 	}
 }
 
@@ -451,69 +450,69 @@ func logoutGet(w http.ResponseWriter, r *http.Request) {
 }
 
 type httpRange struct {
-    start, end int64
+	start, end int64
 }
 
 func parseRange(rangeHeader string, fileSize int64) ([]httpRange, error) {
-    if !strings.HasPrefix(rangeHeader, "bytes=") {
-        return nil, fmt.Errorf("invalid range header format")
-    }
-    
-    rangeHeader = strings.TrimPrefix(rangeHeader, "bytes=")
-    ranges := strings.Split(rangeHeader, ",")
-    parsedRanges := make([]httpRange, 0, len(ranges))
+	if !strings.HasPrefix(rangeHeader, "bytes=") {
+		return nil, fmt.Errorf("invalid range header format")
+	}
 
-    for _, r := range ranges {
-        r = strings.TrimSpace(r)
-        if r == "" {
-            continue
-        }
-        
-        parts := strings.Split(r, "-")
-        if len(parts) != 2 {
-            return nil, fmt.Errorf("invalid range format")
-        }
+	rangeHeader = strings.TrimPrefix(rangeHeader, "bytes=")
+	ranges := strings.Split(rangeHeader, ",")
+	parsedRanges := make([]httpRange, 0, len(ranges))
 
-        var start, end int64
-        var err error
+	for _, r := range ranges {
+		r = strings.TrimSpace(r)
+		if r == "" {
+			continue
+		}
 
-        if parts[0] == "" {
-            // suffix-length format: -N
-            end = fileSize - 1
-            if start, err = strconv.ParseInt(parts[1], 10, 64); err != nil {
-                return nil, fmt.Errorf("invalid range start")
-            }
-            start = fileSize - start
-            if start < 0 {
-                start = 0
-            }
-        } else {
-            // standard format: N-M
-            if start, err = strconv.ParseInt(parts[0], 10, 64); err != nil {
-                return nil, fmt.Errorf("invalid range start")
-            }
-            if parts[1] == "" {
-                // N- format
-                end = fileSize - 1
-            } else {
-                // N-M format
-                if end, err = strconv.ParseInt(parts[1], 10, 64); err != nil {
-                    return nil, fmt.Errorf("invalid range end")
-                }
-            }
-        }
+		parts := strings.Split(r, "-")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid range format")
+		}
 
-        if start > end || start >= fileSize {
-            return nil, fmt.Errorf("invalid range: start after end or file size")
-        }
-        if end >= fileSize {
-            end = fileSize - 1
-        }
+		var start, end int64
+		var err error
 
-        parsedRanges = append(parsedRanges, httpRange{start, end})
-    }
+		if parts[0] == "" {
+			// suffix-length format: -N
+			end = fileSize - 1
+			if start, err = strconv.ParseInt(parts[1], 10, 64); err != nil {
+				return nil, fmt.Errorf("invalid range start")
+			}
+			start = fileSize - start
+			if start < 0 {
+				start = 0
+			}
+		} else {
+			// standard format: N-M
+			if start, err = strconv.ParseInt(parts[0], 10, 64); err != nil {
+				return nil, fmt.Errorf("invalid range start")
+			}
+			if parts[1] == "" {
+				// N- format
+				end = fileSize - 1
+			} else {
+				// N-M format
+				if end, err = strconv.ParseInt(parts[1], 10, 64); err != nil {
+					return nil, fmt.Errorf("invalid range end")
+				}
+			}
+		}
 
-    return parsedRanges, nil
+		if start > end || start >= fileSize {
+			return nil, fmt.Errorf("invalid range: start after end or file size")
+		}
+		if end >= fileSize {
+			end = fileSize - 1
+		}
+
+		parsedRanges = append(parsedRanges, httpRange{start, end})
+	}
+
+	return parsedRanges, nil
 }
 
 func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
