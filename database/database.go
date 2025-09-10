@@ -218,7 +218,7 @@ func NoteAudioNormalized(uuid string) error {
 	}
 	args := pgx.NamedArgs{
 		"is_audio_normalized": true,
-		"uuid": uuid,
+		"uuid":                uuid,
 	}
 	query := "UPDATE note_audio SET is_audio_normalized=@is_audio_normalized WHERE uuid=@uuid"
 	_, err := PGInstance.DB.Exec(context.Background(), query, args)
@@ -247,7 +247,7 @@ func NoteAudioToNormalize() ([]*shared.NoteAudio, error) {
 		return results, errors.New("You must initialize the DB first")
 	}
 	args := pgx.NamedArgs{}
-	query :=  "SELECT created, creator, duration, is_audio_normalized, transcription, transcription_user_edited, version, uuid FROM note_audio WHERE is_audio_normalized = FALSE"
+	query := "SELECT created, creator, duration, is_audio_normalized, transcription, transcription_user_edited, version, uuid FROM note_audio WHERE is_audio_normalized = FALSE"
 
 	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
 
@@ -264,7 +264,7 @@ func NoteAudioToTranscodeToOgg() ([]*shared.NoteAudio, error) {
 		return results, errors.New("You must initialize the DB first")
 	}
 	args := pgx.NamedArgs{}
-	query :=  "SELECT created, creator, duration, is_audio_normalized, transcription, transcription_user_edited, version, uuid FROM note_audio WHERE is_transcoded_to_ogg = FALSE"
+	query := "SELECT created, creator, duration, is_audio_normalized, transcription, transcription_user_edited, version, uuid FROM note_audio WHERE is_transcoded_to_ogg = FALSE"
 
 	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
 
@@ -281,7 +281,7 @@ func NoteAudioTranscodedToOgg(uuid string) error {
 	}
 	args := pgx.NamedArgs{
 		"is_transcoded_to_ogg": true,
-		"uuid": uuid,
+		"uuid":                 uuid,
 	}
 	query := "UPDATE note_audio SET is_transcoded_to_ogg=@is_transcoded_to_ogg WHERE uuid=@uuid"
 	_, err := PGInstance.DB.Exec(context.Background(), query, args)
@@ -525,6 +525,22 @@ func ValidateUser(username string, password string) (*shared.User, error) {
 		ID:          id,
 		Username:    username,
 	}, nil
+}
+
+func Users() ([]*shared.User, error) {
+	results := make([]*shared.User, 0)
+	if PGInstance == nil {
+		return results, errors.New("You must initialize the DB first")
+	}
+	query := "SELECT display_name, id, username FROM user_"
+
+	rows, _ := PGInstance.DB.Query(context.Background(), query)
+
+	if err := pgxscan.ScanAll(&results, rows); err != nil {
+		log.Println("ScanAll on user_ error:", err)
+		return results, err
+	}
+	return results, nil
 }
 
 func doMigrations(connection_string string) error {

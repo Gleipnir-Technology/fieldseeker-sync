@@ -523,9 +523,19 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	users, err := database.Users()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	usersById := make(map[int]*shared.User)
+	for _, u := range users {
+		usersById[u.ID] = u
+	}
 
 	data := html.PageDataProcessAudio{
 		AudioNotes: audioNotes,
+		UsersById:  usersById,
 		User:       u,
 	}
 

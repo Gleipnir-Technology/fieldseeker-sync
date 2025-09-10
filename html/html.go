@@ -41,6 +41,7 @@ type PageDataLogin struct {
 
 type PageDataProcessAudio struct {
 	AudioNotes []*shared.NoteAudio
+	UsersById  map[int]*shared.User
 	User       *shared.User
 }
 
