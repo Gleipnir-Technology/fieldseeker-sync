@@ -574,6 +574,7 @@ type NoteAudio struct {
 	Creator                 int        `db:"creator"`
 	Deleted                 *time.Time `db:"deleted"`
 	Duration                int        `db:"duration"`
+	IsAudioNormalized       bool       `db:"is_audio_normalized"`
 	Transcription           *string    `db:"transcription"`
 	TranscriptionUserEdited bool       `db:"transcription_user_edited"`
 	Version                 int        `db:"version"`

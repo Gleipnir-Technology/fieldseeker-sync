@@ -10,9 +10,13 @@
 {{end}}
 {{define "content"}}
 <div class="container">
+	<a href="/process-audio">Return to list</a>
 	<figure>
 		<figcaption>Listen to the Note:</figcaption>
-		<audio controls src="/audio/{{ .AudioNote.UUID }}"></audio>
+		<audio controls>
+			<source src="/audio/{{ .AudioNote.UUID }}.m4a" type="audio/mpeg"></source>
+			<source src="/audio/{{ .AudioNote.UUID }}.ogg" type="audio/ogg"></source>
+		</audio>
 	</figure>
 	<table>
 		<tbody>

@@ -211,6 +211,20 @@ func NoteAudioGet(ctx context.Context, uuid string) (*shared.NoteAudio, error) {
 	}
 	return nil, errors.New("Should have returned earlier")
 }
+
+func NoteAudioNormalized(uuid string) error {
+	if PGInstance == nil {
+		return errors.New("You must initialize the DB first")
+	}
+	args := pgx.NamedArgs{
+		"is_audio_normalized": true,
+		"uuid": uuid,
+	}
+	query := "UPDATE note_audio SET is_audio_normalized=@is_audio_normalized WHERE uuid=@uuid"
+	_, err := PGInstance.DB.Exec(context.Background(), query, args)
+	return err
+}
+
 func NoteAudioQuery(q *DBQuery) ([]*shared.NoteAudio, error) {
 	results := make([]*shared.NoteAudio, 0)
 	if PGInstance == nil {
@@ -225,6 +239,53 @@ func NoteAudioQuery(q *DBQuery) ([]*shared.NoteAudio, error) {
 		return results, err
 	}
 	return results, nil
+}
+
+func NoteAudioToNormalize() ([]*shared.NoteAudio, error) {
+	results := make([]*shared.NoteAudio, 0)
+	if PGInstance == nil {
+		return results, errors.New("You must initialize the DB first")
+	}
+	args := pgx.NamedArgs{}
+	query :=  "SELECT created, creator, duration, is_audio_normalized, transcription, transcription_user_edited, version, uuid FROM note_audio WHERE is_audio_normalized = FALSE"
+
+	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
+
+	if err := pgxscan.ScanAll(&results, rows); err != nil {
+		log.Println("ScanAll on note_audio error:", err)
+		return results, err
+	}
+	return results, nil
+}
+
+func NoteAudioToTranscodeToOgg() ([]*shared.NoteAudio, error) {
+	results := make([]*shared.NoteAudio, 0)
+	if PGInstance == nil {
+		return results, errors.New("You must initialize the DB first")
+	}
+	args := pgx.NamedArgs{}
+	query :=  "SELECT created, creator, duration, is_audio_normalized, transcription, transcription_user_edited, version, uuid FROM note_audio WHERE is_transcoded_to_ogg = FALSE"
+
+	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
+
+	if err := pgxscan.ScanAll(&results, rows); err != nil {
+		log.Println("ScanAll on note_audio error:", err)
+		return results, err
+	}
+	return results, nil
+}
+
+func NoteAudioTranscodedToOgg(uuid string) error {
+	if PGInstance == nil {
+		return errors.New("You must initialize the DB first")
+	}
+	args := pgx.NamedArgs{
+		"is_transcoded_to_ogg": true,
+		"uuid": uuid,
+	}
+	query := "UPDATE note_audio SET is_transcoded_to_ogg=@is_transcoded_to_ogg WHERE uuid=@uuid"
+	_, err := PGInstance.DB.Exec(context.Background(), query, args)
+	return err
 }
 
 func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteImagePayload, userID int) error {

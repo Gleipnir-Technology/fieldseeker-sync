@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -287,9 +289,25 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u *shared.User) {
 }
 
 func audioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	extension := chi.URLParam(r, "extension")
 	uuid := chi.URLParam(r, "uuid")
 	config := fssync.ReadConfig()
-	filePath := fmt.Sprintf("%s/%s.m4a", config.UserFiles.Directory, uuid)
+	filePath := "unknown"
+	contentType := "unknown"
+	if extension == "m4a" {
+		contentType = "audio/mpeg"
+		filePath = fmt.Sprintf("%s/%s-normalized.m4a", config.UserFiles.Directory, uuid)
+	} else if extension == "mp3" {
+		contentType = "audio/mp3"
+		filePath = fmt.Sprintf("%s/%s.mp3", config.UserFiles.Directory, uuid)
+	} else if extension == "ogg" {
+		contentType = "audio/ogg"
+		filePath = fmt.Sprintf("%s/%s.ogg", config.UserFiles.Directory, uuid)
+	} else {
+		http.Error(w, fmt.Sprintf("Extension '%s' not found", extension), http.StatusNotFound)
+		return
+	}
+	log.Printf("Serving %s", filePath)
 	// Check if file exists
 	if _, err := os.Stat(filePath); err != nil {
 		if os.IsNotExist(err) {
@@ -308,8 +326,52 @@ func audioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	}
 	defer file.Close()
 
-	// Set the content type header
-	w.Header().Set("Content-Type", "audio/mp4")
+	// Get file info
+	fileInfo, err := file.Stat()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fileSize := fileInfo.Size()
+
+	// Parse range header
+	rangeHeader := r.Header.Get("Range")
+	if rangeHeader != "" {
+		ranges, err := parseRange(rangeHeader, fileSize)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusRequestedRangeNotSatisfiable)
+			return
+		}
+		// We'll handle just the first range for this example
+		if len(ranges) > 0 {
+			start, end := ranges[0].start, ranges[0].end
+
+			// Seek to the start position
+			if _, err := file.Seek(start, io.SeekStart); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			// Set headers for partial content
+			w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize))
+			w.Header().Set("Content-Length", fmt.Sprintf("%d", end-start+1))
+			w.Header().Set("Content-Type", contentType)
+			w.Header().Set("Accept-Ranges", "bytes")
+			w.WriteHeader(http.StatusPartialContent)
+
+			// Send the partial content
+			if _, err := io.CopyN(w, file, end-start+1); err != nil {
+				log.Printf("Error streaming partial content: %v", err)
+				return
+			}
+			return
+		}
+        }
+
+	// If no range, serve the whole file
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", fileSize))
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Accept-Ranges", "bytes")
 
 	// Copy the file to the response writer
 	if _, err := io.Copy(w, file); err != nil {
@@ -386,6 +448,72 @@ func logoutGet(w http.ResponseWriter, r *http.Request) {
 	sessionManager.Put(r.Context(), "display_name", "")
 	sessionManager.Put(r.Context(), "username", "")
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+type httpRange struct {
+    start, end int64
+}
+
+func parseRange(rangeHeader string, fileSize int64) ([]httpRange, error) {
+    if !strings.HasPrefix(rangeHeader, "bytes=") {
+        return nil, fmt.Errorf("invalid range header format")
+    }
+    
+    rangeHeader = strings.TrimPrefix(rangeHeader, "bytes=")
+    ranges := strings.Split(rangeHeader, ",")
+    parsedRanges := make([]httpRange, 0, len(ranges))
+
+    for _, r := range ranges {
+        r = strings.TrimSpace(r)
+        if r == "" {
+            continue
+        }
+        
+        parts := strings.Split(r, "-")
+        if len(parts) != 2 {
+            return nil, fmt.Errorf("invalid range format")
+        }
+
+        var start, end int64
+        var err error
+
+        if parts[0] == "" {
+            // suffix-length format: -N
+            end = fileSize - 1
+            if start, err = strconv.ParseInt(parts[1], 10, 64); err != nil {
+                return nil, fmt.Errorf("invalid range start")
+            }
+            start = fileSize - start
+            if start < 0 {
+                start = 0
+            }
+        } else {
+            // standard format: N-M
+            if start, err = strconv.ParseInt(parts[0], 10, 64); err != nil {
+                return nil, fmt.Errorf("invalid range start")
+            }
+            if parts[1] == "" {
+                // N- format
+                end = fileSize - 1
+            } else {
+                // N-M format
+                if end, err = strconv.ParseInt(parts[1], 10, 64); err != nil {
+                    return nil, fmt.Errorf("invalid range end")
+                }
+            }
+        }
+
+        if start > end || start >= fileSize {
+            return nil, fmt.Errorf("invalid range: start after end or file size")
+        }
+        if end >= fileSize {
+            end = fileSize - 1
+        }
+
+        parsedRanges = append(parsedRanges, httpRange{start, end})
+    }
+
+    return parsedRanges, nil
 }
 
 func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {

@@ -14,6 +14,7 @@
 		<thead>
 			<tr>
 				<th scope="col">Created</th>
+				<th scope="col">Duration</th>
 				<th scope="col">UUID</th>
 			</tr>
 		</thead>
@@ -21,6 +22,7 @@
 			{{range $note := .AudioNotes}}
 			<tr>
 				<td>{{ $note.Created }}</td>
+				<td>{{ $note.Duration }}</td>
 				<td><a href="/process-audio/{{ $note.UUID }}">{{ $note.UUID }}</a></td>
 			</tr>
 			{{end}}
