@@ -26,7 +26,7 @@
 			</tr>
 			<tr>
 				<td>Creator</td>
-				<td>{{ .AudioNote.Creator }}</td>
+				<td>{{ with $u := index $.UsersById .AudioNote.Creator }}{{ $u.DisplayName }}{{ end }}</td>
 			</tr>
 			<tr>
 				<td>Deleted</td>

@@ -523,14 +523,10 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	users, err := database.Users()
+	usersById, err := usersById()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-	usersById := make(map[int]*shared.User)
-	for _, u := range users {
-		usersById[u.ID] = u
 	}
 
 	data := html.PageDataProcessAudio{
@@ -552,9 +548,14 @@ func processAudioIdGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	usersById, err := usersById()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	data := html.PageDataProcessAudioId{
 		AudioNote: audioNote,
+		UsersById: usersById,
 		User:      u,
 	}
 
@@ -562,4 +563,16 @@ func processAudioIdGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func usersById() (map[int]*shared.User, error) {
+	users, err := database.Users()
+	if err != nil {
+		return nil, err
+	}
+	usersById := make(map[int]*shared.User)
+	for _, u := range users {
+		usersById[u.ID] = u
+	}
+	return usersById, nil
 }
