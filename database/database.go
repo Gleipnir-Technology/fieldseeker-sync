@@ -146,12 +146,15 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		return fmt.Errorf("Failed to begin transaction: %v", err)
 	}
 
-	query := `INSERT INTO note_audio (created, creator, deleted, duration, transcription, transcription_user_edited, version, uuid) VALUES (@created, @creator, @deleted, @duration, @transcription, @transcription_user_edited, @version, @uuid)`
+	query := `INSERT INTO note_audio (created, creator, deleted, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, transcription, transcription_user_edited, version, uuid) VALUES (@created, @creator, @deleted, @duration, @has_been_reviewed, @is_audio_normalized, @is_transcoded_to_ogg, @transcription, @transcription_user_edited, @version, @uuid)`
 	args := pgx.NamedArgs{
 		"created":                   payload.Created,
 		"creator":                   userID,
 		"deleted":                   nil,
 		"duration":                  payload.Duration,
+		"has_been_reviewed":         false,
+		"is_audio_normalized":       false,
+		"is_transcoded_to_ogg":      false,
 		"transcription":             payload.Transcription,
 		"transcription_user_edited": payload.TranscriptionUserEdited,
 		"version":                   payload.Version,
@@ -230,7 +233,7 @@ func NoteAudioQuery(q *DBQuery) ([]*shared.NoteAudio, error) {
 	if PGInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
-	args, query := prepQuery(q, "SELECT created, creator, duration, transcription, transcription_user_edited, version, uuid FROM note_audio")
+	args, query := prepQuery(q, "SELECT created, creator, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, transcription, transcription_user_edited, version, uuid FROM note_audio")
 
 	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
 
