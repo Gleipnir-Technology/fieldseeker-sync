@@ -579,6 +579,17 @@ func processAudioIdPost(w http.ResponseWriter, r *http.Request, u *shared.User) 
 	http.Redirect(w, r, "/process-audio/" + uuid, http.StatusFound)
 }
 
+func processAudioIdReviewedPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	uuid := chi.URLParam(r, "uuid")
+	log.Printf("Updating %s to reviewed without changes", uuid)
+	err := database.NoteAudioUpdateReviewed(uuid)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/process-audio", http.StatusFound)
+}
+
 func usersById() (map[int]*shared.User, error) {
 	users, err := database.Users()
 	if err != nil {

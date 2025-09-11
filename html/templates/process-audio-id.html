@@ -50,6 +50,9 @@
 			</tr>
 		</tbody>
 	</table>
+	<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/reviewed">
+		<button type="submit" class="btn btn-success">Mark reviewed without changes</button>
+	</form>
 	<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}">
 		<div class="mb-3">
 			<p><b>Original transcription:</b><br/>{{ if not .AudioNote.Transcription }}&lt;none&gt;{{ else }}{{ .AudioNote.Transcription }}{{ end }}</p>

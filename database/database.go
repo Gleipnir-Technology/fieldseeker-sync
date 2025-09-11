@@ -307,6 +307,24 @@ func NoteAudioTranscodedToOgg(uuid string) error {
 	return err
 }
 
+func NoteAudioUpdateReviewed(uuid string) error {
+	args := pgx.NamedArgs{
+		"has_been_reviewed": true,
+		"uuid": uuid,
+	}
+	query := `
+		UPDATE note_audio
+		SET has_been_reviewed=@has_been_reviewed
+		WHERE uuid=@uuid
+	`
+	row, err := PGInstance.DB.Exec(context.Background(), query, args)
+	if err != nil {
+		return fmt.Errorf("Failed to update transcription: %v\n", err)
+	}
+	log.Printf("Marked note_audio %s %s reviewed", uuid, row)
+	return nil
+}
+
 func NoteAudioUpdateTranscription(uuid string, transcription string) error {
 	args := pgx.NamedArgs{
 		"has_been_reviewed": true,
