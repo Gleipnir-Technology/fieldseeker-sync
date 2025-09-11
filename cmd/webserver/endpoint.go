@@ -517,9 +517,7 @@ func parseRange(rangeHeader string, fileSize int64) ([]httpRange, error) {
 }
 
 func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	query := database.NewQuery()
-	query.Limit = 0
-	audioNotes, err := database.NoteAudioQuery(&query)
+	audioNotes, err := database.NoteAudioQuery()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

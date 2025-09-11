@@ -228,14 +228,30 @@ func NoteAudioNormalized(uuid string) error {
 	return err
 }
 
-func NoteAudioQuery(q *DBQuery) ([]*shared.NoteAudio, error) {
+func NoteAudioQuery() ([]*shared.NoteAudio, error) {
 	results := make([]*shared.NoteAudio, 0)
 	if PGInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
-	args, query := prepQuery(q, "SELECT created, creator, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, transcription, transcription_user_edited, version, uuid FROM note_audio")
-
-	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
+	query := `
+		SELECT 
+			created,
+			creator,
+			duration,
+			has_been_reviewed,
+			is_audio_normalized,
+			is_transcoded_to_ogg,
+			transcription,
+			transcription_user_edited,
+			version,
+			uuid
+		FROM (
+			SELECT *, ROW_NUMBER() OVER (PARTITION BY uuid ORDER BY version DESC) as version_rank
+			FROM note_audio
+		) ranked_rows
+		WHERE version_rank = 1;
+	`
+	rows, _ := PGInstance.DB.Query(context.Background(), query)
 
 	if err := pgxscan.ScanAll(&results, rows); err != nil {
 		log.Println("ScanAll on note_audio error:", err)
