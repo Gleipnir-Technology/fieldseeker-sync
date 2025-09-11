@@ -146,7 +146,32 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		return fmt.Errorf("Failed to begin transaction: %v", err)
 	}
 
-	query := `INSERT INTO note_audio (created, creator, deleted, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, transcription, transcription_user_edited, version, uuid) VALUES (@created, @creator, @deleted, @duration, @has_been_reviewed, @is_audio_normalized, @is_transcoded_to_ogg, @transcription, @transcription_user_edited, @version, @uuid)`
+	query := `INSERT INTO note_audio (
+			created,
+			creator,
+			deleted,
+			duration,
+			has_been_reviewed,
+			is_audio_normalized,
+			is_transcoded_to_ogg,
+			transcription,
+			transcription_internally_edited,
+			transcription_user_edited,
+			version,
+			uuid
+		) VALUES (
+			@created,
+			@creator,
+			@deleted,
+			@duration,
+			@has_been_reviewed,
+			@is_audio_normalized,
+			@is_transcoded_to_ogg,
+			@transcription,
+			@transcription_internally_edited,
+			@transcription_user_edited,
+			@version,
+			@uuid)`
 	args := pgx.NamedArgs{
 		"created":                   payload.Created,
 		"creator":                   userID,
@@ -156,6 +181,7 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		"is_audio_normalized":       false,
 		"is_transcoded_to_ogg":      false,
 		"transcription":             payload.Transcription,
+		"transcription_internally_edited": false,
 		"transcription_user_edited": payload.TranscriptionUserEdited,
 		"version":                   payload.Version,
 		"uuid":                      noteUUID,
