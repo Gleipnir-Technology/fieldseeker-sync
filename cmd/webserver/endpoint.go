@@ -567,6 +567,20 @@ func processAudioIdGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	}
 }
 
+func processAudioIdPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	uuid := chi.URLParam(r, "uuid")
+
+	r.ParseForm()
+	transcription := r.Form.Get("transcription")
+	log.Printf("Updating %s to transcript %s", uuid, transcription)
+	err := database.NoteAudioUpdateTranscription(uuid, transcription)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/process-audio/" + uuid, http.StatusFound)
+}
+
 func usersById() (map[int]*shared.User, error) {
 	users, err := database.Users()
 	if err != nil {

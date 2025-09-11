@@ -87,6 +87,7 @@ func run() error {
 	r.Method("GET", "/audio/{uuid}.{extension}", NewEnsureAuth(audioGet))
 	r.Method("GET", "/process-audio", NewEnsureAuth(processAudioGet))
 	r.Method("GET", "/process-audio/{uuid}", NewEnsureAuth(processAudioIdGet))
+	r.Method("POST", "/process-audio/{uuid}", NewEnsureAuth(processAudioIdPost))
 	r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestList))
 
 	r.Get("/login", loginGet)

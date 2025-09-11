@@ -18,7 +18,7 @@
 			<source src="/audio/{{ .AudioNote.UUID }}.ogg" type="audio/ogg"></source>
 		</audio>
 	</figure>
-	<table>
+	<table class="table">
 		<tbody>
 			<tr>
 				<td>Created</td>
@@ -37,10 +37,6 @@
 				<td>{{ .AudioNote.Duration }}</td>
 			</tr>
 			<tr>
-				<td>Transcription</td>
-				<td>{{ .AudioNote.Transcription }}</td>
-			</tr>
-			<tr>
 				<td>Transcription user edited</td>
 				<td>{{ .AudioNote.TranscriptionUserEdited }}</td>
 			</tr>
@@ -54,6 +50,17 @@
 			</tr>
 		</tbody>
 	</table>
+	<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}">
+		<div class="mb-3">
+			<p><b>Original transcription:</b><br/>{{ .AudioNote.Transcription }}</p>
+		</div>
+		<div class="mb-3">
+			<input type="hidden" name="uuid" value="{{ .AudioNote.UUID }}"/>
+			<label for="transcript" class="form-label">Updated Transcription</label>
+			<textarea class="form-control" name="transcription" rows="10">{{ .AudioNote.Transcription }}</textarea>
+			<button type="submit" class="btn btn-primary">Update</button>
+		</div>
+	</form>
 </div>
 {{end}}
 

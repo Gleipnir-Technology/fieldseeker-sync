@@ -291,6 +291,49 @@ func NoteAudioTranscodedToOgg(uuid string) error {
 	return err
 }
 
+func NoteAudioUpdateTranscription(uuid string, transcription string) error {
+	args := pgx.NamedArgs{
+		"has_been_reviewed": true,
+		"transcription": transcription,
+		"transcription_internally_edited": true,
+		"uuid": uuid,
+	}
+	query := `
+		WITH previous_row AS (
+			SELECT *
+			FROM note_audio
+			WHERE uuid = @uuid
+			AND version = (
+				SELECT MAX(version)
+				FROM note_audio
+				WHERE uuid = @uuid
+			)
+		)
+		INSERT INTO note_audio 
+		(created, creator, deleted, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, transcription, transcription_user_edited, transcription_internally_edited, version, uuid)
+		SELECT
+			created,
+			creator,
+			deleted,
+			duration,
+			@has_been_reviewed,
+			is_audio_normalized,
+			is_transcoded_to_ogg,
+			@transcription,
+			transcription_user_edited,
+			@transcription_internally_edited,
+			version + 1,
+			@uuid
+		FROM previous_row
+	`
+	row, err := PGInstance.DB.Exec(context.Background(), query, args)
+	if err != nil {
+		return fmt.Errorf("Failed to update transcription: %v\n", err)
+	}
+	log.Println("Saved updated transcription", uuid, row)
+	return nil
+}
+
 func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.NoteImagePayload, userID int) error {
 	VERSION := 1
 	query := `INSERT INTO note_image (created, creator, deleted, version, uuid) VALUES (@created, @creator, @deleted, @version, @uuid)`
