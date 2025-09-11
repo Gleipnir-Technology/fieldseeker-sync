@@ -52,12 +52,12 @@
 	</table>
 	<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}">
 		<div class="mb-3">
-			<p><b>Original transcription:</b><br/>{{ .AudioNote.Transcription }}</p>
+			<p><b>Original transcription:</b><br/>{{ if not .AudioNote.Transcription }}&lt;none&gt;{{ else }}{{ .AudioNote.Transcription }}{{ end }}</p>
 		</div>
 		<div class="mb-3">
 			<input type="hidden" name="uuid" value="{{ .AudioNote.UUID }}"/>
 			<label for="transcript" class="form-label">Updated Transcription</label>
-			<textarea class="form-control" name="transcription" rows="10">{{ .AudioNote.Transcription }}</textarea>
+			<textarea class="form-control" name="transcription" rows="10">{{ if not .AudioNote.Transcription }}{{ else }}{{ .AudioNote.Transcription }}{{ end }}</textarea>
 			<button type="submit" class="btn btn-primary">Update</button>
 		</div>
 	</form>
