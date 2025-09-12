@@ -3,21 +3,42 @@
 {{define "title"}}Nidus Audio{{end}}
 
 {{define "style"}}
-		html, body {
-			height: 100%;
-			margin: 0;
-		}
+html, body {
+	height: 100%;
+	margin: 0;
+}
+.container-audio {
+	width: 66%;
+	height: auto;
+	padding: 20px;
+	border-radius: 5px;
+	background-color: #eee;
+	color: #444;
+	margin: 20px auto;
+	overflow: hidden;
+}
+audio {
+	width:100%;
+}
 {{end}}
 {{define "content"}}
 <div class="container">
 	<a href="/process-audio">Return to list</a>
-	<figure>
-		<figcaption>Listen to the Note:</figcaption>
-		<audio controls>
-			<source src="/audio/{{ .AudioNote.UUID }}.m4a" type="audio/mpeg"></source>
-			<source src="/audio/{{ .AudioNote.UUID }}.ogg" type="audio/ogg"></source>
-		</audio>
-	</figure>
+	<div class="row">
+		<div class="col">
+			<div class="container-audio">
+				<audio controls>
+					<source src="/audio/{{ .AudioNote.UUID }}.m4a" type="audio/mpeg"></source>
+					<source src="/audio/{{ .AudioNote.UUID }}.ogg" type="audio/ogg"></source>
+				</audio>
+			</div>
+			<div id="audio-player-container">
+				<p>Audio Player</p>
+				<!-- swaps with pause icon -->
+				<button id="play-icon"></button>
+			</div>
+		</div>
+	</div>
 	<table class="table">
 		<tbody>
 			<tr>
