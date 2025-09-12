@@ -351,8 +351,9 @@ func NoteAudioUpdateReviewed(uuid string) error {
 	return nil
 }
 
-func NoteAudioUpdateTranscription(uuid string, transcription string) error {
+func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID int) error {
 	args := pgx.NamedArgs{
+		"creator": userUUID,
 		"has_been_reviewed": true,
 		"transcription": transcription,
 		"transcription_internally_edited": true,
@@ -373,7 +374,7 @@ func NoteAudioUpdateTranscription(uuid string, transcription string) error {
 		(created, creator, deleted, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, transcription, transcription_user_edited, transcription_internally_edited, version, uuid)
 		SELECT
 			created,
-			creator,
+			@creator,
 			deleted,
 			duration,
 			@has_been_reviewed,

@@ -571,7 +571,7 @@ func processAudioIdPost(w http.ResponseWriter, r *http.Request, u *shared.User) 
 	r.ParseForm()
 	transcription := r.Form.Get("transcription")
 	log.Printf("Updating %s to transcript %s", uuid, transcription)
-	err := database.NoteAudioUpdateTranscription(uuid, transcription)
+	err := database.NoteAudioUpdateTranscription(uuid, transcription, u.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
