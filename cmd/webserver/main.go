@@ -249,11 +249,11 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
 
 		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
-
 		// Custom file server with MIME type detection
 		customFileServer := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Detect file extension and set appropriate MIME type
 			ext := filepath.Ext(r.URL.Path)
+			log.Printf("Serving '%s' with extension '%s'", r.URL.Path, ext)
 			switch ext {
 			case ".css":
 				w.Header().Set("Content-Type", "text/css")
