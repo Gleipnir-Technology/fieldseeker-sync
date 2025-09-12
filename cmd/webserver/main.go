@@ -247,7 +247,41 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		rctx := chi.RouteContext(r.Context())
 		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+
 		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
-		fs.ServeHTTP(w, r)
+
+		// Custom file server with MIME type detection
+		customFileServer := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Detect file extension and set appropriate MIME type
+			ext := filepath.Ext(r.URL.Path)
+			switch ext {
+			case ".css":
+				w.Header().Set("Content-Type", "text/css")
+			case ".js":
+				w.Header().Set("Content-Type", "application/javascript")
+			case ".json":
+				w.Header().Set("Content-Type", "application/json")
+			case ".html":
+				w.Header().Set("Content-Type", "text/html")
+			case ".svg":
+				w.Header().Set("Content-Type", "image/svg+xml")
+			case ".png":
+				w.Header().Set("Content-Type", "image/png")
+			case ".jpg", ".jpeg":
+				w.Header().Set("Content-Type", "image/jpeg")
+			case ".gif":
+				w.Header().Set("Content-Type", "image/gif")
+			case ".woff":
+				w.Header().Set("Content-Type", "font/woff")
+			case ".woff2":
+				w.Header().Set("Content-Type", "font/woff2")
+			case ".ttf":
+				w.Header().Set("Content-Type", "font/ttf")
+			}
+
+			fs.ServeHTTP(w, r)
+		})
+
+		customFileServer.ServeHTTP(w, r)
 	})
 }
