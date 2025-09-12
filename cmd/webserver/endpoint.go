@@ -579,6 +579,17 @@ func processAudioIdPost(w http.ResponseWriter, r *http.Request, u *shared.User) 
 	http.Redirect(w, r, "/process-audio/" + uuid, http.StatusFound)
 }
 
+func processAudioIdDeletePost(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	uuid := chi.URLParam(r, "uuid")
+	log.Printf("Deleting %s", uuid)
+	err := database.NoteAudioUpdateDelete(uuid, u.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/process-audio", http.StatusFound)
+}
+
 func processAudioIdReviewedPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	uuid := chi.URLParam(r, "uuid")
 	log.Printf("Updating %s to reviewed without changes", uuid)

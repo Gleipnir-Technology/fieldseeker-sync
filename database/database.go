@@ -279,7 +279,7 @@ func NoteAudioQuery() ([]*shared.NoteAudio, error) {
 			SELECT *, ROW_NUMBER() OVER (PARTITION BY uuid ORDER BY version DESC) as version_rank
 			FROM note_audio
 		) ranked_rows
-		WHERE version_rank = 1;
+		WHERE version_rank = 1 AND deleted IS NULL;
 	`
 	rows, _ := PGInstance.DB.Query(context.Background(), query)
 
@@ -335,6 +335,25 @@ func NoteAudioTranscodedToOgg(uuid string) error {
 	query := "UPDATE note_audio SET is_transcoded_to_ogg=@is_transcoded_to_ogg WHERE uuid=@uuid"
 	_, err := PGInstance.DB.Exec(context.Background(), query, args)
 	return err
+}
+
+func NoteAudioUpdateDelete(uuid string, userID int) error {
+	args := pgx.NamedArgs{
+		"deleted": time.Now(),
+		"deleted_by": userID,
+		"uuid": uuid,
+	}
+	query := `
+		UPDATE note_audio
+		SET deleted=@deleted, deleted_by=@deleted_by
+		WHERE uuid=@uuid
+	`
+	row, err := PGInstance.DB.Exec(context.Background(), query, args)
+	if err != nil {
+		return fmt.Errorf("Failed to update note_audio to deleted: %v\n", err)
+	}
+	log.Printf("Marked note_audio %s %s deleted", uuid, row)
+	return nil
 }
 
 func NoteAudioUpdateReviewed(uuid string) error {
