@@ -253,32 +253,34 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 		customFileServer := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Detect file extension and set appropriate MIME type
 			ext := filepath.Ext(r.URL.Path)
-			log.Printf("Serving '%s' with extension '%s'", r.URL.Path, ext)
+			contentType := "text/plain"
 			switch ext {
 			case ".css":
-				w.Header().Set("Content-Type", "text/css")
+				contentType = "text/css"
 			case ".js":
-				w.Header().Set("Content-Type", "application/javascript")
+				contentType = "application/javascript"
 			case ".json":
-				w.Header().Set("Content-Type", "application/json")
+				contentType = "application/json"
 			case ".html":
-				w.Header().Set("Content-Type", "text/html")
+				contentType = "text/html"
 			case ".svg":
-				w.Header().Set("Content-Type", "image/svg+xml")
+				contentType = "image/svg+xml"
 			case ".png":
-				w.Header().Set("Content-Type", "image/png")
+				contentType = "image/png"
 			case ".jpg", ".jpeg":
-				w.Header().Set("Content-Type", "image/jpeg")
+				contentType = "image/jpeg"
 			case ".gif":
-				w.Header().Set("Content-Type", "image/gif")
+				contentType = "image/gif"
 			case ".woff":
-				w.Header().Set("Content-Type", "font/woff")
+				contentType = "font/woff"
 			case ".woff2":
-				w.Header().Set("Content-Type", "font/woff2")
+				contentType = "font/woff2"
 			case ".ttf":
-				w.Header().Set("Content-Type", "font/ttf")
+				contentType = "font/ttf"
 			}
 
+			w.Header().Set("Content-Type", contentType)
+			log.Printf("Serving '%s' with extension '%s' content-type %s", r.URL.Path, ext, contentType)
 			fs.ServeHTTP(w, r)
 		})
 
