@@ -21,22 +21,39 @@ audio {
 	width:100%;
 }
 {{end}}
+
+{{define "extrajs"}}
+<script>
+function setPlaybackSpeed(speed) {
+	var audio = document.getElementById("audio")
+	audio.playbackRate=speed;
+}
+onload = (event) => {
+	console.log("loaded");
+}
+</script>
+{{end}}
+
 {{define "content"}}
 <div class="container">
 	<a href="/process-audio">Return to list</a>
 	<div class="row">
-		<div class="col">
+		<div class="col-11">
 			<div class="container-audio">
-				<audio controls>
+				<audio controls id="audio">
 					<source src="/audio/{{ .AudioNote.UUID }}.m4a" type="audio/mpeg"></source>
 					<source src="/audio/{{ .AudioNote.UUID }}.ogg" type="audio/ogg"></source>
 				</audio>
 			</div>
-			<div id="audio-player-container">
-				<p>Audio Player</p>
-				<!-- swaps with pause icon -->
-				<button id="play-icon"></button>
-			</div>
+		</div>
+		<div class="col-1">
+			<button class="btn" onclick="setPlaybackSpeed(0.5)"/>0.5x</button>
+			<button class="btn" onclick="setPlaybackSpeed(0.75)"/>0.75x</button>
+			<button class="btn" onclick="setPlaybackSpeed(1.0)"/>1.0x</button>
+			<button class="btn" onclick="setPlaybackSpeed(1.25)"/>1.25x</button>
+			<button class="btn" onclick="setPlaybackSpeed(1.5)"/>1.5x</button>
+			<button class="btn" onclick="setPlaybackSpeed(1.75)"/>1.75x</button>
+			<button class="btn" onclick="setPlaybackSpeed(2.0)"/>2.0x</button>
 		</div>
 	</div>
 	<table class="table">
