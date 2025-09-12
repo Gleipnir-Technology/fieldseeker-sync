@@ -15,6 +15,7 @@
 			<tr>
 				<th scope="col">Created</th>
 				<th scope="col">Reviewed</th>
+				<th scope="col">Needs Further Review</th>
 				<th scope="col">Duration</th>
 				<th scope="col">Tech</th>
 				<th scope="col">UUID</th>
@@ -25,6 +26,7 @@
 			<tr>
 				<td>{{ $note.Created }}</td>
 				<td>{{ if $note.HasBeenReviewed }}T{{ else }}F{{ end}}</td>
+				<td>{{ if $note.NeedsFurtherReview }}T{{ else }}F{{ end}}</td>
 				<td>{{ $note.Duration }}</td>
 				<td>{{ with $u := index $.UsersById $note.Creator }}{{ $u.DisplayName }}{{ end }}</td>
 				<td><a href="/process-audio/{{ $note.UUID }}">{{ $note.UUID }}</a></td>

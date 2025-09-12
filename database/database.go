@@ -270,6 +270,7 @@ func NoteAudioQuery() ([]*shared.NoteAudio, error) {
 			has_been_reviewed,
 			is_audio_normalized,
 			is_transcoded_to_ogg,
+			needs_further_review,
 			transcription,
 			transcription_user_edited,
 			version,
@@ -354,6 +355,23 @@ func NoteAudioUpdateReviewed(uuid string) error {
 	return nil
 }
 
+func NoteAudioUpdateNeedsFurtherReview(uuid string) error {
+	args := pgx.NamedArgs{
+		"needs_further_review": true,
+		"uuid": uuid,
+	}
+	query := `
+		UPDATE note_audio
+		SET needs_further_review=@needs_further_review
+		WHERE uuid=@uuid
+	`
+	row, err := PGInstance.DB.Exec(context.Background(), query, args)
+	if err != nil {
+		return fmt.Errorf("Failed to update needs further review: %v\n", err)
+	}
+	log.Printf("Marked note_audio %s %s needs further review", uuid, row)
+	return nil
+}
 func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID int) error {
 	args := pgx.NamedArgs{
 		"creator": userUUID,
@@ -374,7 +392,7 @@ func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID in
 			)
 		)
 		INSERT INTO note_audio 
-		(created, creator, deleted, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, transcription, transcription_user_edited, transcription_internally_edited, version, uuid)
+		(created, creator, deleted, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, needs_further_review, transcription, transcription_user_edited, transcription_internally_edited, version, uuid)
 		SELECT
 			created,
 			@creator,
@@ -383,6 +401,7 @@ func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID in
 			@has_been_reviewed,
 			is_audio_normalized,
 			is_transcoded_to_ogg,
+			needs_further_review,
 			@transcription,
 			transcription_user_edited,
 			@transcription_internally_edited,

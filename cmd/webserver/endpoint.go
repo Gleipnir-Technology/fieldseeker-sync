@@ -590,6 +590,17 @@ func processAudioIdReviewedPost(w http.ResponseWriter, r *http.Request, u *share
 	http.Redirect(w, r, "/process-audio", http.StatusFound)
 }
 
+func processAudioIdNeedsFurtherReviewPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
+	uuid := chi.URLParam(r, "uuid")
+	log.Printf("Updating %s to needs further review", uuid)
+	err := database.NoteAudioUpdateNeedsFurtherReview(uuid)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/process-audio", http.StatusFound)
+}
+
 func usersById() (map[int]*shared.User, error) {
 	users, err := database.Users()
 	if err != nil {
@@ -606,8 +617,11 @@ type byReviewedAndAge []*shared.NoteAudio
 func (a byReviewedAndAge) Len() int { return len(a) }
 func (a byReviewedAndAge) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a byReviewedAndAge) Less(i, j int) bool {
-	if a[i].HasBeenReviewed == a[j].HasBeenReviewed {
-		return a[i].Created.Before(a[j].Created);
+	if a[i].NeedsFurtherReview == a[j].NeedsFurtherReview {
+		if a[i].HasBeenReviewed == a[j].HasBeenReviewed {
+			return a[i].Created.Before(a[j].Created);
+		}
+		return !a[i].HasBeenReviewed
 	}
-	return !a[i].HasBeenReviewed
+	return a[i].NeedsFurtherReview
 }

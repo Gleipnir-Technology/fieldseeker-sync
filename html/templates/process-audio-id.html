@@ -50,9 +50,18 @@
 			</tr>
 		</tbody>
 	</table>
-	<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/reviewed">
-		<button type="submit" class="btn btn-success">Mark reviewed without changes</button>
-	</form>
+	<div class="row">
+		<div class="col">
+			<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/reviewed">
+				<button type="submit" class="btn btn-success">Mark reviewed without changes</button>
+			</form>
+		</div>
+		<div class="col">
+			<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/needs-further-review">
+				<button type="submit" class="btn btn-warning">Needs further review</button>
+			</form>
+		</div>
+	</div>
 	<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}">
 		<div class="mb-3">
 			<p><b>Original transcription:</b><br/>{{ if not .AudioNote.Transcription }}&lt;none&gt;{{ else }}{{ .AudioNote.Transcription }}{{ end }}</p>
