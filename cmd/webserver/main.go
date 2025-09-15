@@ -1,8 +1,10 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -26,6 +28,9 @@ import (
 )
 
 var sessionManager *scs.SessionManager
+
+//go:embed static
+var embeddedStaticFS embed.FS
 
 func errRender(err error) render.Renderer {
 	fmt.Println("Rendering error:", err)
@@ -111,9 +116,8 @@ func run() error {
 		r.Get("/webhook/fieldseeker", webhookFieldseeker)
 		r.Post("/webhook/fieldseeker", webhookFieldseeker)
 	})
-	workDir, _ := os.Getwd()
-	filesDir := http.Dir(filepath.Join(workDir, "static"))
-	FileServer(r, "/static", filesDir)
+	localFS := http.Dir("./static")
+	FileServer(r, "/static", localFS, embeddedStaticFS, "static")
 
 	bind := os.Getenv("FIELDSEEKER_SYNC_WEBSERVER_BIND")
 	if len(bind) == 0 {
@@ -233,7 +237,7 @@ func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
 
 // FileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.
-func FileServer(r chi.Router, path string, root http.FileSystem) {
+func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embed.FS, embeddedPath string) {
 	if strings.ContainsAny(path, "{}*") {
 		panic("FileServer does not permit any URL parameters.")
 	}
@@ -248,42 +252,113 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 		rctx := chi.RouteContext(r.Context())
 		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
 
-		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
-		// Custom file server with MIME type detection
-		customFileServer := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Detect file extension and set appropriate MIME type
-			ext := filepath.Ext(r.URL.Path)
-			contentType := "text/plain"
-			switch ext {
-			case ".css":
-				contentType = "text/css"
-			case ".js":
-				contentType = "application/javascript"
-			case ".json":
-				contentType = "application/json"
-			case ".html":
-				contentType = "text/html"
-			case ".svg":
-				contentType = "image/svg+xml"
-			case ".png":
-				contentType = "image/png"
-			case ".jpg", ".jpeg":
-				contentType = "image/jpeg"
-			case ".gif":
-				contentType = "image/gif"
-			case ".woff":
-				contentType = "font/woff"
-			case ".woff2":
-				contentType = "font/woff2"
-			case ".ttf":
-				contentType = "font/ttf"
+		// Determine the actual file path
+		requestedPath := strings.TrimPrefix(r.URL.Path, pathPrefix)
+
+		// Try to open from local filesystem first for development
+		localFile, localErr := root.Open(requestedPath)
+
+		var fileToServe http.File
+
+		if localErr == nil {
+			// File found in local filesystem
+			fileToServe = localFile
+		} else {
+			// If not found locall, try embedded filesystem
+			embeddedFilePath := filepath.Join(embeddedPath, requestedPath)
+			embeddedFile, err := embeddedFS.Open(embeddedFilePath)
+
+			if err != nil {
+				http.NotFound(w, r)
+				return
 			}
 
-			w.Header().Set("Content-Type", contentType)
-			log.Printf("Serving '%s' with extension '%s' content-type %s", r.URL.Path, ext, contentType)
-			fs.ServeHTTP(w, r)
-		})
+			// Wrap the embedded file to implement http.File interface
+			fileToServe = &embeddedFileWrapper{embeddedFile}
 
-		customFileServer.ServeHTTP(w, r)
+		}
+
+		// Create a custom ResponseWriter that allows us to modify headers
+		crw := &customResponseWriter{ResponseWriter: w}
+
+		// Serve the file
+		http.ServeContent(crw, r, requestedPath, time.Time{}, fileToServe)
+
+		// Close the file
+		fileToServe.Close()
 	})
+}
+
+// Custom ResponseWriter to track Content-Type
+type customResponseWriter struct {
+	http.ResponseWriter
+	contentType string
+	wroteHeader bool
+}
+
+func (crw *customResponseWriter) WriteHeader(code int) {
+	crw.wroteHeader = true
+	crw.ResponseWriter.WriteHeader(code)
+}
+
+func (crw *customResponseWriter) Header() http.Header {
+	return crw.ResponseWriter.Header()
+}
+
+func (crw *customResponseWriter) Write(b []byte) (int, error) {
+	if !crw.wroteHeader {
+		if crw.contentType == "" {
+			crw.contentType = http.DetectContentType(b)
+			crw.ResponseWriter.Header().Set("Content-Type", crw.contentType)
+		}
+		crw.WriteHeader(http.StatusOK)
+	}
+	return crw.ResponseWriter.Write(b)
+}
+
+type embeddedFileWrapper struct {
+	file fs.File
+}
+
+func (e *embeddedFileWrapper) Close() error {
+	return e.file.Close()
+}
+
+func (e *embeddedFileWrapper) Read(p []byte) (n int, err error) {
+	return e.file.Read(p)
+}
+
+type Seeker interface {
+	Seek(offset int64, whence int) (int64, error)
+}
+
+func (e *embeddedFileWrapper) Seek(offset int64, whence int) (int64, error) {
+	if seeker, ok := e.file.(Seeker); ok {
+		return seeker.Seek(offset, whence)
+	}
+	return 0, fmt.Errorf("Seek not supported")
+}
+
+func (e *embeddedFileWrapper) Readdir(count int) ([]os.FileInfo, error) {
+	// This is a bit tricky with embedded files
+	if dirFile, ok := e.file.(fs.ReadDirFile); ok {
+		entries, err := dirFile.ReadDir(count)
+		if err != nil {
+			return nil, err
+		}
+
+		fileInfos := make([]os.FileInfo, len(entries))
+		for i, entry := range entries {
+			fileInfos[i], err = entry.Info()
+			if err != nil {
+				return nil, err
+			}
+		}
+		return fileInfos, nil
+	}
+	return nil, fmt.Errorf("Readdir not supported")
+}
+
+func (e *embeddedFileWrapper) Stat() (os.FileInfo, error) {
+	return e.file.Stat()
 }
