@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database/models"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
@@ -42,14 +43,14 @@ type PageDataLogin struct {
 }
 
 type PageDataProcessAudio struct {
-	AudioNotes []*shared.NoteAudio
-	UsersById  map[int]*shared.User
-	User       *shared.User
+	Tasks     []*models.TaskAudioReview
+	UsersById map[int]*shared.User
+	User      *shared.User
 }
 
 type PageDataProcessAudioId struct {
 	AudioNote *shared.NoteAudio
-	UsersById  map[int]*shared.User
+	UsersById map[int]*shared.User
 	User      *shared.User
 }
 
@@ -128,7 +129,7 @@ func newBuiltTemplate(files ...string) BuiltTemplate {
 
 func parseEmbedded(files []string) *template.Template {
 	funcMap := template.FuncMap{
-		"geocode": geocode,
+		"geocode":   geocode,
 		"timeSince": timeSince,
 	}
 	// Remap the file names to embedded paths
@@ -146,7 +147,7 @@ func parseEmbedded(files []string) *template.Template {
 
 func parseFromDisk(files []string) *template.Template {
 	funcMap := template.FuncMap{
-		"geocode": geocode,
+		"geocode":   geocode,
 		"timeSince": timeSince,
 	}
 	// Remap file names to paths on disk
@@ -168,16 +169,16 @@ func parseFromDisk(files []string) *template.Template {
 
 func timeSince(t time.Time) string {
 	now := time.Now()
-    diff := now.Sub(t)
+	diff := now.Sub(t)
 
-    hours := diff.Hours()
-    if hours < 1 {
-        minutes := diff.Minutes()
-        return fmt.Sprintf("%d minutes ago", int(minutes))
-    } else if hours < 24 {
-        return fmt.Sprintf("%d hours ago", int(hours))
-    } else {
-        days := hours / 24
-        return fmt.Sprintf("%d days ago", int(days))
-    }
+	hours := diff.Hours()
+	if hours < 1 {
+		minutes := diff.Minutes()
+		return fmt.Sprintf("%d minutes ago", int(minutes))
+	} else if hours < 24 {
+		return fmt.Sprintf("%d hours ago", int(hours))
+	} else {
+		days := hours / 24
+		return fmt.Sprintf("%d days ago", int(days))
+	}
 }

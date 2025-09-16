@@ -14,22 +14,22 @@
 		<thead>
 			<tr>
 				<th scope="col">Created</th>
-				<th scope="col">Reviewed</th>
+				<th scope="col">Reviewed by</th>
 				<th scope="col">Needs Further Review</th>
-				<th scope="col">Duration</th>
-				<th scope="col">Tech</th>
 				<th scope="col">UUID</th>
 			</tr>
 		</thead>
 		<tbody>
-			{{range $note := .AudioNotes}}
+			{{range $task := .Tasks}}
 			<tr>
-				<td>{{ timeSince $note.Created }}</td>
-				<td>{{ if $note.HasBeenReviewed }}T{{ else }}F{{ end}}</td>
-				<td>{{ if $note.NeedsFurtherReview }}T{{ else }}F{{ end}}</td>
-				<td>{{ $note.Duration }}</td>
-				<td>{{ with $u := index $.UsersById $note.Creator }}{{ $u.DisplayName }}{{ end }}</td>
-				<td><a href="/process-audio/{{ $note.UUID }}">{{ $note.UUID }}</a></td>
+				<td>{{ timeSince $task.Created }}</td>
+				{{ if $task.ReviewedBy.IsNull }}
+					<td></td>
+				{{ else }}
+					<td>{{ with $u := index $.UsersById $task.ReviewedBy.MustGet }}{{ $u.DisplayName }}{{ end }}</td>
+				{{ end }}
+				<td>{{ if $task.NeedsReview }}T{{ else }}F{{ end}}</td>
+				<td><a href="/process-audio/{{ $task.NoteAudioUUID }}">{{ $task.NoteAudioUUID }}</a></td>
 			</tr>
 			{{end}}
 		</tbody>

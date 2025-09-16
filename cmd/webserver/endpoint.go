@@ -19,6 +19,7 @@ import (
 
 	"github.com/Gleipnir-Technology/fieldseeker-sync"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database/models"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/html"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
@@ -517,12 +518,12 @@ func parseRange(rangeHeader string, fileSize int64) ([]httpRange, error) {
 }
 
 func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	audioNotes, err := database.NoteAudioQuery()
+	tasks, err := database.TaskAudioReviewList()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	sort.Sort(byReviewedAndAge(audioNotes))
+	sort.Sort(byReviewedAndAge(tasks))
 	usersById, err := usersById()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -530,9 +531,9 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	}
 
 	data := html.PageDataProcessAudio{
-		AudioNotes: audioNotes,
-		UsersById:  usersById,
-		User:       u,
+		Tasks:     tasks,
+		UsersById: usersById,
+		User:      u,
 	}
 
 	err = html.ProcessAudio(w, data)
@@ -576,7 +577,7 @@ func processAudioIdPost(w http.ResponseWriter, r *http.Request, u *shared.User) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/process-audio/" + uuid, http.StatusFound)
+	http.Redirect(w, r, "/process-audio/"+uuid, http.StatusFound)
 }
 
 func processAudioIdDeletePost(w http.ResponseWriter, r *http.Request, u *shared.User) {
@@ -624,15 +625,16 @@ func usersById() (map[int]*shared.User, error) {
 	return usersById, nil
 }
 
-type byReviewedAndAge []*shared.NoteAudio
-func (a byReviewedAndAge) Len() int { return len(a) }
+type byReviewedAndAge []*models.TaskAudioReview
+
+func (a byReviewedAndAge) Len() int      { return len(a) }
 func (a byReviewedAndAge) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a byReviewedAndAge) Less(i, j int) bool {
-	if a[i].NeedsFurtherReview == a[j].NeedsFurtherReview {
-		if a[i].HasBeenReviewed == a[j].HasBeenReviewed {
-			return a[i].Created.Before(a[j].Created);
+	if a[i].NeedsReview == a[j].NeedsReview {
+		if a[i].ReviewedBy == a[j].ReviewedBy {
+			return a[i].Created.Before(a[j].Created)
 		}
-		return !a[i].HasBeenReviewed
+		return a[i].ReviewedBy.IsNull()
 	}
-	return a[i].NeedsFurtherReview
+	return a[i].NeedsReview
 }
