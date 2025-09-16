@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/Gleipnir-Technology/fieldseeker-sync/database/models"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
@@ -30,35 +29,6 @@ type BuiltTemplate struct {
 	template *template.Template
 }
 
-type PageDataIndex struct {
-	ServiceRequestCount int
-	Title               string
-	User                *shared.User
-}
-
-type PageDataLogin struct {
-	Next  string
-	Title string
-	User  *shared.User
-}
-
-type PageDataProcessAudio struct {
-	Tasks     []*models.TaskAudioReview
-	UsersById map[int]*shared.User
-	User      *shared.User
-}
-
-type PageDataProcessAudioId struct {
-	AudioNote *shared.NoteAudio
-	UsersById map[int]*shared.User
-	User      *shared.User
-}
-
-type PageDataServiceRequests struct {
-	ServiceRequests []shared.ServiceRequest
-	User            *shared.User
-}
-
 func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	name := bt.files[0] + ".html"
 	if bt.template == nil {
@@ -73,12 +43,12 @@ func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	}
 }
 
-func Index(w io.Writer, d PageDataIndex) error {
+func Index(w io.Writer, d ContentIndex) error {
 	return index.ExecuteTemplate(w, d)
 }
 
 func Login(w io.Writer, next string) error {
-	d := PageDataLogin{
+	d := ContentLogin{
 		Next:  next,
 		Title: "Login",
 		User:  nil,
@@ -86,15 +56,15 @@ func Login(w io.Writer, next string) error {
 	return login.ExecuteTemplate(w, d)
 }
 
-func ProcessAudio(w io.Writer, d PageDataProcessAudio) error {
+func ProcessAudio(w io.Writer, d ContentProcessAudio) error {
 	return processAudio.ExecuteTemplate(w, d)
 }
 
-func ProcessAudioId(w io.Writer, d PageDataProcessAudioId) error {
+func ProcessAudioId(w io.Writer, d ContentProcessAudioId) error {
 	return processAudioId.ExecuteTemplate(w, d)
 }
 
-func ServiceRequests(w io.Writer, sr PageDataServiceRequests) error {
+func ServiceRequests(w io.Writer, sr ContentServiceRequests) error {
 	return serviceRequests.ExecuteTemplate(w, sr)
 }
 

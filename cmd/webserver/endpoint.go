@@ -388,7 +388,7 @@ func index(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		return
 	}
 
-	data := html.PageDataIndex{
+	data := html.ContentIndex{
 		ServiceRequestCount: count,
 		Title:               "Gateway Sync Test",
 		User:                u,
@@ -530,7 +530,7 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		return
 	}
 
-	data := html.PageDataProcessAudio{
+	data := html.ContentProcessAudio{
 		Tasks:     tasks,
 		UsersById: usersById,
 		User:      u,
@@ -554,7 +554,7 @@ func processAudioIdGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	data := html.PageDataProcessAudioId{
+	data := html.ContentProcessAudioId{
 		AudioNote: audioNote,
 		UsersById: usersById,
 		User:      u,

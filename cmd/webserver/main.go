@@ -179,7 +179,7 @@ func serviceRequestList(w http.ResponseWriter, r *http.Request, u *shared.User) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	sr := html.PageDataServiceRequests{
+	sr := html.ContentServiceRequests{
 		ServiceRequests: requests,
 		User:            u,
 	}
