@@ -46,8 +46,11 @@ var embedMigrations embed.FS
 
 func ConnectDB(ctx context.Context, connection_string string) error {
 	needs, err := needsMigrations(connection_string)
-	if err != nil || needs == nil {
-		return errors.New("Database migrations must be run first!")
+	if err != nil {
+		return fmt.Errorf("Failed to determine if migrations are needed: %v", err)
+	}
+	if needs == nil {
+		return errors.New("Can't read variable 'needs' - it's nil")
 	}
 	if *needs {
 		return errors.New("Must migrate database before connecting.")
@@ -759,7 +762,6 @@ func needsMigrations(connection_string string) (*bool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create goose provider: %w", err)
 	}
-	//goose.SetBaseFS(embedMigrations)
 
 	hasPending, err := provider.HasPending(context.Background())
 	if err != nil {
