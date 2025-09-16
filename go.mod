@@ -1,6 +1,6 @@
 module github.com/Gleipnir-Technology/fieldseeker-sync
 
-go 1.24
+go 1.24.0
 
 toolchain go1.24.3
 
@@ -8,22 +8,28 @@ require github.com/Gleipnir-Technology/arcgis-go v0.0.2 // explicit
 
 require (
 	github.com/Gleipnir-Technology/fieldseeker-sync/shared v0.0.0
+	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
+	github.com/alexedwards/scs/pgxstore v0.0.0-20250417082927-ab20b3feb5e9
 	github.com/alexedwards/scs/v2 v2.8.0
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gdamore/tcell/v2 v2.8.1
 	github.com/georgysavva/scany/v2 v2.1.4
+	github.com/getsentry/sentry-go v0.35.1
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/render v1.0.3
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.7.4
+	github.com/jackc/pgx/v5 v5.7.5
+	github.com/jaswdr/faker/v2 v2.8.0
+	github.com/lib/pq v1.10.9
 	github.com/pressly/goose/v3 v3.24.3
+	github.com/shopspring/decimal v1.4.0
+	github.com/stephenafamo/bob v0.41.1
 )
 
 require (
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
-	github.com/alexedwards/scs/pgxstore v0.0.0-20250417082927-ab20b3feb5e9 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/briandowns/spinner v1.23.2 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
@@ -35,7 +41,6 @@ require (
 	github.com/evilmartians/lefthook v1.11.13 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
-	github.com/getsentry/sentry-go v0.35.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
@@ -66,12 +71,14 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
+	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/schollz/progressbar/v3 v3.18.0 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/stephenafamo/scan v0.7.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect

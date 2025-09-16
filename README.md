@@ -29,6 +29,15 @@ Check on the status of migrations
 env GOOSE_DRIVER=postgres GOOSE_DBSTRING="user=fieldseeker dbname=fieldseeker password=letmein" goose status
 ```
 
+Generate models for bob:
+
+```
+$ cd database
+$ PSQL_DSN="postgresql://fieldseeker-sync:@?host=/var/run/postgresql&sslmode=disable" go run github.com/stephenafamo/bob/gen/bobgen-psql@latest
+```
+
+This will generate a bunch of files in `database/`.
+
 ### Hot reloading
 
 Hot reloading is done via [air](https://github.com/air-verse/air):
