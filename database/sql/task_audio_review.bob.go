@@ -20,72 +20,70 @@ import (
 //go:embed task_audio_review.bob.sql
 var formattedQueries_task_audio_review string
 
-var allTaskAudioReviewSQL = formattedQueries_task_audio_review[156:548]
+var taskAudioReviewOutstandingSQL = formattedQueries_task_audio_review[164:571]
 
-type AllTaskAudioReviewQuery = orm.ModQuery[*dialect.SelectQuery, allTaskAudioReview, AllTaskAudioReviewRow, []AllTaskAudioReviewRow, allTaskAudioReviewTransformer]
+type TaskAudioReviewOutstandingQuery = orm.ModQuery[*dialect.SelectQuery, taskAudioReviewOutstanding, TaskAudioReviewOutstandingRow, []TaskAudioReviewOutstandingRow, taskAudioReviewOutstandingTransformer]
 
-func AllTaskAudioReview() *AllTaskAudioReviewQuery {
-	var expressionTypArgs allTaskAudioReview
+func TaskAudioReviewOutstanding() *TaskAudioReviewOutstandingQuery {
+	var expressionTypArgs taskAudioReviewOutstanding
 
-	return &AllTaskAudioReviewQuery{
-		Query: orm.Query[allTaskAudioReview, AllTaskAudioReviewRow, []AllTaskAudioReviewRow, allTaskAudioReviewTransformer]{
-			ExecQuery: orm.ExecQuery[allTaskAudioReview]{
-				BaseQuery: bob.BaseQuery[allTaskAudioReview]{
+	return &TaskAudioReviewOutstandingQuery{
+		Query: orm.Query[taskAudioReviewOutstanding, TaskAudioReviewOutstandingRow, []TaskAudioReviewOutstandingRow, taskAudioReviewOutstandingTransformer]{
+			ExecQuery: orm.ExecQuery[taskAudioReviewOutstanding]{
+				BaseQuery: bob.BaseQuery[taskAudioReviewOutstanding]{
 					Expression: expressionTypArgs,
 					Dialect:    dialect.Dialect,
 					QueryType:  bob.QueryTypeSelect,
 				},
 			},
-			Scanner: func(context.Context, []string) (func(*scan.Row) (any, error), func(any) (AllTaskAudioReviewRow, error)) {
+			Scanner: func(context.Context, []string) (func(*scan.Row) (any, error), func(any) (TaskAudioReviewOutstandingRow, error)) {
 				return func(row *scan.Row) (any, error) {
-						var t AllTaskAudioReviewRow
-						row.ScheduleScanByIndex(0, &t.ID)
-						row.ScheduleScanByIndex(1, &t.CompletedBy)
-						row.ScheduleScanByIndex(2, &t.Created)
-						row.ScheduleScanByIndex(3, &t.NeedsReview)
-						row.ScheduleScanByIndex(4, &t.NoteAudioUUID)
-						row.ScheduleScanByIndex(5, &t.NoteAudioVersion)
-						row.ScheduleScanByIndex(6, &t.ReviewedBy)
+						var t TaskAudioReviewOutstandingRow
+						row.ScheduleScanByIndex(0, &t.TaskID)
+						row.ScheduleScanByIndex(1, &t.TaskCreated)
+						row.ScheduleScanByIndex(2, &t.NeedsReview)
+						row.ScheduleScanByIndex(3, &t.AudioDuration)
+						row.ScheduleScanByIndex(4, &t.CreatorName)
 						return &t, nil
-					}, func(v any) (AllTaskAudioReviewRow, error) {
-						return *(v.(*AllTaskAudioReviewRow)), nil
+					}, func(v any) (TaskAudioReviewOutstandingRow, error) {
+						return *(v.(*TaskAudioReviewOutstandingRow)), nil
 					}
 			},
 		},
 		Mod: bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {
-			q.AppendSelect(expressionTypArgs.subExpr(7, 369))
-			q.SetTable(expressionTypArgs.subExpr(375, 392))
+			q.AppendSelect(expressionTypArgs.subExpr(12, 160))
+			q.SetTable(expressionTypArgs.subExpr(171, 339))
+			q.AppendWhere(expressionTypArgs.subExpr(351, 375))
+			q.CombinedOrder.AppendOrder(expressionTypArgs.subExpr(390, 407))
 		}),
 	}
 }
 
-type AllTaskAudioReviewRow = struct {
-	ID               int32           `db:"id"`
-	CompletedBy      null.Val[int32] `db:"completed_by"`
-	Created          time.Time       `db:"created"`
-	NeedsReview      bool            `db:"needs_review"`
-	NoteAudioUUID    string          `db:"note_audio_uuid"`
-	NoteAudioVersion int32           `db:"note_audio_version"`
-	ReviewedBy       null.Val[int32] `db:"reviewed_by"`
+type TaskAudioReviewOutstandingRow = struct {
+	TaskID        int32            `db:"task_id"`
+	TaskCreated   time.Time        `db:"task_created"`
+	NeedsReview   bool             `db:"needs_review"`
+	AudioDuration null.Val[string] `db:"audio_duration"`
+	CreatorName   null.Val[string] `db:"creator_name"`
 }
 
-type allTaskAudioReviewTransformer = bob.SliceTransformer[AllTaskAudioReviewRow, []AllTaskAudioReviewRow]
+type taskAudioReviewOutstandingTransformer = bob.SliceTransformer[TaskAudioReviewOutstandingRow, []TaskAudioReviewOutstandingRow]
 
-type allTaskAudioReview struct{}
+type taskAudioReviewOutstanding struct{}
 
-func (o allTaskAudioReview) args() iter.Seq[orm.ArgWithPosition] {
+func (o taskAudioReviewOutstanding) args() iter.Seq[orm.ArgWithPosition] {
 	return func(yield func(arg orm.ArgWithPosition) bool) {
 	}
 }
 
-func (o allTaskAudioReview) raw(from, to int) string {
-	return allTaskAudioReviewSQL[from:to]
+func (o taskAudioReviewOutstanding) raw(from, to int) string {
+	return taskAudioReviewOutstandingSQL[from:to]
 }
 
-func (o allTaskAudioReview) subExpr(from, to int) bob.Expression {
-	return orm.ArgsToExpression(allTaskAudioReviewSQL, from, to, o.args())
+func (o taskAudioReviewOutstanding) subExpr(from, to int) bob.Expression {
+	return orm.ArgsToExpression(taskAudioReviewOutstandingSQL, from, to, o.args())
 }
 
-func (o allTaskAudioReview) WriteSQL(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-	return o.subExpr(0, len(allTaskAudioReviewSQL)).WriteSQL(ctx, w, d, start)
+func (o taskAudioReviewOutstanding) WriteSQL(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
+	return o.subExpr(0, len(taskAudioReviewOutstandingSQL)).WriteSQL(ctx, w, d, start)
 }

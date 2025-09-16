@@ -15,17 +15,17 @@ import (
 	testutils "github.com/stephenafamo/bob/test/utils"
 )
 
-func TestAllTaskAudioReview(t *testing.T) {
+func TestTaskAudioReviewOutstanding(t *testing.T) {
 	t.Run("Base", func(t *testing.T) {
 		var sb strings.Builder
 
-		query := AllTaskAudioReview()
+		query := TaskAudioReviewOutstanding()
 
 		if _, err := query.WriteQuery(t.Context(), &sb, 1); err != nil {
 			t.Fatal(err)
 		}
 
-		if diff := cmp.Diff(allTaskAudioReviewSQL, sb.String()); diff != "" {
+		if diff := cmp.Diff(taskAudioReviewOutstandingSQL, sb.String()); diff != "" {
 			t.Fatalf("unexpected result (-got +want):\n%s", diff)
 		}
 	})
@@ -33,13 +33,13 @@ func TestAllTaskAudioReview(t *testing.T) {
 	t.Run("Mod", func(t *testing.T) {
 		var sb strings.Builder
 
-		query := AllTaskAudioReview()
+		query := TaskAudioReviewOutstanding()
 
 		if _, err := psql.Select(query).WriteQuery(t.Context(), &sb, 1); err != nil {
 			t.Fatal(err)
 		}
 
-		queryDiff, err := testutils.QueryDiff(allTaskAudioReviewSQL, sb.String(), formatQuery)
+		queryDiff, err := testutils.QueryDiff(taskAudioReviewOutstandingSQL, sb.String(), formatQuery)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -68,7 +68,7 @@ func TestAllTaskAudioReview(t *testing.T) {
 			}
 		}()
 
-		query, args, err := bob.Build(ctxTx, psql.Select(AllTaskAudioReview()))
+		query, args, err := bob.Build(ctxTx, psql.Select(TaskAudioReviewOutstanding()))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -84,36 +84,28 @@ func TestAllTaskAudioReview(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if len(columns) != 7 {
-			t.Fatalf("expected %d columns, got %d", 7, len(columns))
+		if len(columns) != 5 {
+			t.Fatalf("expected %d columns, got %d", 5, len(columns))
 		}
 
-		if columns[0] != "id" {
-			t.Fatalf("expected column %d to be %s, got %s", 0, "id", columns[0])
+		if columns[0] != "task_id" {
+			t.Fatalf("expected column %d to be %s, got %s", 0, "task_id", columns[0])
 		}
 
-		if columns[1] != "completed_by" {
-			t.Fatalf("expected column %d to be %s, got %s", 1, "completed_by", columns[1])
+		if columns[1] != "task_created" {
+			t.Fatalf("expected column %d to be %s, got %s", 1, "task_created", columns[1])
 		}
 
-		if columns[2] != "created" {
-			t.Fatalf("expected column %d to be %s, got %s", 2, "created", columns[2])
+		if columns[2] != "needs_review" {
+			t.Fatalf("expected column %d to be %s, got %s", 2, "needs_review", columns[2])
 		}
 
-		if columns[3] != "needs_review" {
-			t.Fatalf("expected column %d to be %s, got %s", 3, "needs_review", columns[3])
+		if columns[3] != "audio_duration" {
+			t.Fatalf("expected column %d to be %s, got %s", 3, "audio_duration", columns[3])
 		}
 
-		if columns[4] != "note_audio_uuid" {
-			t.Fatalf("expected column %d to be %s, got %s", 4, "note_audio_uuid", columns[4])
-		}
-
-		if columns[5] != "note_audio_version" {
-			t.Fatalf("expected column %d to be %s, got %s", 5, "note_audio_version", columns[5])
-		}
-
-		if columns[6] != "reviewed_by" {
-			t.Fatalf("expected column %d to be %s, got %s", 6, "reviewed_by", columns[6])
+		if columns[4] != "creator_name" {
+			t.Fatalf("expected column %d to be %s, got %s", 4, "creator_name", columns[4])
 		}
 	})
 }

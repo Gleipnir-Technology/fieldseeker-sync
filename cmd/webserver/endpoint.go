@@ -9,7 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sort"
+	//"sort"
 	"strconv"
 	"strings"
 
@@ -518,12 +518,13 @@ func parseRange(rangeHeader string, fileSize int64) ([]httpRange, error) {
 }
 
 func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	tasks, err := database.TaskAudioReviewList()
+	rows, err := database.TaskAudioReviewList()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	sort.Sort(byReviewedAndAge(tasks))
+
+	//sort.Sort(byReviewedAndAge(tasks))
 	usersById, err := usersById()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -531,7 +532,9 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	}
 
 	data := html.ContentProcessAudio{
-		Tasks:     tasks,
+		Rows:      rows,
+		SortField: "created_at",
+		SortOrder: "desc",
 		UsersById: usersById,
 		User:      u,
 	}

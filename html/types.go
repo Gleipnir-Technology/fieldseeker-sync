@@ -1,7 +1,7 @@
 package html
 
 import (
-	"github.com/Gleipnir-Technology/fieldseeker-sync/database/models"
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database/sql"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
@@ -18,7 +18,9 @@ type ContentLogin struct {
 }
 
 type ContentProcessAudio struct {
-	Tasks     []*models.TaskAudioReview
+	Rows      []sql.TaskAudioReviewOutstandingRow
+	SortField string
+	SortOrder string
 	UsersById map[int]*shared.User
 	User      *shared.User
 }
