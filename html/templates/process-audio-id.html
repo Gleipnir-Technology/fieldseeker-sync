@@ -7,6 +7,11 @@ html, body {
 	height: 100%;
 	margin: 0;
 }
+.btn.speed {
+	font-size: 12px;
+	margin: 0px;
+	padding: 0px;
+}
 .container-audio {
 	width: 100%;
 	height: auto;
@@ -77,20 +82,38 @@ function setPlaybackSpeed(speed) {
 			</div>
 		</div>
 		<div class="col-1">
-			<button class="btn" onclick="setPlaybackSpeed(0.5)">0.5x</button>
-			<button class="btn" onclick="setPlaybackSpeed(0.75)">0.75x</button>
-			<button class="btn" onclick="setPlaybackSpeed(1.0)">1.0x</button>
-			<button class="btn" onclick="setPlaybackSpeed(1.25)">1.25x</button>
-			<button class="btn" onclick="setPlaybackSpeed(1.5)">1.5x</button>
-			<button class="btn" onclick="setPlaybackSpeed(1.75)">1.75x</button>
-			<button class="btn" onclick="setPlaybackSpeed(2.0)">2.0x</button>
+			<button class="btn speed" onclick="setPlaybackSpeed(0.5)">0.5x</button>
+			<button class="btn speed" onclick="setPlaybackSpeed(0.75)">0.75x</button>
+			<button class="btn speed" onclick="setPlaybackSpeed(1.0)">1.0x</button>
+			<button class="btn speed" onclick="setPlaybackSpeed(1.25)">1.25x</button>
+			<button class="btn speed" onclick="setPlaybackSpeed(1.5)">1.5x</button>
+			<button class="btn speed" onclick="setPlaybackSpeed(1.75)">1.75x</button>
+			<button class="btn speed" onclick="setPlaybackSpeed(2.0)">2.0x</button>
 		</div>
 	</div>
 	<div class="row">
-		<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/delete">
-			<button type="submit" class="btn btn-danger">Delete</button>
-		</form>
+		<div class="col">
+			<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/reviewed">
+				<button type="submit" class="btn btn-success">Mark reviewed without changes</button>
+			</form>
+		</div>
+		<div class="col">
+			<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/needs-further-review">
+				<button type="submit" class="btn btn-warning">Needs further review</button>
+			</form>
+		</div>
 	</div>
+	<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}">
+		<div class="mb-3">
+			<p><b>Original transcription:</b><br/>{{ if not .AudioNote.Transcription }}&lt;none&gt;{{ else }}{{ .AudioNote.Transcription }}{{ end }}</p>
+		</div>
+		<div class="mb-3">
+			<input type="hidden" name="uuid" value="{{ .AudioNote.UUID }}"/>
+			<label for="transcript" class="form-label">Updated Transcription</label>
+			<textarea class="form-control" name="transcription" rows="10">{{ if not .AudioNote.Transcription }}{{ else }}{{ .AudioNote.Transcription }}{{ end }}</textarea>
+			<button type="submit" class="btn btn-primary">Update</button>
+		</div>
+	</form>
 	<div class="row">
 		<div class="col-4">
 			<table class="table">
@@ -170,28 +193,10 @@ function setPlaybackSpeed(speed) {
 		</div>
 	</div>
 	<div class="row">
-		<div class="col">
-			<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/reviewed">
-				<button type="submit" class="btn btn-success">Mark reviewed without changes</button>
-			</form>
-		</div>
-		<div class="col">
-			<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/needs-further-review">
-				<button type="submit" class="btn btn-warning">Needs further review</button>
-			</form>
-		</div>
+		<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/delete">
+			<button type="submit" class="btn btn-danger">Delete</button>
+		</form>
 	</div>
-	<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}">
-		<div class="mb-3">
-			<p><b>Original transcription:</b><br/>{{ if not .AudioNote.Transcription }}&lt;none&gt;{{ else }}{{ .AudioNote.Transcription }}{{ end }}</p>
-		</div>
-		<div class="mb-3">
-			<input type="hidden" name="uuid" value="{{ .AudioNote.UUID }}"/>
-			<label for="transcript" class="form-label">Updated Transcription</label>
-			<textarea class="form-control" name="transcription" rows="10">{{ if not .AudioNote.Transcription }}{{ else }}{{ .AudioNote.Transcription }}{{ end }}</textarea>
-			<button type="submit" class="btn btn-primary">Update</button>
-		</div>
-	</form>
 </div>
 {{end}}
 
