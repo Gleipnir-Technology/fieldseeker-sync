@@ -24,7 +24,7 @@
 		<tbody>
 			{{range $note := .AudioNotes}}
 			<tr>
-				<td>{{ $note.Created }}</td>
+				<td>{{ timeSince $note.Created }}</td>
 				<td>{{ if $note.HasBeenReviewed }}T{{ else }}F{{ end}}</td>
 				<td>{{ if $note.NeedsFurtherReview }}T{{ else }}F{{ end}}</td>
 				<td>{{ $note.Duration }}</td>

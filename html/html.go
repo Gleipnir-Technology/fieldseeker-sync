@@ -3,10 +3,12 @@ package html
 import (
 	"embed"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
@@ -69,6 +71,7 @@ func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 		return bt.template.ExecuteTemplate(w, name, data)
 	}
 }
+
 func Index(w io.Writer, d PageDataIndex) error {
 	return index.ExecuteTemplate(w, d)
 }
@@ -126,6 +129,7 @@ func newBuiltTemplate(files ...string) BuiltTemplate {
 func parseEmbedded(files []string) *template.Template {
 	funcMap := template.FuncMap{
 		"geocode": geocode,
+		"timeSince": timeSince,
 	}
 	// Remap the file names to embedded paths
 	paths := make([]string, 0)
@@ -143,6 +147,7 @@ func parseEmbedded(files []string) *template.Template {
 func parseFromDisk(files []string) *template.Template {
 	funcMap := template.FuncMap{
 		"geocode": geocode,
+		"timeSince": timeSince,
 	}
 	// Remap file names to paths on disk
 	paths := make([]string, 0)
@@ -159,4 +164,20 @@ func parseFromDisk(files []string) *template.Template {
 		return nil
 	}
 	return templ
+}
+
+func timeSince(t time.Time) string {
+	now := time.Now()
+    diff := now.Sub(t)
+
+    hours := diff.Hours()
+    if hours < 1 {
+        minutes := diff.Minutes()
+        return fmt.Sprintf("%d minutes ago", int(minutes))
+    } else if hours < 24 {
+        return fmt.Sprintf("%d hours ago", int(hours))
+    } else {
+        days := hours / 24
+        return fmt.Sprintf("%d days ago", int(days))
+    }
 }
