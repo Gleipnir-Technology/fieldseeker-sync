@@ -6,6 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"sort"
 	"strconv"
@@ -44,12 +45,14 @@ func (e PasswordVerificationError) Error() string { return "Password verificatio
 var embedMigrations embed.FS
 
 func ConnectDB(ctx context.Context, connection_string string) error {
-	err := doMigrations(connection_string)
-	if err != nil {
-		return err
+	needs, err := needsMigrations(connection_string)
+	if err != nil || needs == nil {
+		return errors.New("Database migrations must be run first!")
+	}
+	if *needs {
+		return errors.New("Must migrate database before connecting.")
 	}
 
-	err = nil
 	pgOnce.Do(func() {
 		db, e := pgxpool.New(ctx, connection_string)
 		PGInstance = &postgres{db}
@@ -175,19 +178,19 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 			@version,
 			@uuid)`
 	args := pgx.NamedArgs{
-		"created":                   payload.Created,
-		"creator":                   userID,
-		"deleted":                   nil,
-		"duration":                  payload.Duration,
-		"has_been_reviewed":         false,
-		"is_audio_normalized":       false,
-		"is_transcoded_to_ogg":      false,
-		"needs_further_review":      false,
-		"transcription":             payload.Transcription,
+		"created":                         payload.Created,
+		"creator":                         userID,
+		"deleted":                         nil,
+		"duration":                        payload.Duration,
+		"has_been_reviewed":               false,
+		"is_audio_normalized":             false,
+		"is_transcoded_to_ogg":            false,
+		"needs_further_review":            false,
+		"transcription":                   payload.Transcription,
 		"transcription_internally_edited": false,
-		"transcription_user_edited": payload.TranscriptionUserEdited,
-		"version":                   payload.Version,
-		"uuid":                      noteUUID,
+		"transcription_user_edited":       payload.TranscriptionUserEdited,
+		"version":                         payload.Version,
+		"uuid":                            noteUUID,
 	}
 	row, err := PGInstance.DB.Exec(context.Background(), query, args)
 	if err != nil {
@@ -339,9 +342,9 @@ func NoteAudioTranscodedToOgg(uuid string) error {
 
 func NoteAudioUpdateDelete(uuid string, userID int) error {
 	args := pgx.NamedArgs{
-		"deleted": time.Now(),
+		"deleted":    time.Now(),
 		"deleted_by": userID,
-		"uuid": uuid,
+		"uuid":       uuid,
 	}
 	query := `
 		UPDATE note_audio
@@ -359,7 +362,7 @@ func NoteAudioUpdateDelete(uuid string, userID int) error {
 func NoteAudioUpdateReviewed(uuid string) error {
 	args := pgx.NamedArgs{
 		"has_been_reviewed": true,
-		"uuid": uuid,
+		"uuid":              uuid,
 	}
 	query := `
 		UPDATE note_audio
@@ -377,7 +380,7 @@ func NoteAudioUpdateReviewed(uuid string) error {
 func NoteAudioUpdateNeedsFurtherReview(uuid string) error {
 	args := pgx.NamedArgs{
 		"needs_further_review": true,
-		"uuid": uuid,
+		"uuid":                 uuid,
 	}
 	query := `
 		UPDATE note_audio
@@ -393,11 +396,11 @@ func NoteAudioUpdateNeedsFurtherReview(uuid string) error {
 }
 func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID int) error {
 	args := pgx.NamedArgs{
-		"creator": userUUID,
-		"has_been_reviewed": true,
-		"transcription": transcription,
+		"creator":                         userUUID,
+		"has_been_reviewed":               true,
+		"transcription":                   transcription,
 		"transcription_internally_edited": true,
-		"uuid": uuid,
+		"uuid":                            uuid,
 	}
 	query := `
 		WITH previous_row AS (
@@ -691,7 +694,7 @@ func Users() ([]*shared.User, error) {
 	return results, nil
 }
 
-func doMigrations(connection_string string) error {
+func DoMigrations(connection_string string) error {
 	log.Println("Connecting to database at", connection_string)
 	db, err := sql.Open("pgx", connection_string)
 	if err != nil {
@@ -705,16 +708,64 @@ func doMigrations(connection_string string) error {
 	}
 	log.Printf("Connected to: %s", val)
 
-	goose.SetBaseFS(embedMigrations)
-
-	if err := goose.SetDialect("postgres"); err != nil {
-		return fmt.Errorf("Failed to select dialect: %w", err)
+	fsys, err := fs.Sub(embedMigrations, "migrations")
+	if err != nil {
+		return fmt.Errorf("Failed to get migrations embedded directory: %w", err)
 	}
+	provider, err := goose.NewProvider(goose.DialectPostgres, db, fsys)
+	if err != nil {
+		return fmt.Errorf("Failed to create goose provider: %w", err)
+	}
+	//goose.SetBaseFS(embedMigrations)
 
-	if err := goose.Up(db, "migrations"); err != nil {
+	current, target, err := provider.GetVersions(context.Background())
+	if err != nil {
+		return fmt.Errorf("Faield to get goose versions: %w", err)
+	}
+	log.Printf("Current version %d, need to be at version %d", current, target)
+	results, err := provider.Up(context.Background())
+	if err != nil {
 		return fmt.Errorf("Failed to run migrations: %w", err)
 	}
+	if len(results) > 0 {
+		for _, r := range results {
+			log.Printf("Migration %d %s", r.Source.Version, r.Direction)
+		}
+	} else {
+		log.Println("No migrations necessary.")
+	}
 	return nil
+}
+
+func needsMigrations(connection_string string) (*bool, error) {
+	log.Println("Connecting to database at", connection_string)
+	db, err := sql.Open("pgx", connection_string)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to open database connection: %w", err)
+	}
+	defer db.Close()
+	row := db.QueryRowContext(context.Background(), "SELECT version()")
+	var val string
+	if err := row.Scan(&val); err != nil {
+		return nil, fmt.Errorf("Failed to get database version query result: %w", err)
+	}
+	log.Printf("Connected to: %s", val)
+
+	fsys, err := fs.Sub(embedMigrations, "migrations")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get migrations embedded directory: %w", err)
+	}
+	provider, err := goose.NewProvider(goose.DialectPostgres, db, fsys)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create goose provider: %w", err)
+	}
+	//goose.SetBaseFS(embedMigrations)
+
+	hasPending, err := provider.HasPending(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return &hasPending, nil
 }
 
 func hasUpdates(row map[string]string, feature arcgis.Feature) bool {

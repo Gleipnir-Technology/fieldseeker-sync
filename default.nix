@@ -12,6 +12,7 @@ pkgs.buildGoModule rec {
 		"cmd/dump"
 		"cmd/full-export"
 		"cmd/login"
+		"cmd/migrate"
 		"cmd/registration"
 		"cmd/webserver"
 	];
