@@ -30,6 +30,28 @@ html, body {
 	background-color: #f0f0f0;
 }
 
+#glossarySidebar {
+			height: 100%;
+			width: 0;
+			position: fixed;
+			z-index: 1000;
+			top: 0;
+			right: 0;
+			background-color: #f1f1f1;
+			overflow-x: hidden;
+			transition: 0.5s;
+			padding-top: 60px;
+		}
+
+		#glossarySidebar.show {
+			width: 300px;
+		}
+
+		.glossary-item {
+			padding: 10px 15px;
+			border-bottom: 1px solid #ddd;
+			cursor: pointer;
+		}
 .ruler-marks {
 	display: flex;
 	height: 100%;
@@ -63,10 +85,115 @@ function setPlaybackSpeed(speed) {
 	var audio = document.getElementById("audio")
 	audio.playbackRate=speed;
 }
+onload = (event) => {
+	// Toggle Glossary Sidebar
+	document.getElementById('toggleGlossary').addEventListener('click', function() {
+		document.getElementById('glossarySidebar').classList.add('show');
+	});
+
+	// Close Glossary Sidebar
+	document.getElementById('closeGlossary').addEventListener('click', function() {
+		document.getElementById('glossarySidebar').classList.remove('show');
+	});
+
+	// Initialize Popovers
+	var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+	var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+		return new bootstrap.Popover(popoverTriggerEl)
+	});
+}
 </script>
 {{end}}
 
 {{define "content"}}
+<!-- Glossary Sidebar -->
+<div id="glossarySidebar">
+	<div class="d-flex justify-content-between align-items-center px-3 mb-3">
+		<h3>Glossary</h3>
+		<button id="closeGlossary" class="btn-close"></button>
+	</div>
+	
+	<div id="glossaryList">
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="This is the name for the life stages of the mosquito, so you will hear them say 'First Instar' or 'Firsts.'">
+			Instar
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="These are the transitional life stages of mosquitoes, singular and plural respectively.">
+			Pupa or Pupae
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="These are the juvenile life stages of mosquitoes, singular or plural respectively.">
+			Larva or Larvae
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="This is a state of female mosquitoes, meaning they are carrying eggs. There are gravid mosquitoes and gravid traps designed to capture gravid mosquitoes.">
+			Gravid
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="These are a variety of mosquito traps. They may also say BGs (plural), meaning multiple BG Sentinel traps. (BG stands for BioGents and is basically a brand name, but most people call the traps by the brand name.)">
+			BG, BG Sentinel, Sentinel
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="This is carbon dioxide, and it refers to the gas but also to a variety of traps that use CO₂ as bait.">
+			CO₂
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="This is an irrigation method where water is pumped to a tall standing pipe and then gravity feeds the water into the field. They will often be full of mosquitoes.">
+			Standpipe
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content=" This is a large pond where the manure from the feed lanes is washed to keep it from piling up at the dairy. They often produce mosquitoes.">
+			Dairy Lagoon
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="This is usually a natural temporary waterway that will hold stagnant water near rivers.">
+			Slough
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="This is a genus of mosquito that represents several species we deal with regularly. They often indicate day biting and aggressive behavior.">
+			Aedes
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="This is a genus of mosquito that represents several species we deal with regularly. They are more sneaky than Aedes and are our primary vectors in disease transmission.">
+			Culex
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="This is usually a natural temporary waterway that will hold stagnant water near rivers. ie 'aegypti source'">
+			Aegypti
+		</div>
+		<div class="glossary-item"
+			data-bs-toggle="popover"
+			data-bs-trigger="hover"
+			data-bs-content="This is a genus of mosquito that represents several species we deal with regularly. They often indicate day biting and aggressive behavior.">
+			Quinks
+		</div>
+	</div>
+</div>
 <div class="container">
 	<a href="/process-audio">Return to list</a>
 	<div class="row">
@@ -101,6 +228,11 @@ function setPlaybackSpeed(speed) {
 			<form method="POST" action="/process-audio/{{ .Task.ID }}/needs-further-review">
 				<button type="submit" class="btn btn-warning">Needs further review</button>
 			</form>
+		</div>
+		<div class="col">
+			<button id="toggleGlossary" class="btn btn-primary">
+				Show Glossary
+				</button>
 		</div>
 	</div>
 	<form method="POST" action="/process-audio/{{ .Task.ID }}">
@@ -145,48 +277,6 @@ function setPlaybackSpeed(speed) {
 					<tr>
 						<td>UUID</td>
 						<td>{{ .NoteAudio.UUID }}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<div class="col-8">
-			<table class="table">
-				<tbody>
-					<tr>
-						<td><a href="#" data-toggle="tooltip"
-								title="This is the name for the life stages of the mosquito, so you will hear them say 'First Instar' or 'Firsts.'">Instar</a></td>
-						<td><a href="#" data-toggle="tooltip"
-								title="These are the transitional life stages of mosquitoes, singular and plural respectively.">Pupa or Pupae</a></td>
-						<td><a href="#" data-toggle="tooltip"
-								title="These are the juvenile life stages of mosquitoes, singular or plural respectively.">Larva or Larvae</a></td>
-					</tr>
-					<tr>
-						<td><a href="#" data-toggle="tooltip"
-								title="This is a state of female mosquitoes, meaning they are carrying eggs. There are gravid mosquitoes and gravid traps designed to capture gravid mosquitoes.">Gravid</a></td>
-						<td><a href="#" data-toggle="tooltip"
-								title="These are a variety of mosquito traps. They may also say BGs (plural), meaning multiple BG Sentinel traps. (BG stands for BioGents and is basically a brand name, but most people call the traps by the brand name.)">BG, BG Sentinel, Sentinel</a></td>
-						<td><a href="#" data-toggle="tooltip"
-								title="This is carbon dioxide, and it refers to the gas but also to a variety of traps that use CO₂ as bait.">CO₂</a></td>
-					</tr>
-					<tr>
-						<td><a href="#" data-toggle="tooltip"
-								title="This is an irrigation method where water is pumped to a tall standing pipe and then gravity feeds the water into the field. They will often be full of mosquitoes.">Standpipe</a></td>
-						<td><a href="#" data-toggle="tooltip"
-								title=" This is a large pond where the manure from the feed lanes is washed to keep it from piling up at the dairy. They often produce mosquitoes.">Dairy Lagoon</a></td>
-						<td><a href="#" data-toggle="tooltip"
-								title="This is usually a natural temporary waterway that will hold stagnant water near rivers.">Slough</a></td>
-					</tr>
-					<tr>
-						<td><a href="#" data-toggle="tooltip"
-								title="This is a genus of mosquito that represents several species we deal with regularly. They often indicate day biting and aggressive behavior.">Aedes</a></td>
-						<td><a href="#" data-toggle="tooltip"
-								title="This is a genus of mosquito that represents several species we deal with regularly. They are more sneaky than Aedes and are our primary vectors in disease transmission.">Culex</a></td>
-						<td><a href="#" data-toggle="tooltip"
-								title="This is usually a natural temporary waterway that will hold stagnant water near rivers. ie 'aegypti source'">Aegypti</a></td>
-					</tr>
-					<tr>
-						<td><a href="#" data-toggle="tooltip"
-								title="This is a genus of mosquito that represents several species we deal with regularly. They often indicate day biting and aggressive behavior.">Quinks</a></td>
 					</tr>
 				</tbody>
 			</table>
