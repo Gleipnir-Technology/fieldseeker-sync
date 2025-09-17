@@ -256,7 +256,7 @@ func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 		requestedPath := strings.TrimPrefix(r.URL.Path, pathPrefix)
 
 		// Try to open from local filesystem first for development
-		localFile, localErr := root.Open(requestedPath)
+		localFile, localErr := root.Open("cmd/webserver/static" + requestedPath)
 
 		var fileToServe http.File
 
