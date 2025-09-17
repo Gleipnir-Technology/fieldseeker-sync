@@ -73,8 +73,8 @@ function setPlaybackSpeed(speed) {
 		<div class="col-11">
 			<div class="container-audio">
 				<audio controls id="audio">
-					<source src="/audio/{{ .AudioNote.UUID }}.m4a" type="audio/mpeg"></source>
-					<source src="/audio/{{ .AudioNote.UUID }}.ogg" type="audio/ogg"></source>
+					<source src="/audio/{{ .Task.NoteAudioUUID }}.m4a" type="audio/mpeg"></source>
+					<source src="/audio/{{ .Task.NoteAudioUUID }}.ogg" type="audio/ogg"></source>
 				</audio>
 				<div class="audio-ruler">
 					<div class="ruler-marks" id="rulerMarks"></div>
@@ -93,24 +93,24 @@ function setPlaybackSpeed(speed) {
 	</div>
 	<div class="row">
 		<div class="col">
-			<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/reviewed">
+			<form method="POST" action="/process-audio/{{ .Task.ID }}/reviewed">
 				<button type="submit" class="btn btn-success">Mark reviewed without changes</button>
 			</form>
 		</div>
 		<div class="col">
-			<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/needs-further-review">
+			<form method="POST" action="/process-audio/{{ .Task.ID }}/needs-further-review">
 				<button type="submit" class="btn btn-warning">Needs further review</button>
 			</form>
 		</div>
 	</div>
-	<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}">
+	<form method="POST" action="/process-audio/{{ .Task.ID }}">
 		<div class="mb-3">
-			<p><b>Original transcription:</b><br/>{{ if not .AudioNote.Transcription }}&lt;none&gt;{{ else }}{{ .AudioNote.Transcription }}{{ end }}</p>
+			<p><b>Original transcription:</b><br/>{{ if .NoteAudio.Transcription.IsValue }}{{ .NoteAudio.Transcription.MustGet }}{{ else }}&lt;none&gt;{{ end }}</p>
 		</div>
 		<div class="mb-3">
-			<input type="hidden" name="uuid" value="{{ .AudioNote.UUID }}"/>
+			<input type="hidden" name="uuid" value="{{ .NoteAudio.UUID }}"/>
 			<label for="transcript" class="form-label">Updated Transcription</label>
-			<textarea class="form-control" name="transcription" rows="10">{{ if not .AudioNote.Transcription }}{{ else }}{{ .AudioNote.Transcription }}{{ end }}</textarea>
+			<textarea class="form-control" name="transcription" rows="10">{{ if .NoteAudio.Transcription.IsValue }}{{ .NoteAudio.Transcription.MustGet }}{{ else }}{{ end }}</textarea>
 			<button type="submit" class="btn btn-primary">Update</button>
 		</div>
 	</form>
@@ -120,31 +120,31 @@ function setPlaybackSpeed(speed) {
 				<tbody>
 					<tr>
 						<td>Created</td>
-						<td>{{ .AudioNote.Created }}</td>
+						<td>{{ timeSince .NoteAudio.Created }}</td>
 					</tr>
 					<tr>
 						<td>Creator</td>
-						<td>{{ with $u := index $.UsersById .AudioNote.Creator }}{{ $u.DisplayName }}{{ end }}</td>
+						<td>{{ with $u := index $.UsersById .NoteAudio.Creator }}{{ $u.DisplayName }}{{ end }}</td>
 					</tr>
 					<tr>
 						<td>Deleted</td>
-						<td>{{ .AudioNote.Deleted }}</td>
+						<td>{{ if .NoteAudio.Deleted.IsValue }}{{ timeSince .NoteAudio.Deleted }}{{ else }}{{ end }}</td>
 					</tr>
 					<tr>
 						<td>Duration</td>
-						<td>{{ .AudioNote.Duration }}</td>
+						<td>{{ timeElapsed .NoteAudio.Duration }}</td>
 					</tr>
 					<tr>
 						<td>Transcription user edited</td>
-						<td>{{ .AudioNote.TranscriptionUserEdited }}</td>
+						<td>{{ .NoteAudio.TranscriptionUserEdited }}</td>
 					</tr>
 					<tr>
 						<td>Version</td>
-						<td>{{ .AudioNote.Version }}</td>
+						<td>{{ .NoteAudio.Version }}</td>
 					</tr>
 					<tr>
 						<td>UUID</td>
-						<td>{{ .AudioNote.UUID }}</td>
+						<td>{{ .NoteAudio.UUID }}</td>
 					</tr>
 				</tbody>
 			</table>
@@ -193,7 +193,7 @@ function setPlaybackSpeed(speed) {
 		</div>
 	</div>
 	<div class="row">
-		<form method="POST" action="/process-audio/{{ .AudioNote.UUID }}/delete">
+		<form method="POST" action="/process-audio/{{ .NoteAudio.UUID }}/delete">
 			<button type="submit" class="btn btn-danger">Delete</button>
 		</form>
 	</div>

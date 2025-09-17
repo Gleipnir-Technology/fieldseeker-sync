@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
+	"github.com/aarondl/opt/null"
 )
 
 //go:embed templates/*
@@ -97,11 +98,17 @@ func newBuiltTemplate(files ...string) BuiltTemplate {
 	}
 }
 
-func parseEmbedded(files []string) *template.Template {
+func makeFuncMap() template.FuncMap {
 	funcMap := template.FuncMap{
-		"geocode":   geocode,
-		"timeSince": timeSince,
+		"geocode":     geocode,
+		"timeElapsed": timeElapsed,
+		"timeSince":   timeSince,
 	}
+	return funcMap
+}
+
+func parseEmbedded(files []string) *template.Template {
+	funcMap := makeFuncMap()
 	// Remap the file names to embedded paths
 	paths := make([]string, 0)
 	for _, f := range files {
@@ -116,10 +123,7 @@ func parseEmbedded(files []string) *template.Template {
 }
 
 func parseFromDisk(files []string) *template.Template {
-	funcMap := template.FuncMap{
-		"geocode":   geocode,
-		"timeSince": timeSince,
-	}
+	funcMap := makeFuncMap()
 	// Remap file names to paths on disk
 	paths := make([]string, 0)
 	for _, f := range files {
@@ -135,6 +139,24 @@ func parseFromDisk(files []string) *template.Template {
 		return nil
 	}
 	return templ
+}
+
+func timeElapsed(seconds null.Val[float32]) string {
+	if !seconds.IsValue() {
+		return "none"
+	}
+	s := int(seconds.MustGet())
+	hours := s / 3600
+	remainder := s - (hours * 3600)
+	minutes := remainder / 60
+	remainder = remainder - (minutes * 60)
+	if hours > 0 {
+		return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, remainder)
+	} else if minutes > 0 {
+		return fmt.Sprintf("%02d:%02d", minutes, remainder)
+	} else {
+		return fmt.Sprintf("%d seconds", remainder)
+	}
 }
 
 func timeSince(t time.Time) string {

@@ -20,12 +20,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	"github.com/stephenafamo/bob"
 )
 
 type postgres struct {
-	DB *pgxpool.Pool
+	BobDB bob.DB
+	DB    *pgxpool.Pool
 }
 
 var (
@@ -58,7 +61,8 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 
 	pgOnce.Do(func() {
 		db, e := pgxpool.New(ctx, connection_string)
-		PGInstance = &postgres{db}
+		bobDB := bob.NewDB(stdlib.OpenDBFromPool(db))
+		PGInstance = &postgres{bobDB, db}
 		err = e
 	})
 	if err != nil {
@@ -225,29 +229,6 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		return fmt.Errorf("Failed to commit transaction: %v", err)
 	}
 	return nil
-}
-
-func NoteAudioGet(ctx context.Context, uuid string) (*shared.NoteAudio, error) {
-	if PGInstance == nil {
-		return nil, errors.New("You must initialize the DB first")
-	}
-	args := pgx.NamedArgs{
-		"uuid": uuid,
-	}
-	row, err := PGInstance.DB.Query(ctx, "SELECT created, creator, duration, transcription, transcription_user_edited, version, uuid FROM note_audio WHERE uuid=@uuid ORDER BY version DESC LIMIT 1", args)
-	if err != nil {
-		return nil, err
-	}
-	defer row.Close()
-	for row.Next() {
-		var result shared.NoteAudio
-		if err := pgxscan.ScanRow(&result, row); err != nil {
-			log.Println("Scan on note_audio error:", err)
-			return nil, err
-		}
-		return &result, nil
-	}
-	return nil, errors.New("Should have returned earlier")
 }
 
 func NoteAudioNormalized(uuid string) error {

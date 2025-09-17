@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/Gleipnir-Technology/fieldseeker-sync/database/sql"
-	"github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
@@ -53,10 +52,9 @@ func TaskAudioReviewList(sort TaskAudioReviewOutstandingSort, isAscending bool) 
 		thing,
 		orderBy,
 	)
-	db := bob.NewDB(stdlib.OpenDBFromPool(PGInstance.DB))
 	var rows []sql.TaskAudioReviewOutstandingRow
 	var err error
-	rows, err = bob.Allx[taskAudioReviewOutstandingTransformer](ctx, db, selector, thing.Scanner)
+	rows, err = bob.Allx[taskAudioReviewOutstandingTransformer](ctx, PGInstance.BobDB, selector, thing.Scanner)
 
 	if err != nil {
 		return results, err

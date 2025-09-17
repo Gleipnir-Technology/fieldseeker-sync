@@ -567,8 +567,18 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 }
 
 func processAudioIdGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	uuid := chi.URLParam(r, "uuid")
-	audioNote, err := database.NoteAudioGet(context.Background(), uuid)
+	id_str := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(id_str)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	task, err := models.FindTaskAudioReview(context.Background(), database.PGInstance.BobDB, int32(id))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	noteAudio, err := database.NoteAudioGetLatest(context.Background(), task.NoteAudioUUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -579,11 +589,13 @@ func processAudioIdGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 		return
 	}
 	data := html.ContentProcessAudioId{
-		AudioNote: audioNote,
+		NoteAudio: noteAudio,
+		Task:      task,
 		UsersById: usersById,
 		User:      u,
 	}
 
+	log.Printf("noteAudio %s isvalue %v", noteAudio.UUID, noteAudio.Transcription.IsNull())
 	err = html.ProcessAudioId(w, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -1,6 +1,7 @@
 package html
 
 import (
+	"github.com/Gleipnir-Technology/fieldseeker-sync/database/models"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/database/sql"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
@@ -26,7 +27,8 @@ type ContentProcessAudio struct {
 }
 
 type ContentProcessAudioId struct {
-	AudioNote *shared.NoteAudio
+	NoteAudio *models.NoteAudio
+	Task      *models.TaskAudioReview
 	UsersById map[int]*shared.User
 	User      *shared.User
 }
