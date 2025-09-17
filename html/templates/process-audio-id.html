@@ -237,7 +237,16 @@ onload = (event) => {
 	</div>
 	<form method="POST" action="/process-audio/{{ .Task.ID }}">
 		<div class="mb-3">
-			<p><b>Original transcription:</b><br/>{{ if .NoteAudio.Transcription.IsValue }}{{ .NoteAudio.Transcription.MustGet }}{{ else }}&lt;none&gt;{{ end }}</p>
+			<b>Original transcription:</b>
+			{{ if .NoteAudio.TranscriptionUserEdited }}
+				<span class="badge bg-warning">user edited</span>
+			{{ end }}
+			<br/>
+			{{ if .NoteAudio.Transcription.IsValue }}
+				<blockquote class="blockquote"><p>{{ .NoteAudio.Transcription.MustGet }}</p></blockquote>
+			{{ else }}
+				&lt;none&gt;
+			{{ end }}
 		</div>
 		<div class="mb-3">
 			<input type="hidden" name="uuid" value="{{ .NoteAudio.UUID }}"/>
@@ -267,10 +276,6 @@ onload = (event) => {
 					<tr>
 						<td>Duration</td>
 						<td>{{ timeElapsed .NoteAudio.Duration }}</td>
-					</tr>
-					<tr>
-						<td>Transcription user edited</td>
-						<td>{{ .NoteAudio.TranscriptionUserEdited }}</td>
 					</tr>
 					<tr>
 						<td>Version</td>
