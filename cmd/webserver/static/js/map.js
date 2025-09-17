@@ -7,7 +7,7 @@ var markers = {
 }
 
 
-onload = (event) => {
+function initMap() {
 	const bounds = parseBoundsFromHash();
 	console.log("Fitting bounds", bounds);
 	map = L.map('map').fitBounds(bounds);
@@ -32,7 +32,7 @@ onload = (event) => {
 			shadowAnchor: [12, 42],
 			tooltipAnchor: [16, -28],
 		}
-});
+	});
 	markers.types.blue = new MarkerIcon({iconUrl: "/static/img/marker-blue.png"})
 	markers.types.green = new MarkerIcon({iconUrl: "/static/img/marker-green.png"})
 	markers.types.red = new MarkerIcon({iconUrl: "/static/img/marker-red.png"})
@@ -249,3 +249,5 @@ function showTrapData(sr) {
 		"</table>"
 	);
 }
+
+window.addEventListener("load", initMap);

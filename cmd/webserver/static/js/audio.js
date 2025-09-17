@@ -1,4 +1,5 @@
 function onAudioMetadata(event) {
+	console.log("Got audio metadata");
 	const audioPlayer = document.getElementById('audio');
 	const duration = audioPlayer.duration;
 	const intervals = 10; // Number of marks
@@ -17,7 +18,8 @@ function onAudioMetadata(event) {
 	}
 }
 
-onload = (event) => {
+function initAudio() {
+	console.log("Setting up audio ruler events");
 	const audioPlayer = document.getElementById('audio');
 	const rulerMarks = document.getElementById('rulerMarks');
 	audioPlayer.addEventListener('loadedmetadata', onAudioMetadata);
@@ -37,3 +39,5 @@ onload = (event) => {
 		}
 	);
 }
+
+window.addEventListener("load", initAudio);
