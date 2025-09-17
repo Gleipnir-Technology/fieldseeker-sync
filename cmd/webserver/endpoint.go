@@ -518,18 +518,28 @@ func parseRange(rangeHeader string, fileSize int64) ([]httpRange, error) {
 }
 
 func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	sort_field := r.URL.Query().Get("sort")
-	if sort_field == "" {
-		sort_field = "created_at"
+	sortField := r.URL.Query().Get("sort")
+	var sortEnum database.TaskAudioReviewOutstandingSort
+	switch sortField {
+	case "":
+		sortEnum = database.SortCreated
+	case "created_at":
+		sortEnum = database.SortCreated
+	case "duration":
+		sortEnum = database.SortAudioDuration
+	case "creator":
+		sortEnum = database.SortCreatorName
+	case "needs_review":
+		sortEnum = database.SortNeedsReview
+	default:
+		sortEnum = database.SortCreated
 	}
-	sort_order := r.URL.Query().Get("order")
-	if sort_order == "" {
-		sort_order = "asc"
+	sortOrder := r.URL.Query().Get("order")
+	if sortOrder == "" {
+		sortOrder = "asc"
 	}
 
-	log.Printf("Sort is field '%s' and order '%s'", sort_field, sort_order)
-
-	rows, err := database.TaskAudioReviewList(database.SortCreated, sort_order == "asc")
+	rows, err := database.TaskAudioReviewList(sortEnum, sortOrder == "asc")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -544,8 +554,8 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 
 	data := html.ContentProcessAudio{
 		Rows:      rows,
-		SortField: sort_field,
-		SortOrder: sort_order,
+		SortField: sortField,
+		SortOrder: sortOrder,
 		UsersById: usersById,
 		User:      u,
 	}

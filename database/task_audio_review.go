@@ -30,14 +30,24 @@ func TaskAudioReviewList(sort TaskAudioReviewOutstandingSort, isAscending bool) 
 	if PGInstance == nil {
 		return results, errors.New("You must initialize the DB first")
 	}
-	//rows, err := query.All(ctx, db)
+	var orderColumn string
+	switch sort {
+	case SortNeedsReview:
+		orderColumn = "task.needs_review"
+	case SortCreated:
+		orderColumn = "task_created"
+	case SortAudioDuration:
+		orderColumn = "audio_duration"
+	case SortCreatorName:
+		orderColumn = "creator_name"
+	}
 	ctx := context.Background()
 	thing := sql.TaskAudioReviewOutstanding()
 	var orderBy dialect.OrderBy[*dialect.SelectQuery]
 	if isAscending {
-		orderBy = sm.OrderBy("task_created").Desc()
+		orderBy = sm.OrderBy(orderColumn).Desc()
 	} else {
-		orderBy = sm.OrderBy("task_created").Asc()
+		orderBy = sm.OrderBy(orderColumn).Asc()
 	}
 	selector := psql.Select(
 		thing,
