@@ -13,5 +13,3 @@ JOIN
     user_ u ON note.creator = u.id
 WHERE 
     task.reviewed_by IS NULL
-ORDER BY 
-    task.created DESC;

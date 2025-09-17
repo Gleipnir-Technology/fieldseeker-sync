@@ -518,7 +518,18 @@ func parseRange(rangeHeader string, fileSize int64) ([]httpRange, error) {
 }
 
 func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	rows, err := database.TaskAudioReviewList()
+	sort_field := r.URL.Query().Get("sort")
+	if sort_field == "" {
+		sort_field = "created_at"
+	}
+	sort_order := r.URL.Query().Get("order")
+	if sort_order == "" {
+		sort_order = "asc"
+	}
+
+	log.Printf("Sort is field '%s' and order '%s'", sort_field, sort_order)
+
+	rows, err := database.TaskAudioReviewList(database.SortCreated)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -533,8 +544,8 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 
 	data := html.ContentProcessAudio{
 		Rows:      rows,
-		SortField: "created_at",
-		SortOrder: "desc",
+		SortField: sort_field,
+		SortOrder: sort_order,
 		UsersById: usersById,
 		User:      u,
 	}
