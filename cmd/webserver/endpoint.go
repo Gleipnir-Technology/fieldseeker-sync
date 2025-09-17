@@ -529,7 +529,7 @@ func processAudioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 
 	log.Printf("Sort is field '%s' and order '%s'", sort_field, sort_order)
 
-	rows, err := database.TaskAudioReviewList(database.SortCreated)
+	rows, err := database.TaskAudioReviewList(database.SortCreated, sort_order == "asc")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
