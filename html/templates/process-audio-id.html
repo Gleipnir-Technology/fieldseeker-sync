@@ -258,10 +258,12 @@ onload = (event) => {
 						<td>Creator</td>
 						<td>{{ with $u := index $.UsersById .NoteAudio.Creator }}{{ $u.DisplayName }}{{ end }}</td>
 					</tr>
+					{{ if .NoteAudio.Deleted.IsValue }}
 					<tr>
 						<td>Deleted</td>
-						<td>{{ if .NoteAudio.Deleted.IsValue }}{{ timeSince .NoteAudio.Deleted }}{{ else }}{{ end }}</td>
+						<td>{{ timeSince .NoteAudio.Deleted }}</td>
 					</tr>
+					{{ else }}{{ end }}
 					<tr>
 						<td>Duration</td>
 						<td>{{ timeElapsed .NoteAudio.Duration }}</td>
