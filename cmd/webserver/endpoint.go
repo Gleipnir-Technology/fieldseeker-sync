@@ -603,17 +603,28 @@ func processAudioIdGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 }
 
 func processAudioIdPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	uuid := chi.URLParam(r, "uuid")
+	id_str := chi.URLParam(r, "id")
 
-	r.ParseForm()
-	transcription := r.Form.Get("transcription")
-	log.Printf("Updating %s to transcript %s", uuid, transcription)
-	err := database.NoteAudioUpdateTranscription(uuid, transcription, u.ID)
+	id, err := strconv.Atoi(id_str)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	task, err := models.FindTaskAudioReview(context.Background(), database.PGInstance.BobDB, int32(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/process-audio/"+uuid, http.StatusFound)
+
+	r.ParseForm()
+	transcription := r.Form.Get("transcription")
+	log.Printf("Updating %s to transcript %s", task.NoteAudioUUID, transcription)
+	err = database.NoteAudioUpdateTranscription(task.NoteAudioUUID, transcription, u.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/process-audio", http.StatusFound)
 }
 
 func processAudioIdDeletePost(w http.ResponseWriter, r *http.Request, u *shared.User) {
