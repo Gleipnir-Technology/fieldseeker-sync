@@ -94,8 +94,9 @@ func run() error {
 	r.Method("GET", "/process-audio/{id}", NewEnsureAuth(processAudioIdGet))
 	r.Method("POST", "/process-audio/{id}", NewEnsureAuth(processAudioIdPost))
 	r.Method("POST", "/process-audio/{id}/delete", NewEnsureAuth(processAudioIdDeletePost))
-	r.Method("POST", "/process-audio/{id}/reviewed", NewEnsureAuth(processAudioIdReviewedPost))
 	r.Method("POST", "/process-audio/{id}/needs-further-review", NewEnsureAuth(processAudioIdNeedsFurtherReviewPost))
+	r.Method("POST", "/process-audio/{id}/reviewed", NewEnsureAuth(processAudioIdReviewedPost))
+	r.Method("POST", "/process-audio/{id}/further-reviewed", NewEnsureAuth(processAudioIdFurtherReviewedPost))
 	r.Method("GET", "/service-request", NewEnsureAuth(serviceRequestList))
 
 	r.Get("/login", loginGet)

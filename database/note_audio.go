@@ -299,6 +299,23 @@ func NoteAudioUpdateReviewed(uuid string, userID int) error {
 	return nil
 }
 
+func NoteAudioUpdateFurtherReviewed(taskID int32, userID int) error {
+	args := pgx.NamedArgs{
+		"id":      taskID,
+		"user_id": userID,
+	}
+	query := `
+		UPDATE task_audio_review SET
+		reviewed_by=@user_id
+		WHERE id=@id
+	`
+	_, err := PGInstance.DB.Exec(context.Background(), query, args)
+	if err != nil {
+		return fmt.Errorf("Failed to update further reviewed on review task: %v\n", err)
+	}
+	return nil
+}
+
 func NoteAudioUpdateNeedsFurtherReview(uuid string, userID int) error {
 	args := pgx.NamedArgs{
 		"needs_further_review": true,
