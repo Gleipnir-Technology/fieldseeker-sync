@@ -3,14 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
-	"log"
 	"time"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/Gleipnir-Technology/fieldseeker-sync"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
+	"github.com/getsentry/sentry-go"
 )
 
 func main() {

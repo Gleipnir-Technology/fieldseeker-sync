@@ -8,11 +8,15 @@ import (
 	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
 )
 
-type NoCredentialsError struct { }
+type NoCredentialsError struct{}
+
 func (e NoCredentialsError) Error() string { return "No credentials were present in the request" }
 
-type InvalidSessionError struct {}
-func (e InvalidSessionError) Error() string { return "A session was present, but the contents were not valid" }
+type InvalidSessionError struct{}
+
+func (e InvalidSessionError) Error() string {
+	return "A session was present, but the contents were not valid"
+}
 
 // authenticatedHandler is a handler function that also requires a user
 type AuthenticatedHandler func(http.ResponseWriter, *http.Request, *shared.User)
@@ -71,7 +75,7 @@ func getAuthenticatedUser(r *http.Request) (*shared.User, error) {
 	if user_id > 0 && len(display_name) > 0 && len(username) > 0 {
 		return &shared.User{
 			DisplayName: display_name,
-			ID: user_id,
+			ID:          user_id,
 			Username:    username,
 		}, nil
 	}
@@ -94,4 +98,3 @@ func getAuthenticatedUser(r *http.Request) (*shared.User, error) {
 
 	return user, nil
 }
-
