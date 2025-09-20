@@ -1,4 +1,4 @@
-package fssync
+package database
 
 import (
 	"testing"
