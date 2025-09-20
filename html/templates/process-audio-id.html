@@ -219,6 +219,34 @@ onload = (event) => {
 		</div>
 	</div>
 	<div class="row">
+		<form method="POST" id="updateform" action="/process-audio/{{ .Task.ID }}">
+			<div class="mb-3">
+				{{ if .Task.CompletedBy.IsValue }}
+				<b>Initial Reviewer:</b>
+				<span class="badge bg-secondary">{{ with $u := index $.UsersById .Task.CompletedBy.MustGet }}{{ $u.DisplayName }}{{ end }}</span>
+				<br/>
+
+				{{ end }}
+				<b>Original transcription:</b>
+				{{ if .NoteAudio.TranscriptionUserEdited }}
+					<span class="badge bg-warning">user edited</span>
+				{{ end }}
+				<br/>
+				{{ if .NoteAudio.Transcription.IsValue }}
+					<blockquote class="blockquote"><p>{{ .NoteAudio.Transcription.MustGet }}</p></blockquote>
+				{{ else }}
+					&lt;none&gt;
+				{{ end }}
+			</div>
+			<input type="hidden" name="uuid" value="{{ .NoteAudio.UUID }}"/>
+			<label for="transcript" class="form-label">Updated Transcription</label>
+			<textarea class="form-control" name="transcription" rows="10">{{ if .NoteAudio.Transcription.IsValue }}{{ .NoteAudio.Transcription.MustGet }}{{ else }}{{ end }}</textarea>
+		</form>
+	</div>
+	<div class="row">
+		<div class="col">
+			<button type="submit" form="updateform" class="btn btn-primary">Update</button>
+		</div>
 		<div class="col">
 			<form method="POST" action="/process-audio/{{ .Task.ID }}/reviewed">
 				<button type="submit" class="btn btn-success">Mark reviewed without changes</button>
@@ -238,37 +266,11 @@ onload = (event) => {
 		</div>
 		{{ end }}
 		<div class="col">
-			<button id="toggleGlossary" class="btn btn-primary">
+			<button id="toggleGlossary" class="btn btn-info">
 				Show Glossary
 				</button>
 		</div>
 	</div>
-	<form method="POST" action="/process-audio/{{ .Task.ID }}">
-		<div class="mb-3">
-			{{ if .Task.CompletedBy.IsValue }}
-			<b>Initial Reviewer:</b>
-			<span class="badge bg-secondary">{{ with $u := index $.UsersById .Task.CompletedBy.MustGet }}{{ $u.DisplayName }}{{ end }}</span>
-			<br/>
-
-			{{ end }}
-			<b>Original transcription:</b>
-			{{ if .NoteAudio.TranscriptionUserEdited }}
-				<span class="badge bg-warning">user edited</span>
-			{{ end }}
-			<br/>
-			{{ if .NoteAudio.Transcription.IsValue }}
-				<blockquote class="blockquote"><p>{{ .NoteAudio.Transcription.MustGet }}</p></blockquote>
-			{{ else }}
-				&lt;none&gt;
-			{{ end }}
-		</div>
-		<div class="mb-3">
-			<input type="hidden" name="uuid" value="{{ .NoteAudio.UUID }}"/>
-			<label for="transcript" class="form-label">Updated Transcription</label>
-			<textarea class="form-control" name="transcription" rows="10">{{ if .NoteAudio.Transcription.IsValue }}{{ .NoteAudio.Transcription.MustGet }}{{ else }}{{ end }}</textarea>
-			<button type="submit" class="btn btn-primary">Update</button>
-		</div>
-	</form>
 	<div class="row">
 		<div class="col-4">
 			<table class="table">
