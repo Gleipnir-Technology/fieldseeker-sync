@@ -224,11 +224,19 @@ onload = (event) => {
 				<button type="submit" class="btn btn-success">Mark reviewed without changes</button>
 			</form>
 		</div>
+		{{ if .Task.NeedsReview }}
+		<div class="col">
+			<form method="POST" action="/process-audio/{{ .Task.ID }}/further-reviewed">
+				<button type="submit" class="btn btn-dark">Mark further reviewed</button>
+			</form>
+		</div>
+		{{ else }}
 		<div class="col">
 			<form method="POST" action="/process-audio/{{ .Task.ID }}/needs-further-review">
 				<button type="submit" class="btn btn-warning">Needs further review</button>
 			</form>
 		</div>
+		{{ end }}
 		<div class="col">
 			<button id="toggleGlossary" class="btn btn-primary">
 				Show Glossary
