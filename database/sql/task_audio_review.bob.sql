@@ -15,4 +15,4 @@ JOIN
 JOIN 
     user_ u ON note.creator = u.id
 WHERE 
-    task.reviewed_by IS NULL;
+    task.completed_by IS NULL;
