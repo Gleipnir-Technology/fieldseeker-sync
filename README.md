@@ -64,8 +64,17 @@ index c9df235..307622c 100644
 
 This tells me everything I need to know. I need to add 3 columns, `FS_MosquitoInspection.PTAID`, `FS_RodentLocation.JURISDICTION`, and `FS_TimeCard.RODENTLOCID`.
 
-We'll create a new migration for that. At this point, that's going to be `database/migrations/00019_ptaid_jurisdiction_rodentlocid`. You can look at the source to see how to map the changes to SQL statements.
+We'll create a new migration for that. At this point, that's going to be `database/migrations/00020_ptaid_jurisdiction_rodentlocid`. You can look at the source to see how to map the changes to SQL statements.
 
+Make sure to remember the history tables.
+
+You can use `goose` to check the current status and go up and down in migrations to make sure you get things right:
+```sh
+cd database/migrations
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=fieldseeker-sync host=/var/run/postgresql" goose status
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=fieldseeker-sync host=/var/run/postgresql" goose up
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=fieldseeker-sync host=/var/run/postgresql" goose down
+```
 
 ## Hacking
 

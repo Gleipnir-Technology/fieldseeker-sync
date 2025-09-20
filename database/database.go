@@ -56,7 +56,7 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 		return errors.New("Can't read variable 'needs' - it's nil")
 	}
 	if *needs {
-		return errors.New("Must migrate database before connecting.")
+		return errors.New(fmt.Sprintf("Must migrate database before connecting: %s", *needs))
 	}
 
 	pgOnce.Do(func() {
@@ -481,8 +481,14 @@ func hasUpdates(row map[string]string, feature arcgis.Feature) bool {
 	for key, value := range feature.Attributes {
 		rowdata := row[strings.ToLower(key)]
 		// We'll accept any 'nil' as represented by the empty string in the database
-		if value == nil && rowdata == "" {
-			continue
+		if value == nil {
+			if rowdata == "" {
+				continue
+			} else if len(rowdata) > 0 {
+				return true
+			} else {
+				log.Fatal("Looks like our original value is nil, but our row value is something non-empty with a zero length. Need a programmer to look into this.")
+			}
 		}
 		// check strings first, their simplest
 		if featureAsString, ok := value.(string); ok {
@@ -519,8 +525,8 @@ func hasUpdates(row map[string]string, feature arcgis.Feature) bool {
 				continue
 			}
 		}
-		log.Printf("Type: %T\tkey: %s\tvalue: %v\trow: %s\n", value, key, value, rowdata)
-		log.Fatal("Need type update.")
+		log.Printf("key: %s\tvalue: %v (type %T)\trow: %s\n", key, value, value, rowdata)
+		log.Fatal("we've hit a point where we can't tell if we have an update or not, need a programmer to look at the above")
 	}
 	return false
 }
