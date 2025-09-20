@@ -245,6 +245,12 @@ onload = (event) => {
 	</div>
 	<form method="POST" action="/process-audio/{{ .Task.ID }}">
 		<div class="mb-3">
+			{{ if .Task.CompletedBy.IsValue }}
+			<b>Initial Reviewer:</b>
+			<span class="badge bg-secondary">{{ with $u := index $.UsersById .Task.CompletedBy.MustGet }}{{ $u.DisplayName }}{{ end }}</span>
+			<br/>
+
+			{{ end }}
 			<b>Original transcription:</b>
 			{{ if .NoteAudio.TranscriptionUserEdited }}
 				<span class="badge bg-warning">user edited</span>
