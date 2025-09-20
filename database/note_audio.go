@@ -357,6 +357,7 @@ func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID in
 	}
 
 	args := pgx.NamedArgs{
+		"created":                         time.Now(),
 		"creator":                         userUUID,
 		"has_been_reviewed":               true,
 		"transcription":                   transcription,
@@ -377,7 +378,7 @@ func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID in
 		INSERT INTO note_audio 
 		(created, creator, deleted, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, needs_further_review, transcription, transcription_user_edited, transcription_internally_edited, version, uuid)
 		SELECT
-			created,
+			@created,
 			@creator,
 			deleted,
 			duration,
