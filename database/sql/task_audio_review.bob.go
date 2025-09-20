@@ -20,7 +20,7 @@ import (
 //go:embed task_audio_review.bob.sql
 var formattedQueries_task_audio_review string
 
-var taskAudioReviewOutstandingSQL = formattedQueries_task_audio_review[164:540]
+var taskAudioReviewOutstandingSQL = formattedQueries_task_audio_review[164:594]
 
 type TaskAudioReviewOutstandingQuery = orm.ModQuery[*dialect.SelectQuery, taskAudioReviewOutstanding, TaskAudioReviewOutstandingRow, []TaskAudioReviewOutstandingRow, taskAudioReviewOutstandingTransformer]
 
@@ -53,7 +53,7 @@ func TaskAudioReviewOutstanding() *TaskAudioReviewOutstandingQuery {
 		Mod: bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {
 			q.AppendSelect(expressionTypArgs.subExpr(12, 160))
 			q.SetTable(expressionTypArgs.subExpr(171, 339))
-			q.AppendWhere(expressionTypArgs.subExpr(351, 376))
+			q.AppendWhere(expressionTypArgs.subExpr(352, 429))
 		}),
 	}
 }

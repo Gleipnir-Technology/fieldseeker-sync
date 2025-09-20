@@ -12,4 +12,4 @@ JOIN
 JOIN 
     user_ u ON note.creator = u.id
 WHERE 
-    task.completed_by IS NULL
+    (task.completed_by IS NULL OR (task.needs_review AND task.reviewed_by IS NULL))
