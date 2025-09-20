@@ -17,6 +17,7 @@ require (
 	github.com/getsentry/sentry-go v0.35.1
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/render v1.0.3
+	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/jaswdr/faker/v2 v2.8.0
@@ -24,6 +25,8 @@ require (
 	github.com/pressly/goose/v3 v3.24.3
 	github.com/shopspring/decimal v1.4.0
 	github.com/stephenafamo/bob v0.41.1
+	github.com/stephenafamo/scan v0.7.0
+	github.com/wasilibs/go-pgquery v0.0.0-20250409022910-10ac41983c07
 )
 
 require (
@@ -71,6 +74,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
+	github.com/pganalyze/pg_query_go/v6 v6.1.0 // indirect
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/schollz/progressbar/v3 v3.18.0 // indirect
@@ -78,7 +82,8 @@ require (
 	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
-	github.com/stephenafamo/scan v0.7.0 // indirect
+	github.com/tetratelabs/wazero v1.9.0 // indirect
+	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
@@ -86,6 +91,7 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
