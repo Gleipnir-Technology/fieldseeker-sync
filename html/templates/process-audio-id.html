@@ -304,7 +304,7 @@ onload = (event) => {
 		</div>
 	</div>
 	<div class="row">
-		<form method="POST" action="/process-audio/{{ .NoteAudio.UUID }}/delete">
+		<form method="POST" action="/process-audio/{{ .Task.ID }}/delete">
 			<button type="submit" class="btn btn-danger">Delete</button>
 		</form>
 	</div>
