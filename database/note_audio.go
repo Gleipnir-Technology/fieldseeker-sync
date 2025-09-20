@@ -95,18 +95,21 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 
 	query = `INSERT INTO task_audio_review (
 		completed_by,
+		created,
 		needs_review,
 		note_audio_uuid,
 		note_audio_version,
 		reviewed_by
 	) VALUES (
 		@completed_by,
+		@created,
 		@needs_review,
 		@note_audio_uuid,
 		@note_audio_version,
 		@reviewed_by)`
 	args = pgx.NamedArgs{
 		"completed_by":       nil,
+		"created":            time.Now(),
 		"needs_review":       false,
 		"note_audio_uuid":    noteUUID,
 		"note_audio_version": payload.Version,
