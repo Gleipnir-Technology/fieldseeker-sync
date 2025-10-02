@@ -38,13 +38,29 @@ func main() {
 		log.Fatalf("Failed to get projects: %v", err)
 	}
 	fmt.Printf("Found %d projects:\n", projects.Count)
-	for i, project := range projects.Results {
+	var project labelstudio.Project
+	for i, p := range projects.Results {
 		fmt.Printf("%d. %s (ID: %d) - Tasks: %d\n",
 			i+1,
-			project.Title,
-			project.ID,
-			project.TaskNumber)
+			p.Title,
+			p.ID,
+			p.TaskNumber)
+		project = p
 	}
+
+	simpleTasks := []map[string]interface{}{
+		{
+			"data": map[string]string{
+				"audio":         "s3://label-studio-nidus-audio/ffda05fd-a999-4a1d-b043-0089d3241280-normalized.m4a",
+				"transcription": "This is a fake transcription I just wrote.",
+			},
+		},
+	}
+	response, err := client.ImportTasks(project.ID, simpleTasks)
+	if err != nil {
+		log.Fatalf("Failed to import tasks: %v", err)
+	}
+	fmt.Printf("Successfully imported %d tasks\n", response.TaskCount)
 
 	// Specify bucket name
 	//bucketNamePtr := flag.String("bucket", "label-studio", "The bucket to upload to")
