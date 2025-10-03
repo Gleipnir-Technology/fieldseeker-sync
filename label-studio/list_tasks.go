@@ -3,6 +3,7 @@ package labelstudio
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -69,7 +70,7 @@ type TasksListOptions struct {
 	Page        int    // Page number for pagination
 	PageSize    int    // Number of items per page
 	Ordering    string // Field to order by (e.g., "created_at", "-created_at" for descending)
-	FilterQuery string // Search query for filtering tasks
+	Query       string // Search query for filtering tasks
 	IsLabeled   *bool  // Filter by labeled status
 	IsReviewed  *bool  // Filter by review status
 	GroundTruth *bool  // Filter by ground truth status
@@ -102,8 +103,8 @@ func (c *Client) ListTasks(options *TasksListOptions) (*TasksListResponse, error
 		if options.Ordering != "" {
 			queryParams.Add("ordering", options.Ordering)
 		}
-		if options.FilterQuery != "" {
-			queryParams.Add("filter", options.FilterQuery)
+		if options.Query != "" {
+			queryParams.Add("query", options.Query)
 		}
 		if options.IsLabeled != nil {
 			if *options.IsLabeled {
@@ -152,7 +153,12 @@ func (c *Client) ListTasks(options *TasksListOptions) (*TasksListResponse, error
 
 	// Check for successful response
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned error: %s: ", resp.Status, resp.Body)
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("Got status code %d and failed to read response body: %v", resp.StatusCode, err)
+		}
+		bodyString := string(bodyBytes)
+		return nil, fmt.Errorf("API returned error: %s: ", resp.Status, bodyString)
 	}
 
 	// Parse response

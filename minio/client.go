@@ -16,18 +16,18 @@ type Client struct {
 	client *minio.Client
 }
 
-func NewClient(baseURL string, accessKeyID string, secretAccessKey string) *Client {
-	// Initialize client
+func NewClient(baseURL string, accessKeyID string, secretAccessKey string) (*Client, error) {
+	log.Printf("Connecting to S3 at %s", baseURL)
 	minioClient, err := minio.New(baseURL, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
 		Secure: true,
 	})
 	if err != nil {
-		log.Fatalln(err)
+		return nil, fmt.Errorf("Failed to connect to minio: %v", err)
 	}
 	return &Client{
 		client: minioClient,
-	}
+	}, nil
 }
 
 func signUrl(minioClient *minio.Client, bucketName string, filePath string) {
@@ -45,19 +45,18 @@ func signUrl(minioClient *minio.Client, bucketName string, filePath string) {
 	fmt.Println("Successfully generated presigned URL", presignedURL)
 }
 
-func uploadFile(minioClient *minio.Client, bucketName string, filePath string) {
+func (minioClient *Client) UploadFile(bucketName string, filePath string, uploadPath string) error {
 	// Open the file for reading
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Fatalln(err)
+		return fmt.Errorf("Failed to open file %s to upload: %v", filePath, err)
 	}
 	defer file.Close()
 
 	// Upload the file
-	_, err = minioClient.FPutObject(context.Background(), bucketName, filePath, filePath, minio.PutObjectOptions{})
+	_, err = minioClient.client.FPutObject(context.Background(), bucketName, uploadPath, filePath, minio.PutObjectOptions{})
 	if err != nil {
-		log.Fatalln(err)
+		return fmt.Errorf("Failed to put object to bucket %s: %v", bucketName, err)
 	}
-
-	fmt.Println("File uploaded successfully")
+	return nil
 }
