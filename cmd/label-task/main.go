@@ -48,19 +48,56 @@ func main() {
 		project = p
 	}
 
-	simpleTasks := []map[string]interface{}{
-		{
-			"data": map[string]string{
-				"audio":         "s3://label-studio-nidus-audio/ffda05fd-a999-4a1d-b043-0089d3241280-normalized.m4a",
-				"transcription": "This is a fake transcription I just wrote.",
+	/*
+		simpleTasks := []map[string]interface{}{
+			{
+				"data": map[string]string{
+					"audio": "s3://label-studio-nidus-audio/ffda05fd-a999-4a1d-b043-0089d3241280-normalized.m4a",
+					"transcription": "This is a fake transcription I just wrote.",
+				},
+				"meta": map[string]string{
+					"note_uuid": "abc-123",
+				},
 			},
-		},
+		}
+		response, err := client.ImportTasks(project.ID, simpleTasks)
+		if err != nil {
+			log.Fatalf("Failed to import tasks: %v", err)
+		}
+		fmt.Printf("Successfully imported %d tasks\n", response.TaskCount)
+	*/
+
+	// Get all tasks
+	options := &labelstudio.TasksListOptions{
+		ProjectID: project.ID,
 	}
-	response, err := client.ImportTasks(project.ID, simpleTasks)
+	tasksResponse, err := client.ListTasks(options)
 	if err != nil {
-		log.Fatalf("Failed to import tasks: %v", err)
+		log.Fatalf("Failed to get tasks: %v", err)
 	}
-	fmt.Printf("Successfully imported %d tasks\n", response.TaskCount)
+
+	// Display summary of tasks
+	fmt.Printf("Total tasks: %d\n", tasksResponse.Total)
+	fmt.Printf("Total annotations: %d\n", tasksResponse.TotalAnnotations)
+	fmt.Printf("Total predictions: %d\n", tasksResponse.TotalPredictions)
+
+	// Display details of first few tasks
+	fmt.Println("\nTask details:")
+	for i, task := range tasksResponse.Tasks {
+		if i >= 5 { // Limit to first 5 tasks for brevity
+			break
+		}
+		fmt.Printf("Task ID: %d, Created: %s, Project: %d\n",
+			task.ID,
+			task.CreatedAt.Format("2006-01-02 15:04:05"),
+			task.Project)
+		fmt.Printf("  Data: %v\n", task.Data)
+		fmt.Printf("  Is Labeled: %v, Annotations: %d\n",
+			task.IsLabeled,
+			task.TotalAnnotations)
+		fmt.Printf("  Meta: %v\n", task.Meta)
+		fmt.Println("---")
+	}
 
 	// Specify bucket name
 	//bucketNamePtr := flag.String("bucket", "label-studio", "The bucket to upload to")
