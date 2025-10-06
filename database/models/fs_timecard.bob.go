@@ -52,6 +52,7 @@ type FSTimecard struct {
 	LastEditedDate null.Val[int64]   `db:"last_edited_date" `
 	LastEditedUser null.Val[string]  `db:"last_edited_user" `
 	Updated        time.Time         `db:"updated" `
+	Rodentlocid    null.Val[string]  `db:"rodentlocid" `
 }
 
 // FSTimecardSlice is an alias for a slice of pointers to FSTimecard.
@@ -67,7 +68,7 @@ type FSTimecardsQuery = *psql.ViewQuery[*FSTimecard, FSTimecardSlice]
 func buildFSTimecardColumns(alias string) fsTimecardColumns {
 	return fsTimecardColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"activity", "comments", "creationdate", "creator", "enddatetime", "equiptype", "externalid", "editdate", "editor", "fieldtech", "globalid", "lclocid", "linelocid", "locationname", "objectid", "pointlocid", "polygonlocid", "samplelocid", "srid", "startdatetime", "traplocid", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "updated",
+			"activity", "comments", "creationdate", "creator", "enddatetime", "equiptype", "externalid", "editdate", "editor", "fieldtech", "globalid", "lclocid", "linelocid", "locationname", "objectid", "pointlocid", "polygonlocid", "samplelocid", "srid", "startdatetime", "traplocid", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "updated", "rodentlocid",
 		).WithParent("fs_timecard"),
 		tableAlias:     alias,
 		Activity:       psql.Quote(alias, "activity"),
@@ -100,6 +101,7 @@ func buildFSTimecardColumns(alias string) fsTimecardColumns {
 		LastEditedDate: psql.Quote(alias, "last_edited_date"),
 		LastEditedUser: psql.Quote(alias, "last_edited_user"),
 		Updated:        psql.Quote(alias, "updated"),
+		Rodentlocid:    psql.Quote(alias, "rodentlocid"),
 	}
 }
 
@@ -136,6 +138,7 @@ type fsTimecardColumns struct {
 	LastEditedDate psql.Expression
 	LastEditedUser psql.Expression
 	Updated        psql.Expression
+	Rodentlocid    psql.Expression
 }
 
 func (c fsTimecardColumns) Alias() string {
@@ -180,10 +183,11 @@ type FSTimecardSetter struct {
 	LastEditedDate omitnull.Val[int64]   `db:"last_edited_date" `
 	LastEditedUser omitnull.Val[string]  `db:"last_edited_user" `
 	Updated        omit.Val[time.Time]   `db:"updated" `
+	Rodentlocid    omitnull.Val[string]  `db:"rodentlocid" `
 }
 
 func (s FSTimecardSetter) SetColumns() []string {
-	vals := make([]string, 0, 30)
+	vals := make([]string, 0, 31)
 	if !s.Activity.IsUnset() {
 		vals = append(vals, "activity")
 	}
@@ -273,6 +277,9 @@ func (s FSTimecardSetter) SetColumns() []string {
 	}
 	if s.Updated.IsValue() {
 		vals = append(vals, "updated")
+	}
+	if !s.Rodentlocid.IsUnset() {
+		vals = append(vals, "rodentlocid")
 	}
 	return vals
 }
@@ -368,6 +375,9 @@ func (s FSTimecardSetter) Overwrite(t *FSTimecard) {
 	if s.Updated.IsValue() {
 		t.Updated = s.Updated.MustGet()
 	}
+	if !s.Rodentlocid.IsUnset() {
+		t.Rodentlocid = s.Rodentlocid.MustGetNull()
+	}
 }
 
 func (s *FSTimecardSetter) Apply(q *dialect.InsertQuery) {
@@ -376,7 +386,7 @@ func (s *FSTimecardSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 30)
+		vals := make([]bob.Expression, 31)
 		if !s.Activity.IsUnset() {
 			vals[0] = psql.Arg(s.Activity.MustGetNull())
 		} else {
@@ -557,6 +567,12 @@ func (s *FSTimecardSetter) Apply(q *dialect.InsertQuery) {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Rodentlocid.IsUnset() {
+			vals[30] = psql.Arg(s.Rodentlocid.MustGetNull())
+		} else {
+			vals[30] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -566,7 +582,7 @@ func (s FSTimecardSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FSTimecardSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 30)
+	exprs := make([]bob.Expression, 0, 31)
 
 	if !s.Activity.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -775,6 +791,13 @@ func (s FSTimecardSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "updated")...),
 			psql.Arg(s.Updated),
+		}})
+	}
+
+	if !s.Rodentlocid.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "rodentlocid")...),
+			psql.Arg(s.Rodentlocid),
 		}})
 	}
 
@@ -1034,6 +1057,7 @@ type fsTimecardWhere[Q psql.Filterable] struct {
 	LastEditedDate psql.WhereNullMod[Q, int64]
 	LastEditedUser psql.WhereNullMod[Q, string]
 	Updated        psql.WhereMod[Q, time.Time]
+	Rodentlocid    psql.WhereNullMod[Q, string]
 }
 
 func (fsTimecardWhere[Q]) AliasedAs(alias string) fsTimecardWhere[Q] {
@@ -1072,5 +1096,6 @@ func buildFSTimecardWhere[Q psql.Filterable](cols fsTimecardColumns) fsTimecardW
 		LastEditedDate: psql.WhereNull[Q, int64](cols.LastEditedDate),
 		LastEditedUser: psql.WhereNull[Q, string](cols.LastEditedUser),
 		Updated:        psql.Where[Q, time.Time](cols.Updated),
+		Rodentlocid:    psql.WhereNull[Q, string](cols.Rodentlocid),
 	}
 }

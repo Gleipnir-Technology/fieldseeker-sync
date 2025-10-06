@@ -68,6 +68,7 @@ type HistoryTimecardTemplate struct {
 	LastEditedDate func() null.Val[int64]
 	LastEditedUser func() null.Val[string]
 	Version        func() int32
+	Rodentlocid    func() null.Val[string]
 
 	f *Factory
 
@@ -214,6 +215,10 @@ func (o HistoryTimecardTemplate) BuildSetter() *models.HistoryTimecardSetter {
 		val := o.Version()
 		m.Version = omit.From(val)
 	}
+	if o.Rodentlocid != nil {
+		val := o.Rodentlocid()
+		m.Rodentlocid = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -328,6 +333,9 @@ func (o HistoryTimecardTemplate) Build() *models.HistoryTimecard {
 	}
 	if o.Version != nil {
 		m.Version = o.Version()
+	}
+	if o.Rodentlocid != nil {
+		m.Rodentlocid = o.Rodentlocid()
 	}
 
 	o.setModelRels(m)
@@ -488,6 +496,7 @@ func (m historyTimecardMods) RandomizeAllColumns(f *faker.Faker) HistoryTimecard
 		HistoryTimecardMods.RandomLastEditedDate(f),
 		HistoryTimecardMods.RandomLastEditedUser(f),
 		HistoryTimecardMods.RandomVersion(f),
+		HistoryTimecardMods.RandomRodentlocid(f),
 	}
 }
 
@@ -2086,6 +2095,59 @@ func (m historyTimecardMods) RandomVersion(f *faker.Faker) HistoryTimecardMod {
 	return HistoryTimecardModFunc(func(_ context.Context, o *HistoryTimecardTemplate) {
 		o.Version = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyTimecardMods) Rodentlocid(val null.Val[string]) HistoryTimecardMod {
+	return HistoryTimecardModFunc(func(_ context.Context, o *HistoryTimecardTemplate) {
+		o.Rodentlocid = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyTimecardMods) RodentlocidFunc(f func() null.Val[string]) HistoryTimecardMod {
+	return HistoryTimecardModFunc(func(_ context.Context, o *HistoryTimecardTemplate) {
+		o.Rodentlocid = f
+	})
+}
+
+// Clear any values for the column
+func (m historyTimecardMods) UnsetRodentlocid() HistoryTimecardMod {
+	return HistoryTimecardModFunc(func(_ context.Context, o *HistoryTimecardTemplate) {
+		o.Rodentlocid = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyTimecardMods) RandomRodentlocid(f *faker.Faker) HistoryTimecardMod {
+	return HistoryTimecardModFunc(func(_ context.Context, o *HistoryTimecardTemplate) {
+		o.Rodentlocid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyTimecardMods) RandomRodentlocidNotNull(f *faker.Faker) HistoryTimecardMod {
+	return HistoryTimecardModFunc(func(_ context.Context, o *HistoryTimecardTemplate) {
+		o.Rodentlocid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

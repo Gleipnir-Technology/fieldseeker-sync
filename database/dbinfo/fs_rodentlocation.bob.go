@@ -303,6 +303,15 @@ var FSRodentlocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Jurisdiction: column{
+			Name:      "jurisdiction",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fsRodentlocationIndexes{
 		FSRodentlocationPkey: index{
@@ -365,11 +374,12 @@ type fsRodentlocationColumns struct {
 	LastEditedDate            column
 	LastEditedUser            column
 	Updated                   column
+	Jurisdiction              column
 }
 
 func (c fsRodentlocationColumns) AsSlice() []column {
 	return []column{
-		c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Lastinspectaction, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectrodentevidence, c.Lastinspectspecies, c.Locationname, c.Locationnumber, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Symbology, c.Usetype, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Updated,
+		c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Lastinspectaction, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectrodentevidence, c.Lastinspectspecies, c.Locationname, c.Locationnumber, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Symbology, c.Usetype, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Updated, c.Jurisdiction,
 	}
 }
 

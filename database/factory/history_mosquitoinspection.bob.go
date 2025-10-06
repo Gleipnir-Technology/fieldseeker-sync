@@ -97,6 +97,7 @@ type HistoryMosquitoinspectionTemplate struct {
 	LastEditedDate         func() null.Val[int64]
 	LastEditedUser         func() null.Val[string]
 	Version                func() int32
+	Ptaid                  func() null.Val[string]
 
 	f *Factory
 
@@ -359,6 +360,10 @@ func (o HistoryMosquitoinspectionTemplate) BuildSetter() *models.HistoryMosquito
 		val := o.Version()
 		m.Version = omit.From(val)
 	}
+	if o.Ptaid != nil {
+		val := o.Ptaid()
+		m.Ptaid = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -561,6 +566,9 @@ func (o HistoryMosquitoinspectionTemplate) Build() *models.HistoryMosquitoinspec
 	if o.Version != nil {
 		m.Version = o.Version()
 	}
+	if o.Ptaid != nil {
+		m.Ptaid = o.Ptaid()
+	}
 
 	o.setModelRels(m)
 
@@ -749,6 +757,7 @@ func (m historyMosquitoinspectionMods) RandomizeAllColumns(f *faker.Faker) Histo
 		HistoryMosquitoinspectionMods.RandomLastEditedDate(f),
 		HistoryMosquitoinspectionMods.RandomLastEditedUser(f),
 		HistoryMosquitoinspectionMods.RandomVersion(f),
+		HistoryMosquitoinspectionMods.RandomPtaid(f),
 	}
 }
 
@@ -3884,6 +3893,59 @@ func (m historyMosquitoinspectionMods) RandomVersion(f *faker.Faker) HistoryMosq
 	return HistoryMosquitoinspectionModFunc(func(_ context.Context, o *HistoryMosquitoinspectionTemplate) {
 		o.Version = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyMosquitoinspectionMods) Ptaid(val null.Val[string]) HistoryMosquitoinspectionMod {
+	return HistoryMosquitoinspectionModFunc(func(_ context.Context, o *HistoryMosquitoinspectionTemplate) {
+		o.Ptaid = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyMosquitoinspectionMods) PtaidFunc(f func() null.Val[string]) HistoryMosquitoinspectionMod {
+	return HistoryMosquitoinspectionModFunc(func(_ context.Context, o *HistoryMosquitoinspectionTemplate) {
+		o.Ptaid = f
+	})
+}
+
+// Clear any values for the column
+func (m historyMosquitoinspectionMods) UnsetPtaid() HistoryMosquitoinspectionMod {
+	return HistoryMosquitoinspectionModFunc(func(_ context.Context, o *HistoryMosquitoinspectionTemplate) {
+		o.Ptaid = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyMosquitoinspectionMods) RandomPtaid(f *faker.Faker) HistoryMosquitoinspectionMod {
+	return HistoryMosquitoinspectionModFunc(func(_ context.Context, o *HistoryMosquitoinspectionTemplate) {
+		o.Ptaid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyMosquitoinspectionMods) RandomPtaidNotNull(f *faker.Faker) HistoryMosquitoinspectionMod {
+	return HistoryMosquitoinspectionModFunc(func(_ context.Context, o *HistoryMosquitoinspectionTemplate) {
+		o.Ptaid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

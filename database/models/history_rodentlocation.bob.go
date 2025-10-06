@@ -55,6 +55,7 @@ type HistoryRodentlocation struct {
 	LastEditedDate            null.Val[int64]     `db:"last_edited_date" `
 	LastEditedUser            null.Val[string]    `db:"last_edited_user" `
 	Version                   int32               `db:"version,pk" `
+	Jurisdiction              null.Val[string]    `db:"jurisdiction" `
 }
 
 // HistoryRodentlocationSlice is an alias for a slice of pointers to HistoryRodentlocation.
@@ -70,7 +71,7 @@ type HistoryRodentlocationsQuery = *psql.ViewQuery[*HistoryRodentlocation, Histo
 func buildHistoryRodentlocationColumns(alias string) historyRodentlocationColumns {
 	return historyRodentlocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"accessdesc", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "globalid", "habitat", "lastinspectaction", "lastinspectconditions", "lastinspectdate", "lastinspectrodentevidence", "lastinspectspecies", "locationname", "locationnumber", "nextactiondatescheduled", "objectid", "priority", "symbology", "usetype", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"accessdesc", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "globalid", "habitat", "lastinspectaction", "lastinspectconditions", "lastinspectdate", "lastinspectrodentevidence", "lastinspectspecies", "locationname", "locationnumber", "nextactiondatescheduled", "objectid", "priority", "symbology", "usetype", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version", "jurisdiction",
 		).WithParent("history_rodentlocation"),
 		tableAlias:                alias,
 		Accessdesc:                psql.Quote(alias, "accessdesc"),
@@ -106,6 +107,7 @@ func buildHistoryRodentlocationColumns(alias string) historyRodentlocationColumn
 		LastEditedDate:            psql.Quote(alias, "last_edited_date"),
 		LastEditedUser:            psql.Quote(alias, "last_edited_user"),
 		Version:                   psql.Quote(alias, "version"),
+		Jurisdiction:              psql.Quote(alias, "jurisdiction"),
 	}
 }
 
@@ -145,6 +147,7 @@ type historyRodentlocationColumns struct {
 	LastEditedDate            psql.Expression
 	LastEditedUser            psql.Expression
 	Version                   psql.Expression
+	Jurisdiction              psql.Expression
 }
 
 func (c historyRodentlocationColumns) Alias() string {
@@ -192,10 +195,11 @@ type HistoryRodentlocationSetter struct {
 	LastEditedDate            omitnull.Val[int64]     `db:"last_edited_date" `
 	LastEditedUser            omitnull.Val[string]    `db:"last_edited_user" `
 	Version                   omit.Val[int32]         `db:"version,pk" `
+	Jurisdiction              omitnull.Val[string]    `db:"jurisdiction" `
 }
 
 func (s HistoryRodentlocationSetter) SetColumns() []string {
-	vals := make([]string, 0, 33)
+	vals := make([]string, 0, 34)
 	if !s.Accessdesc.IsUnset() {
 		vals = append(vals, "accessdesc")
 	}
@@ -294,6 +298,9 @@ func (s HistoryRodentlocationSetter) SetColumns() []string {
 	}
 	if s.Version.IsValue() {
 		vals = append(vals, "version")
+	}
+	if !s.Jurisdiction.IsUnset() {
+		vals = append(vals, "jurisdiction")
 	}
 	return vals
 }
@@ -398,6 +405,9 @@ func (s HistoryRodentlocationSetter) Overwrite(t *HistoryRodentlocation) {
 	if s.Version.IsValue() {
 		t.Version = s.Version.MustGet()
 	}
+	if !s.Jurisdiction.IsUnset() {
+		t.Jurisdiction = s.Jurisdiction.MustGetNull()
+	}
 }
 
 func (s *HistoryRodentlocationSetter) Apply(q *dialect.InsertQuery) {
@@ -406,7 +416,7 @@ func (s *HistoryRodentlocationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 33)
+		vals := make([]bob.Expression, 34)
 		if !s.Accessdesc.IsUnset() {
 			vals[0] = psql.Arg(s.Accessdesc.MustGetNull())
 		} else {
@@ -605,6 +615,12 @@ func (s *HistoryRodentlocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[32] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Jurisdiction.IsUnset() {
+			vals[33] = psql.Arg(s.Jurisdiction.MustGetNull())
+		} else {
+			vals[33] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -614,7 +630,7 @@ func (s HistoryRodentlocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryRodentlocationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 33)
+	exprs := make([]bob.Expression, 0, 34)
 
 	if !s.Accessdesc.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -844,6 +860,13 @@ func (s HistoryRodentlocationSetter) Expressions(prefix ...string) []bob.Express
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "version")...),
 			psql.Arg(s.Version),
+		}})
+	}
+
+	if !s.Jurisdiction.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "jurisdiction")...),
+			psql.Arg(s.Jurisdiction),
 		}})
 	}
 
@@ -1116,6 +1139,7 @@ type historyRodentlocationWhere[Q psql.Filterable] struct {
 	LastEditedDate            psql.WhereNullMod[Q, int64]
 	LastEditedUser            psql.WhereNullMod[Q, string]
 	Version                   psql.WhereMod[Q, int32]
+	Jurisdiction              psql.WhereNullMod[Q, string]
 }
 
 func (historyRodentlocationWhere[Q]) AliasedAs(alias string) historyRodentlocationWhere[Q] {
@@ -1157,5 +1181,6 @@ func buildHistoryRodentlocationWhere[Q psql.Filterable](cols historyRodentlocati
 		LastEditedDate:            psql.WhereNull[Q, int64](cols.LastEditedDate),
 		LastEditedUser:            psql.WhereNull[Q, string](cols.LastEditedUser),
 		Version:                   psql.Where[Q, int32](cols.Version),
+		Jurisdiction:              psql.WhereNull[Q, string](cols.Jurisdiction),
 	}
 }

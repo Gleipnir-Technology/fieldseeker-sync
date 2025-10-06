@@ -17,10 +17,10 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-//go:embed task_audio_review.bob.sql
-var formattedQueries_task_audio_review string
+//go:embed task_audio_review_outstanding.bob.sql
+var formattedQueries_task_audio_review_outstanding string
 
-var taskAudioReviewOutstandingSQL = formattedQueries_task_audio_review[164:594]
+var taskAudioReviewOutstandingSQL = formattedQueries_task_audio_review_outstanding[164:594]
 
 type TaskAudioReviewOutstandingQuery = orm.ModQuery[*dialect.SelectQuery, taskAudioReviewOutstanding, TaskAudioReviewOutstandingRow, []TaskAudioReviewOutstandingRow, taskAudioReviewOutstandingTransformer]
 

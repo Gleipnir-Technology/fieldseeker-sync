@@ -82,6 +82,7 @@ type HistoryMosquitoinspection struct {
 	LastEditedDate         null.Val[int64]     `db:"last_edited_date" `
 	LastEditedUser         null.Val[string]    `db:"last_edited_user" `
 	Version                int32               `db:"version,pk" `
+	Ptaid                  null.Val[string]    `db:"ptaid" `
 }
 
 // HistoryMosquitoinspectionSlice is an alias for a slice of pointers to HistoryMosquitoinspection.
@@ -97,7 +98,7 @@ type HistoryMosquitoinspectionsQuery = *psql.ViewQuery[*HistoryMosquitoinspectio
 func buildHistoryMosquitoinspectionColumns(alias string) historyMosquitoinspectionColumns {
 	return historyMosquitoinspectionColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"actiontaken", "activity", "adultact", "avetemp", "avglarvae", "avgpupae", "breeding", "cbcount", "comments", "containercount", "creationdate", "creator", "domstage", "eggs", "enddatetime", "editdate", "editor", "fieldspecies", "fieldtech", "globalid", "jurisdiction", "larvaepresent", "linelocid", "locationname", "lstages", "numdips", "objectid", "personalcontact", "pointlocid", "polygonlocid", "posdips", "positivecontainercount", "pupaepresent", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "tirecount", "totlarvae", "totpupae", "visualmonitoring", "vmcomments", "winddir", "windspeed", "zone", "zone2", "adminaction", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"actiontaken", "activity", "adultact", "avetemp", "avglarvae", "avgpupae", "breeding", "cbcount", "comments", "containercount", "creationdate", "creator", "domstage", "eggs", "enddatetime", "editdate", "editor", "fieldspecies", "fieldtech", "globalid", "jurisdiction", "larvaepresent", "linelocid", "locationname", "lstages", "numdips", "objectid", "personalcontact", "pointlocid", "polygonlocid", "posdips", "positivecontainercount", "pupaepresent", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "tirecount", "totlarvae", "totpupae", "visualmonitoring", "vmcomments", "winddir", "windspeed", "zone", "zone2", "adminaction", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version", "ptaid",
 		).WithParent("history_mosquitoinspection"),
 		tableAlias:             alias,
 		Actiontaken:            psql.Quote(alias, "actiontaken"),
@@ -160,6 +161,7 @@ func buildHistoryMosquitoinspectionColumns(alias string) historyMosquitoinspecti
 		LastEditedDate:         psql.Quote(alias, "last_edited_date"),
 		LastEditedUser:         psql.Quote(alias, "last_edited_user"),
 		Version:                psql.Quote(alias, "version"),
+		Ptaid:                  psql.Quote(alias, "ptaid"),
 	}
 }
 
@@ -226,6 +228,7 @@ type historyMosquitoinspectionColumns struct {
 	LastEditedDate         psql.Expression
 	LastEditedUser         psql.Expression
 	Version                psql.Expression
+	Ptaid                  psql.Expression
 }
 
 func (c historyMosquitoinspectionColumns) Alias() string {
@@ -300,10 +303,11 @@ type HistoryMosquitoinspectionSetter struct {
 	LastEditedDate         omitnull.Val[int64]     `db:"last_edited_date" `
 	LastEditedUser         omitnull.Val[string]    `db:"last_edited_user" `
 	Version                omit.Val[int32]         `db:"version,pk" `
+	Ptaid                  omitnull.Val[string]    `db:"ptaid" `
 }
 
 func (s HistoryMosquitoinspectionSetter) SetColumns() []string {
-	vals := make([]string, 0, 60)
+	vals := make([]string, 0, 61)
 	if !s.Actiontaken.IsUnset() {
 		vals = append(vals, "actiontaken")
 	}
@@ -483,6 +487,9 @@ func (s HistoryMosquitoinspectionSetter) SetColumns() []string {
 	}
 	if s.Version.IsValue() {
 		vals = append(vals, "version")
+	}
+	if !s.Ptaid.IsUnset() {
+		vals = append(vals, "ptaid")
 	}
 	return vals
 }
@@ -668,6 +675,9 @@ func (s HistoryMosquitoinspectionSetter) Overwrite(t *HistoryMosquitoinspection)
 	if s.Version.IsValue() {
 		t.Version = s.Version.MustGet()
 	}
+	if !s.Ptaid.IsUnset() {
+		t.Ptaid = s.Ptaid.MustGetNull()
+	}
 }
 
 func (s *HistoryMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
@@ -676,7 +686,7 @@ func (s *HistoryMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 60)
+		vals := make([]bob.Expression, 61)
 		if !s.Actiontaken.IsUnset() {
 			vals[0] = psql.Arg(s.Actiontaken.MustGetNull())
 		} else {
@@ -1037,6 +1047,12 @@ func (s *HistoryMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 			vals[59] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Ptaid.IsUnset() {
+			vals[60] = psql.Arg(s.Ptaid.MustGetNull())
+		} else {
+			vals[60] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -1046,7 +1062,7 @@ func (s HistoryMosquitoinspectionSetter) UpdateMod() bob.Mod[*dialect.UpdateQuer
 }
 
 func (s HistoryMosquitoinspectionSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 60)
+	exprs := make([]bob.Expression, 0, 61)
 
 	if !s.Actiontaken.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -1468,6 +1484,13 @@ func (s HistoryMosquitoinspectionSetter) Expressions(prefix ...string) []bob.Exp
 		}})
 	}
 
+	if !s.Ptaid.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "ptaid")...),
+			psql.Arg(s.Ptaid),
+		}})
+	}
+
 	return exprs
 }
 
@@ -1764,6 +1787,7 @@ type historyMosquitoinspectionWhere[Q psql.Filterable] struct {
 	LastEditedDate         psql.WhereNullMod[Q, int64]
 	LastEditedUser         psql.WhereNullMod[Q, string]
 	Version                psql.WhereMod[Q, int32]
+	Ptaid                  psql.WhereNullMod[Q, string]
 }
 
 func (historyMosquitoinspectionWhere[Q]) AliasedAs(alias string) historyMosquitoinspectionWhere[Q] {
@@ -1832,5 +1856,6 @@ func buildHistoryMosquitoinspectionWhere[Q psql.Filterable](cols historyMosquito
 		LastEditedDate:         psql.WhereNull[Q, int64](cols.LastEditedDate),
 		LastEditedUser:         psql.WhereNull[Q, string](cols.LastEditedUser),
 		Version:                psql.Where[Q, int32](cols.Version),
+		Ptaid:                  psql.WhereNull[Q, string](cols.Ptaid),
 	}
 }

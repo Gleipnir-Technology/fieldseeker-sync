@@ -53,6 +53,7 @@ type HistoryTimecard struct {
 	LastEditedDate null.Val[int64]     `db:"last_edited_date" `
 	LastEditedUser null.Val[string]    `db:"last_edited_user" `
 	Version        int32               `db:"version,pk" `
+	Rodentlocid    null.Val[string]    `db:"rodentlocid" `
 }
 
 // HistoryTimecardSlice is an alias for a slice of pointers to HistoryTimecard.
@@ -68,7 +69,7 @@ type HistoryTimecardsQuery = *psql.ViewQuery[*HistoryTimecard, HistoryTimecardSl
 func buildHistoryTimecardColumns(alias string) historyTimecardColumns {
 	return historyTimecardColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"activity", "comments", "creationdate", "creator", "enddatetime", "equiptype", "externalid", "editdate", "editor", "fieldtech", "globalid", "lclocid", "linelocid", "locationname", "objectid", "pointlocid", "polygonlocid", "samplelocid", "srid", "startdatetime", "traplocid", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"activity", "comments", "creationdate", "creator", "enddatetime", "equiptype", "externalid", "editdate", "editor", "fieldtech", "globalid", "lclocid", "linelocid", "locationname", "objectid", "pointlocid", "polygonlocid", "samplelocid", "srid", "startdatetime", "traplocid", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version", "rodentlocid",
 		).WithParent("history_timecard"),
 		tableAlias:     alias,
 		Activity:       psql.Quote(alias, "activity"),
@@ -102,6 +103,7 @@ func buildHistoryTimecardColumns(alias string) historyTimecardColumns {
 		LastEditedDate: psql.Quote(alias, "last_edited_date"),
 		LastEditedUser: psql.Quote(alias, "last_edited_user"),
 		Version:        psql.Quote(alias, "version"),
+		Rodentlocid:    psql.Quote(alias, "rodentlocid"),
 	}
 }
 
@@ -139,6 +141,7 @@ type historyTimecardColumns struct {
 	LastEditedDate psql.Expression
 	LastEditedUser psql.Expression
 	Version        psql.Expression
+	Rodentlocid    psql.Expression
 }
 
 func (c historyTimecardColumns) Alias() string {
@@ -184,10 +187,11 @@ type HistoryTimecardSetter struct {
 	LastEditedDate omitnull.Val[int64]     `db:"last_edited_date" `
 	LastEditedUser omitnull.Val[string]    `db:"last_edited_user" `
 	Version        omit.Val[int32]         `db:"version,pk" `
+	Rodentlocid    omitnull.Val[string]    `db:"rodentlocid" `
 }
 
 func (s HistoryTimecardSetter) SetColumns() []string {
-	vals := make([]string, 0, 31)
+	vals := make([]string, 0, 32)
 	if !s.Activity.IsUnset() {
 		vals = append(vals, "activity")
 	}
@@ -280,6 +284,9 @@ func (s HistoryTimecardSetter) SetColumns() []string {
 	}
 	if s.Version.IsValue() {
 		vals = append(vals, "version")
+	}
+	if !s.Rodentlocid.IsUnset() {
+		vals = append(vals, "rodentlocid")
 	}
 	return vals
 }
@@ -378,6 +385,9 @@ func (s HistoryTimecardSetter) Overwrite(t *HistoryTimecard) {
 	if s.Version.IsValue() {
 		t.Version = s.Version.MustGet()
 	}
+	if !s.Rodentlocid.IsUnset() {
+		t.Rodentlocid = s.Rodentlocid.MustGetNull()
+	}
 }
 
 func (s *HistoryTimecardSetter) Apply(q *dialect.InsertQuery) {
@@ -386,7 +396,7 @@ func (s *HistoryTimecardSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 31)
+		vals := make([]bob.Expression, 32)
 		if !s.Activity.IsUnset() {
 			vals[0] = psql.Arg(s.Activity.MustGetNull())
 		} else {
@@ -573,6 +583,12 @@ func (s *HistoryTimecardSetter) Apply(q *dialect.InsertQuery) {
 			vals[30] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Rodentlocid.IsUnset() {
+			vals[31] = psql.Arg(s.Rodentlocid.MustGetNull())
+		} else {
+			vals[31] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -582,7 +598,7 @@ func (s HistoryTimecardSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryTimecardSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 31)
+	exprs := make([]bob.Expression, 0, 32)
 
 	if !s.Activity.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -798,6 +814,13 @@ func (s HistoryTimecardSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "version")...),
 			psql.Arg(s.Version),
+		}})
+	}
+
+	if !s.Rodentlocid.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "rodentlocid")...),
+			psql.Arg(s.Rodentlocid),
 		}})
 	}
 
@@ -1068,6 +1091,7 @@ type historyTimecardWhere[Q psql.Filterable] struct {
 	LastEditedDate psql.WhereNullMod[Q, int64]
 	LastEditedUser psql.WhereNullMod[Q, string]
 	Version        psql.WhereMod[Q, int32]
+	Rodentlocid    psql.WhereNullMod[Q, string]
 }
 
 func (historyTimecardWhere[Q]) AliasedAs(alias string) historyTimecardWhere[Q] {
@@ -1107,5 +1131,6 @@ func buildHistoryTimecardWhere[Q psql.Filterable](cols historyTimecardColumns) h
 		LastEditedDate: psql.WhereNull[Q, int64](cols.LastEditedDate),
 		LastEditedUser: psql.WhereNull[Q, string](cols.LastEditedUser),
 		Version:        psql.Where[Q, int32](cols.Version),
+		Rodentlocid:    psql.WhereNull[Q, string](cols.Rodentlocid),
 	}
 }

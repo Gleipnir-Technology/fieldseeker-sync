@@ -555,6 +555,15 @@ var HistoryMosquitoinspections = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Ptaid: column{
+			Name:      "ptaid",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: historyMosquitoinspectionIndexes{
 		HistoryMosquitoinspectionPkey: index{
@@ -650,11 +659,12 @@ type historyMosquitoinspectionColumns struct {
 	LastEditedDate         column
 	LastEditedUser         column
 	Version                column
+	Ptaid                  column
 }
 
 func (c historyMosquitoinspectionColumns) AsSlice() []column {
 	return []column{
-		c.Actiontaken, c.Activity, c.Adultact, c.Avetemp, c.Avglarvae, c.Avgpupae, c.Breeding, c.Cbcount, c.Comments, c.Containercount, c.Creationdate, c.Creator, c.Domstage, c.Eggs, c.Enddatetime, c.Editdate, c.Editor, c.Fieldspecies, c.Fieldtech, c.Globalid, c.Jurisdiction, c.Larvaepresent, c.Linelocid, c.Locationname, c.Lstages, c.Numdips, c.Objectid, c.Personalcontact, c.Pointlocid, c.Polygonlocid, c.Posdips, c.Positivecontainercount, c.Pupaepresent, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sdid, c.Sitecond, c.Srid, c.Startdatetime, c.Tirecount, c.Totlarvae, c.Totpupae, c.Visualmonitoring, c.Vmcomments, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.Adminaction, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.Actiontaken, c.Activity, c.Adultact, c.Avetemp, c.Avglarvae, c.Avgpupae, c.Breeding, c.Cbcount, c.Comments, c.Containercount, c.Creationdate, c.Creator, c.Domstage, c.Eggs, c.Enddatetime, c.Editdate, c.Editor, c.Fieldspecies, c.Fieldtech, c.Globalid, c.Jurisdiction, c.Larvaepresent, c.Linelocid, c.Locationname, c.Lstages, c.Numdips, c.Objectid, c.Personalcontact, c.Pointlocid, c.Polygonlocid, c.Posdips, c.Positivecontainercount, c.Pupaepresent, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sdid, c.Sitecond, c.Srid, c.Startdatetime, c.Tirecount, c.Totlarvae, c.Totpupae, c.Visualmonitoring, c.Vmcomments, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.Adminaction, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version, c.Ptaid,
 	}
 }
 

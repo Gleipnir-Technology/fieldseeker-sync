@@ -81,6 +81,7 @@ type FSMosquitoinspection struct {
 	LastEditedUser         null.Val[string]  `db:"last_edited_user" `
 	Adminaction            null.Val[string]  `db:"adminaction" `
 	Updated                time.Time         `db:"updated" `
+	Ptaid                  null.Val[string]  `db:"ptaid" `
 }
 
 // FSMosquitoinspectionSlice is an alias for a slice of pointers to FSMosquitoinspection.
@@ -96,7 +97,7 @@ type FSMosquitoinspectionsQuery = *psql.ViewQuery[*FSMosquitoinspection, FSMosqu
 func buildFSMosquitoinspectionColumns(alias string) fsMosquitoinspectionColumns {
 	return fsMosquitoinspectionColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"actiontaken", "activity", "adultact", "avetemp", "avglarvae", "avgpupae", "breeding", "cbcount", "comments", "containercount", "creationdate", "creator", "domstage", "eggs", "enddatetime", "editdate", "editor", "fieldspecies", "fieldtech", "globalid", "jurisdiction", "larvaepresent", "linelocid", "locationname", "lstages", "numdips", "objectid", "personalcontact", "pointlocid", "polygonlocid", "posdips", "positivecontainercount", "pupaepresent", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "tirecount", "totlarvae", "totpupae", "visualmonitoring", "vmcomments", "winddir", "windspeed", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "adminaction", "updated",
+			"actiontaken", "activity", "adultact", "avetemp", "avglarvae", "avgpupae", "breeding", "cbcount", "comments", "containercount", "creationdate", "creator", "domstage", "eggs", "enddatetime", "editdate", "editor", "fieldspecies", "fieldtech", "globalid", "jurisdiction", "larvaepresent", "linelocid", "locationname", "lstages", "numdips", "objectid", "personalcontact", "pointlocid", "polygonlocid", "posdips", "positivecontainercount", "pupaepresent", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "tirecount", "totlarvae", "totpupae", "visualmonitoring", "vmcomments", "winddir", "windspeed", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "adminaction", "updated", "ptaid",
 		).WithParent("fs_mosquitoinspection"),
 		tableAlias:             alias,
 		Actiontaken:            psql.Quote(alias, "actiontaken"),
@@ -158,6 +159,7 @@ func buildFSMosquitoinspectionColumns(alias string) fsMosquitoinspectionColumns 
 		LastEditedUser:         psql.Quote(alias, "last_edited_user"),
 		Adminaction:            psql.Quote(alias, "adminaction"),
 		Updated:                psql.Quote(alias, "updated"),
+		Ptaid:                  psql.Quote(alias, "ptaid"),
 	}
 }
 
@@ -223,6 +225,7 @@ type fsMosquitoinspectionColumns struct {
 	LastEditedUser         psql.Expression
 	Adminaction            psql.Expression
 	Updated                psql.Expression
+	Ptaid                  psql.Expression
 }
 
 func (c fsMosquitoinspectionColumns) Alias() string {
@@ -296,10 +299,11 @@ type FSMosquitoinspectionSetter struct {
 	LastEditedUser         omitnull.Val[string]  `db:"last_edited_user" `
 	Adminaction            omitnull.Val[string]  `db:"adminaction" `
 	Updated                omit.Val[time.Time]   `db:"updated" `
+	Ptaid                  omitnull.Val[string]  `db:"ptaid" `
 }
 
 func (s FSMosquitoinspectionSetter) SetColumns() []string {
-	vals := make([]string, 0, 59)
+	vals := make([]string, 0, 60)
 	if !s.Actiontaken.IsUnset() {
 		vals = append(vals, "actiontaken")
 	}
@@ -476,6 +480,9 @@ func (s FSMosquitoinspectionSetter) SetColumns() []string {
 	}
 	if s.Updated.IsValue() {
 		vals = append(vals, "updated")
+	}
+	if !s.Ptaid.IsUnset() {
+		vals = append(vals, "ptaid")
 	}
 	return vals
 }
@@ -658,6 +665,9 @@ func (s FSMosquitoinspectionSetter) Overwrite(t *FSMosquitoinspection) {
 	if s.Updated.IsValue() {
 		t.Updated = s.Updated.MustGet()
 	}
+	if !s.Ptaid.IsUnset() {
+		t.Ptaid = s.Ptaid.MustGetNull()
+	}
 }
 
 func (s *FSMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
@@ -666,7 +676,7 @@ func (s *FSMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 59)
+		vals := make([]bob.Expression, 60)
 		if !s.Actiontaken.IsUnset() {
 			vals[0] = psql.Arg(s.Actiontaken.MustGetNull())
 		} else {
@@ -1021,6 +1031,12 @@ func (s *FSMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 			vals[58] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Ptaid.IsUnset() {
+			vals[59] = psql.Arg(s.Ptaid.MustGetNull())
+		} else {
+			vals[59] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -1030,7 +1046,7 @@ func (s FSMosquitoinspectionSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FSMosquitoinspectionSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 59)
+	exprs := make([]bob.Expression, 0, 60)
 
 	if !s.Actiontaken.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -1445,6 +1461,13 @@ func (s FSMosquitoinspectionSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
+	if !s.Ptaid.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "ptaid")...),
+			psql.Arg(s.Ptaid),
+		}})
+	}
+
 	return exprs
 }
 
@@ -1730,6 +1753,7 @@ type fsMosquitoinspectionWhere[Q psql.Filterable] struct {
 	LastEditedUser         psql.WhereNullMod[Q, string]
 	Adminaction            psql.WhereNullMod[Q, string]
 	Updated                psql.WhereMod[Q, time.Time]
+	Ptaid                  psql.WhereNullMod[Q, string]
 }
 
 func (fsMosquitoinspectionWhere[Q]) AliasedAs(alias string) fsMosquitoinspectionWhere[Q] {
@@ -1797,5 +1821,6 @@ func buildFSMosquitoinspectionWhere[Q psql.Filterable](cols fsMosquitoinspection
 		LastEditedUser:         psql.WhereNull[Q, string](cols.LastEditedUser),
 		Adminaction:            psql.WhereNull[Q, string](cols.Adminaction),
 		Updated:                psql.Where[Q, time.Time](cols.Updated),
+		Ptaid:                  psql.WhereNull[Q, string](cols.Ptaid),
 	}
 }

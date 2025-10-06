@@ -294,6 +294,15 @@ var HistoryTimecards = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Rodentlocid: column{
+			Name:      "rodentlocid",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: historyTimecardIndexes{
 		HistoryTimecardPkey: index{
@@ -360,11 +369,12 @@ type historyTimecardColumns struct {
 	LastEditedDate column
 	LastEditedUser column
 	Version        column
+	Rodentlocid    column
 }
 
 func (c historyTimecardColumns) AsSlice() []column {
 	return []column{
-		c.Activity, c.Comments, c.Creationdate, c.Creator, c.Enddatetime, c.Equiptype, c.Externalid, c.Editdate, c.Editor, c.Fieldtech, c.Globalid, c.Lclocid, c.Linelocid, c.Locationname, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Samplelocid, c.Srid, c.Startdatetime, c.Traplocid, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.Activity, c.Comments, c.Creationdate, c.Creator, c.Enddatetime, c.Equiptype, c.Externalid, c.Editdate, c.Editor, c.Fieldtech, c.Globalid, c.Lclocid, c.Linelocid, c.Locationname, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Samplelocid, c.Srid, c.Startdatetime, c.Traplocid, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version, c.Rodentlocid,
 	}
 }
 

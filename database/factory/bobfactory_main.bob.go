@@ -481,6 +481,7 @@ func (f *Factory) FromExistingFSMosquitoinspection(m *models.FSMosquitoinspectio
 	o.LastEditedUser = func() null.Val[string] { return m.LastEditedUser }
 	o.Adminaction = func() null.Val[string] { return m.Adminaction }
 	o.Updated = func() time.Time { return m.Updated }
+	o.Ptaid = func() null.Val[string] { return m.Ptaid }
 
 	return o
 }
@@ -915,6 +916,7 @@ func (f *Factory) FromExistingFSRodentlocation(m *models.FSRodentlocation) *FSRo
 	o.LastEditedDate = func() null.Val[int64] { return m.LastEditedDate }
 	o.LastEditedUser = func() null.Val[string] { return m.LastEditedUser }
 	o.Updated = func() time.Time { return m.Updated }
+	o.Jurisdiction = func() null.Val[string] { return m.Jurisdiction }
 
 	return o
 }
@@ -1302,6 +1304,7 @@ func (f *Factory) FromExistingFSTimecard(m *models.FSTimecard) *FSTimecardTempla
 	o.LastEditedDate = func() null.Val[int64] { return m.LastEditedDate }
 	o.LastEditedUser = func() null.Val[string] { return m.LastEditedUser }
 	o.Updated = func() time.Time { return m.Updated }
+	o.Rodentlocid = func() null.Val[string] { return m.Rodentlocid }
 
 	return o
 }
@@ -2064,6 +2067,7 @@ func (f *Factory) FromExistingHistoryMosquitoinspection(m *models.HistoryMosquit
 	o.LastEditedDate = func() null.Val[int64] { return m.LastEditedDate }
 	o.LastEditedUser = func() null.Val[string] { return m.LastEditedUser }
 	o.Version = func() int32 { return m.Version }
+	o.Ptaid = func() null.Val[string] { return m.Ptaid }
 
 	return o
 }
@@ -2568,6 +2572,7 @@ func (f *Factory) FromExistingHistoryRodentlocation(m *models.HistoryRodentlocat
 	o.LastEditedDate = func() null.Val[int64] { return m.LastEditedDate }
 	o.LastEditedUser = func() null.Val[string] { return m.LastEditedUser }
 	o.Version = func() int32 { return m.Version }
+	o.Jurisdiction = func() null.Val[string] { return m.Jurisdiction }
 
 	return o
 }
@@ -2961,6 +2966,7 @@ func (f *Factory) FromExistingHistoryTimecard(m *models.HistoryTimecard) *Histor
 	o.LastEditedDate = func() null.Val[int64] { return m.LastEditedDate }
 	o.LastEditedUser = func() null.Val[string] { return m.LastEditedUser }
 	o.Version = func() int32 { return m.Version }
+	o.Rodentlocid = func() null.Val[string] { return m.Rodentlocid }
 
 	return o
 }

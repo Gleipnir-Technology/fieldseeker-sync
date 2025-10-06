@@ -21,7 +21,7 @@ const (
 	SortCreatorName
 )
 
-// copied from sql.task_audio_review.bob.go
+// copied from sql.task_audio_review_outstanding.bob.go
 type taskAudioReviewOutstandingTransformer = bob.SliceTransformer[sql.TaskAudioReviewOutstandingRow, []sql.TaskAudioReviewOutstandingRow]
 
 func TaskAudioReviewList(sort TaskAudioReviewOutstandingSort, isAscending bool) ([]sql.TaskAudioReviewOutstandingRow, error) {

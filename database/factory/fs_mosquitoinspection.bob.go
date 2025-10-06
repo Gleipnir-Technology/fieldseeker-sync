@@ -96,6 +96,7 @@ type FSMosquitoinspectionTemplate struct {
 	LastEditedUser         func() null.Val[string]
 	Adminaction            func() null.Val[string]
 	Updated                func() time.Time
+	Ptaid                  func() null.Val[string]
 
 	f *Factory
 
@@ -354,6 +355,10 @@ func (o FSMosquitoinspectionTemplate) BuildSetter() *models.FSMosquitoinspection
 		val := o.Updated()
 		m.Updated = omit.From(val)
 	}
+	if o.Ptaid != nil {
+		val := o.Ptaid()
+		m.Ptaid = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -553,6 +558,9 @@ func (o FSMosquitoinspectionTemplate) Build() *models.FSMosquitoinspection {
 	if o.Updated != nil {
 		m.Updated = o.Updated()
 	}
+	if o.Ptaid != nil {
+		m.Ptaid = o.Ptaid()
+	}
 
 	o.setModelRels(m)
 
@@ -736,6 +744,7 @@ func (m fsMosquitoinspectionMods) RandomizeAllColumns(f *faker.Faker) FSMosquito
 		FSMosquitoinspectionMods.RandomLastEditedUser(f),
 		FSMosquitoinspectionMods.RandomAdminaction(f),
 		FSMosquitoinspectionMods.RandomUpdated(f),
+		FSMosquitoinspectionMods.RandomPtaid(f),
 	}
 }
 
@@ -3818,6 +3827,59 @@ func (m fsMosquitoinspectionMods) RandomUpdated(f *faker.Faker) FSMosquitoinspec
 	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
 		o.Updated = func() time.Time {
 			return random_time_Time(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fsMosquitoinspectionMods) Ptaid(val null.Val[string]) FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Ptaid = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fsMosquitoinspectionMods) PtaidFunc(f func() null.Val[string]) FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Ptaid = f
+	})
+}
+
+// Clear any values for the column
+func (m fsMosquitoinspectionMods) UnsetPtaid() FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Ptaid = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fsMosquitoinspectionMods) RandomPtaid(f *faker.Faker) FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Ptaid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fsMosquitoinspectionMods) RandomPtaidNotNull(f *faker.Faker) FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Ptaid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

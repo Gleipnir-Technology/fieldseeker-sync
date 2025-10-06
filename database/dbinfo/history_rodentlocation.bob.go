@@ -312,6 +312,15 @@ var HistoryRodentlocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Jurisdiction: column{
+			Name:      "jurisdiction",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: historyRodentlocationIndexes{
 		HistoryRodentlocationPkey: index{
@@ -380,11 +389,12 @@ type historyRodentlocationColumns struct {
 	LastEditedDate            column
 	LastEditedUser            column
 	Version                   column
+	Jurisdiction              column
 }
 
 func (c historyRodentlocationColumns) AsSlice() []column {
 	return []column{
-		c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Lastinspectaction, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectrodentevidence, c.Lastinspectspecies, c.Locationname, c.Locationnumber, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Symbology, c.Usetype, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Lastinspectaction, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectrodentevidence, c.Lastinspectspecies, c.Locationname, c.Locationnumber, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Symbology, c.Usetype, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version, c.Jurisdiction,
 	}
 }
 

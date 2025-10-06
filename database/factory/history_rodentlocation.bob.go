@@ -70,6 +70,7 @@ type HistoryRodentlocationTemplate struct {
 	LastEditedDate            func() null.Val[int64]
 	LastEditedUser            func() null.Val[string]
 	Version                   func() int32
+	Jurisdiction              func() null.Val[string]
 
 	f *Factory
 
@@ -224,6 +225,10 @@ func (o HistoryRodentlocationTemplate) BuildSetter() *models.HistoryRodentlocati
 		val := o.Version()
 		m.Version = omit.From(val)
 	}
+	if o.Jurisdiction != nil {
+		val := o.Jurisdiction()
+		m.Jurisdiction = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -344,6 +349,9 @@ func (o HistoryRodentlocationTemplate) Build() *models.HistoryRodentlocation {
 	}
 	if o.Version != nil {
 		m.Version = o.Version()
+	}
+	if o.Jurisdiction != nil {
+		m.Jurisdiction = o.Jurisdiction()
 	}
 
 	o.setModelRels(m)
@@ -506,6 +514,7 @@ func (m historyRodentlocationMods) RandomizeAllColumns(f *faker.Faker) HistoryRo
 		HistoryRodentlocationMods.RandomLastEditedDate(f),
 		HistoryRodentlocationMods.RandomLastEditedUser(f),
 		HistoryRodentlocationMods.RandomVersion(f),
+		HistoryRodentlocationMods.RandomJurisdiction(f),
 	}
 }
 
@@ -2210,6 +2219,59 @@ func (m historyRodentlocationMods) RandomVersion(f *faker.Faker) HistoryRodentlo
 	return HistoryRodentlocationModFunc(func(_ context.Context, o *HistoryRodentlocationTemplate) {
 		o.Version = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyRodentlocationMods) Jurisdiction(val null.Val[string]) HistoryRodentlocationMod {
+	return HistoryRodentlocationModFunc(func(_ context.Context, o *HistoryRodentlocationTemplate) {
+		o.Jurisdiction = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyRodentlocationMods) JurisdictionFunc(f func() null.Val[string]) HistoryRodentlocationMod {
+	return HistoryRodentlocationModFunc(func(_ context.Context, o *HistoryRodentlocationTemplate) {
+		o.Jurisdiction = f
+	})
+}
+
+// Clear any values for the column
+func (m historyRodentlocationMods) UnsetJurisdiction() HistoryRodentlocationMod {
+	return HistoryRodentlocationModFunc(func(_ context.Context, o *HistoryRodentlocationTemplate) {
+		o.Jurisdiction = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyRodentlocationMods) RandomJurisdiction(f *faker.Faker) HistoryRodentlocationMod {
+	return HistoryRodentlocationModFunc(func(_ context.Context, o *HistoryRodentlocationTemplate) {
+		o.Jurisdiction = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyRodentlocationMods) RandomJurisdictionNotNull(f *faker.Faker) HistoryRodentlocationMod {
+	return HistoryRodentlocationModFunc(func(_ context.Context, o *HistoryRodentlocationTemplate) {
+		o.Jurisdiction = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

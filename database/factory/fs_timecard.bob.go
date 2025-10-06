@@ -67,6 +67,7 @@ type FSTimecardTemplate struct {
 	LastEditedDate func() null.Val[int64]
 	LastEditedUser func() null.Val[string]
 	Updated        func() time.Time
+	Rodentlocid    func() null.Val[string]
 
 	f *Factory
 
@@ -209,6 +210,10 @@ func (o FSTimecardTemplate) BuildSetter() *models.FSTimecardSetter {
 		val := o.Updated()
 		m.Updated = omit.From(val)
 	}
+	if o.Rodentlocid != nil {
+		val := o.Rodentlocid()
+		m.Rodentlocid = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -320,6 +325,9 @@ func (o FSTimecardTemplate) Build() *models.FSTimecard {
 	}
 	if o.Updated != nil {
 		m.Updated = o.Updated()
+	}
+	if o.Rodentlocid != nil {
+		m.Rodentlocid = o.Rodentlocid()
 	}
 
 	o.setModelRels(m)
@@ -475,6 +483,7 @@ func (m fsTimecardMods) RandomizeAllColumns(f *faker.Faker) FSTimecardMod {
 		FSTimecardMods.RandomLastEditedDate(f),
 		FSTimecardMods.RandomLastEditedUser(f),
 		FSTimecardMods.RandomUpdated(f),
+		FSTimecardMods.RandomRodentlocid(f),
 	}
 }
 
@@ -2020,6 +2029,59 @@ func (m fsTimecardMods) RandomUpdated(f *faker.Faker) FSTimecardMod {
 	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
 		o.Updated = func() time.Time {
 			return random_time_Time(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fsTimecardMods) Rodentlocid(val null.Val[string]) FSTimecardMod {
+	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
+		o.Rodentlocid = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fsTimecardMods) RodentlocidFunc(f func() null.Val[string]) FSTimecardMod {
+	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
+		o.Rodentlocid = f
+	})
+}
+
+// Clear any values for the column
+func (m fsTimecardMods) UnsetRodentlocid() FSTimecardMod {
+	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
+		o.Rodentlocid = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fsTimecardMods) RandomRodentlocid(f *faker.Faker) FSTimecardMod {
+	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
+		o.Rodentlocid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fsTimecardMods) RandomRodentlocidNotNull(f *faker.Faker) FSTimecardMod {
+	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
+		o.Rodentlocid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }
