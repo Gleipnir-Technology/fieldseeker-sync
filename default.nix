@@ -11,6 +11,7 @@ pkgs.buildGoModule rec {
 		"cmd/download-schema"
 		"cmd/dump"
 		"cmd/full-export"
+		"cmd/label-task"
 		"cmd/login"
 		"cmd/migrate"
 		"cmd/registration"
@@ -18,5 +19,5 @@ pkgs.buildGoModule rec {
 	];
 	version = "0.0.25";
 	# Needs to be updated after every modification of go.mod/go.sum
-	vendorHash = "sha256-UfF3Cpfnmr7IXwk/IGjfX1R7cHc8mzGrLv4D/v/bixw=";
+	vendorHash = "sha256-tczPtDHVKNc3Zcuy+5at6DYOP0DbKav8tkgCUnFFx80=";
 }
