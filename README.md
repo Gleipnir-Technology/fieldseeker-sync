@@ -87,7 +87,7 @@ First, start a database:
 Build the code:
 
 ```
-nix shell
+nix develop
 go build
 ```
 
