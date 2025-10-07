@@ -19,5 +19,5 @@ pkgs.buildGoModule rec {
 	];
 	version = "0.0.27";
 	# Needs to be updated after every modification of go.mod/go.sum
-	vendorHash = "sha256-Y6obrC9kztSlj1t5TdoDZuW4v1jTV/WhVbXzr36xxz0=";
+	vendorHash = "sha256-Z1pIVdRtl13RxbsSKyJKM3bvE2MFPj7KXZjt5jiEPDE=";
 }
