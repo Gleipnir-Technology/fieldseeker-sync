@@ -79,7 +79,8 @@ func main() {
 		}
 		err = createTask(labelStudioClient, project, minioClient, minioBucket, customer, note)
 		if err != nil {
-			log.Fatalf("Failed to create a task: %v", err)
+			log.Printf("Failed to create a task: %v", err)
+			continue
 		}
 	}
 }
