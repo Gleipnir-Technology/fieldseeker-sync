@@ -15,6 +15,17 @@
 			{
 				packages.default = package;
 				packages.fieldseeker-sync = package;
+				
+				# Development shell configuration
+				devShells.default = pkgs.mkShell {
+					buildInputs = [
+						pkgs.air
+						pkgs.go
+						pkgs.goose
+						pkgs.gotools
+						pkgs.lefthook
+					];
+				};
 			}
 		);
 }
