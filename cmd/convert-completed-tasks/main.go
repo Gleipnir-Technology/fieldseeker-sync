@@ -115,39 +115,41 @@ func main() {
 		taskResult.ToName = "audio"
 		taskResult.Type = "textarea"
 		taskResult.Value = taskResultValue
-		draftRequest := labelstudio.NewDraft(project.ID)
-		draftRequest.CreatedUsername = fmt.Sprintf(" %s, %d", labelStudioUser.Email, labelStudioUser.ID)
-		draftRequest.CreatedAgo = "2 minutes"
-		draftRequest.ImportID = nil
-		// Fake value
-		draftRequest.Task = labelTask.ID
-		draftRequest.User = "janie@gleipnir.technology"
+		/*
+			draftRequest := labelstudio.NewDraft(project.ID)
+			draftRequest.CreatedUsername = fmt.Sprintf(" %s, %d", labelStudioUser.Email, labelStudioUser.ID)
+			draftRequest.CreatedAgo = "2 minutes"
+			draftRequest.ImportID = nil
+			// Fake value
+			draftRequest.Task = labelTask.ID
+			draftRequest.User = "janie@gleipnir.technology"
 
-		draftRequest.DraftID = 0
-		draftRequest.LeadTime = 20.123
-		draftRequest.ParentAnnotation = nil
-		draftRequest.ParentPrediction = nil
-		draftRequest.Project = string(project.ID)
-		draftRequest.Result = []labelstudio.TaskResult{taskResult}
-		draftRequest.StartedAt = time.Now().Format("2006-01-02T15:04:05.000Z")
-		draft, err := labelStudioClient.CreateDraft(labelTask.ID, draftRequest)
+			draftRequest.DraftID = 0
+			draftRequest.LeadTime = 20.123
+			draftRequest.ParentAnnotation = nil
+			draftRequest.ParentPrediction = nil
+			draftRequest.Project = string(project.ID)
+			draftRequest.Result = []labelstudio.TaskResult{taskResult}
+			draftRequest.StartedAt = time.Now().Format("2006-01-02T15:04:05.000Z")
+			draft, err := labelStudioClient.CreateDraft(labelTask.ID, draftRequest)
 
-		if err != nil {
-			log.Fatalf("Failed to create draft: %v", err)
-		}
-		log.Printf("Created draft %d", draft.ID)
-
+			if err != nil {
+				log.Fatalf("Failed to create draft: %v", err)
+			}
+			log.Printf("Created draft %d", draft.ID)
+		*/
 		annotationRequest := labelstudio.NewAnnotationRequest(project.ID)
-		annotationRequest.DraftID = draft.ID
+		annotationRequest.DraftID = 0
 		annotationRequest.LeadTime = 20.123
 		annotationRequest.ParentAnnotation = nil
 		annotationRequest.ParentPrediction = nil
 		annotationRequest.Result = []labelstudio.TaskResult{taskResult}
+		annotationRequest.Project = project.ID
 		annotation, err := labelStudioClient.CreateAnnotation(labelTask.ID, annotationRequest)
 		if err != nil {
 			log.Fatalf("Failed to create annotation: %v", err)
 		}
-		log.Printf("Created annotation %d", annotation.ID)
+		log.Printf("Created annotation %d by %s with result %s", annotation.ID, annotation.CreatedUsername, annotation.Result[0].Value.Text)
 		log.Printf("Finished port of review task %d of note_audio %s", reviewTask.TaskID, reviewTask.NoteAudioUUID)
 	}
 }
