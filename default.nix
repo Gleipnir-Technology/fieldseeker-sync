@@ -8,6 +8,7 @@ pkgs.buildGoModule rec {
 	src = ./.;
 	subPackages = [
 		"cmd/audio-post-processor"
+		"cmd/convert-completed-tasks"
 		"cmd/download-schema"
 		"cmd/dump"
 		"cmd/full-export"

@@ -109,12 +109,6 @@ type ReviewSettings struct {
 	RequeueRejectedTasksToAnnotator bool `json:"requeue_rejected_tasks_to_annotator"`
 }
 
-// User represents a user in the system
-type User struct {
-	Avatar string `json:"avatar"`
-	ID     int    `json:"id"`
-}
-
 // Projects fetches the list of projects from the Label Studio API
 func (c *Client) Projects() (*ProjectsResponse, error) {
 	// Check if we have an access token, if not try to get it
