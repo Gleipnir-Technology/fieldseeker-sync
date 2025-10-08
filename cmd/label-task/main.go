@@ -1,8 +1,8 @@
 package main
 
 import (
-	//"flag"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -27,6 +27,9 @@ func createMinioClient() (*minio.Client, error) {
 }
 
 func main() {
+	count := 0
+	flag.IntVar(&count, "count", 0, "The count of tasks to import, used for testing.")
+	flag.Parse()
 	err := fssync.InitDB()
 	if err != nil {
 		log.Println("Failed to initialize: ", err)
@@ -67,8 +70,16 @@ func main() {
 		log.Fatalf("You must specify a CUSTOMER env var")
 	}
 	// Get all the note audios
-	allNoteAudio, err := database.NoteAudioQuery()
-	for _, note := range allNoteAudio {
+	allNoteAudio, err := database.NoteAudioQueryByVersion(1)
+	for i, note := range allNoteAudio {
+		if count != 0 && i >= count {
+			log.Printf("Finished %d items, ending", count)
+			return
+		}
+		if note.Version != 1 {
+			log.Fatalf("Got version %d of %s", note.Version, note.UUID)
+			return
+		}
 		task, err := findMatchingTask(labelStudioClient, project, customer, note)
 		if err != nil {
 			log.Fatalf("Failed to search for a task: %v", err)
@@ -83,6 +94,7 @@ func main() {
 			continue
 		}
 	}
+	log.Println("Run complete.")
 }
 
 func createTask(client *labelstudio.Client, project *labelstudio.Project, minioClient *minio.Client, bucket string, customer string, note *shared.NoteAudio) error {

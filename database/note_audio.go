@@ -185,6 +185,38 @@ func NoteAudioQuery() ([]*shared.NoteAudio, error) {
 	return results, nil
 }
 
+func NoteAudioQueryByVersion(version int) ([]*shared.NoteAudio, error) {
+	results := make([]*shared.NoteAudio, 0)
+	if PGInstance == nil {
+		return results, errors.New("You must initialize the DB first")
+	}
+	query := `
+		SELECT 
+			created,
+			creator,
+			duration,
+			has_been_reviewed,
+			is_audio_normalized,
+			is_transcoded_to_ogg,
+			needs_further_review,
+			transcription,
+			transcription_user_edited,
+			version,
+			uuid
+		FROM note_audio
+		WHERE version = @version AND deleted IS NULL;
+	`
+	args := pgx.NamedArgs{
+		"version": version,
+	}
+	rows, _ := PGInstance.DB.Query(context.Background(), query, args)
+
+	if err := pgxscan.ScanAll(&results, rows); err != nil {
+		log.Println("ScanAll on note_audio error:", err)
+		return results, err
+	}
+	return results, nil
+}
 func NoteAudioToNormalize() ([]*shared.NoteAudio, error) {
 	results := make([]*shared.NoteAudio, 0)
 	if PGInstance == nil {
