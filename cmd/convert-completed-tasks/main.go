@@ -217,10 +217,10 @@ func findLabelStudioUser(labelStudioClient *labelstudio.Client, username string)
 		return nil, err
 	}
 	emailMap := map[string]string{
-		"benjaminsperry":  "ben@gleipnir.technology",
-		"eliribble":       "eli@gleipnir.technology",
-		"janiesperry":     "janie@gleipnir.technology",
-		"tzipporahribble": "tzipporah@gleipnir.technology",
+		"benjaminsperry": "ben@gleipnir.technology",
+		"eliribble":      "eli@gleipnir.technology",
+		"janiesperry":    "janie@gleipnir.technology",
+		"zippyribble":    "tzipporah@gleipnir.technology",
 	}
 	email := emailMap[username]
 	for _, user := range users {
