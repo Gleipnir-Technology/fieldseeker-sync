@@ -56,7 +56,7 @@ func ConnectDB(ctx context.Context, connection_string string) error {
 		return errors.New("Can't read variable 'needs' - it's nil")
 	}
 	if *needs {
-		return errors.New(fmt.Sprintf("Must migrate database before connecting: %s", *needs))
+		return errors.New(fmt.Sprintf("Must migrate database before connecting: %t", *needs))
 	}
 
 	pgOnce.Do(func() {
