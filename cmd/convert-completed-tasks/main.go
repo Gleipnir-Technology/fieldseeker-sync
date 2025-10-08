@@ -96,7 +96,7 @@ func main() {
 		}
 		// If it's already correctly updated, move on
 		if labelTask.Data["transcription"] == transcription {
-			log.Printf("Already updated the transcription for note_audio %s", reviewTask.NoteAudioUUID)
+			log.Printf("Already updated the transcription for label studio task %d note_audio %s to '%s'", labelTask.ID, reviewTask.NoteAudioUUID, transcription)
 			continue
 		}
 		// Otherwise, update the task with the updated information
