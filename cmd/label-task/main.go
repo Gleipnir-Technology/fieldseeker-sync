@@ -102,9 +102,12 @@ func createTask(client *labelstudio.Client, project *labelstudio.Project, minioC
 	audioRef := fmt.Sprintf("s3://%s/%s-normalized.m4a", bucket, note.UUID)
 	audioFile := fmt.Sprintf("%s/%s-normalized.m4a", config.UserFiles.Directory, note.UUID)
 	uploadPath := fmt.Sprintf("%s-normalized.m4a", note.UUID)
-	err := minioClient.UploadFile(bucket, audioFile, uploadPath)
-	if err != nil {
-		return fmt.Errorf("Failed to upload audio: %v", err)
+
+	if !minioClient.ObjectExists(bucket, uploadPath) {
+		err := minioClient.UploadFile(bucket, audioFile, uploadPath)
+		if err != nil {
+			return fmt.Errorf("Failed to upload audio: %v", err)
+		}
 	}
 	transcription := ""
 	if note.Transcription != nil {
@@ -123,7 +126,7 @@ func createTask(client *labelstudio.Client, project *labelstudio.Project, minioC
 			},
 		},
 	}
-	_, err = client.ImportTasks(project.ID, simpleTasks)
+	_, err := client.ImportTasks(project.ID, simpleTasks)
 	if err != nil {
 		log.Fatalf("Failed to import tasks: %v", err)
 	}

@@ -44,6 +44,21 @@ func signUrl(minioClient *minio.Client, bucketName string, filePath string) {
 
 	fmt.Println("Successfully generated presigned URL", presignedURL)
 }
+func (minioClient *Client) ObjectExists(bucket string, path string) bool {
+	ctx := context.Background()
+	opts := minio.ListObjectsOptions{
+		UseV1:     false,
+		Prefix:    path,
+		Recursive: false,
+	}
+	for object := range minioClient.client.ListObjects(ctx, bucket, opts) {
+		if object.Err == nil {
+			return true
+		}
+		log.Printf("Error getting object %s/%s: %v", bucket, path, object.Err)
+	}
+	return false
+}
 
 func (minioClient *Client) UploadFile(bucketName string, filePath string, uploadPath string) error {
 	// Open the file for reading
