@@ -14,7 +14,7 @@ type AnnotationRequest struct {
 	LeadTime         float64      `json:"lead_time"`
 	ParentAnnotation *int         `json:"parent_annotation,omitempty"`
 	ParentPrediction *int         `json:"parent_prediction,omitempty"`
-	Project          string       `json:"project"`
+	Project          int          `json:"project"`
 	Result           []TaskResult `json:"result"`
 	StartedAt        string       `json:"started_at"`
 }
@@ -40,13 +40,13 @@ type Annotation struct {
 	Task             int          `json:"task"`
 	WasCancelled     bool         `json:"was_cancelled"`
 	UpdatedAt        string       `json:"updated_at"`
-	UpdatedBy        string       `json:"updated_by"`
+	UpdatedBy        int          `json:"updated_by"`
 }
 
 // NewAnnotation creates a new draft request builder
 func NewAnnotationRequest(projectID int) *AnnotationRequest {
 	return &AnnotationRequest{
-		Project:   string(projectID),
+		Project:   projectID,
 		StartedAt: time.Now().UTC().Format(time.RFC3339Nano),
 	}
 }
@@ -67,8 +67,8 @@ func (c *Client) CreateAnnotation(taskID int, draft *AnnotationRequest) (*Annota
 	}
 
 	// Create request URL with query parameter
-	//url := fmt.Sprintf("%s/api/tasks/%d/drafts?project=%s", c.BaseURL, taskID, draft.Project)
-	url := fmt.Sprintf("%s/api/tasks/%d/drafts", c.BaseURL, taskID)
+	//url := fmt.Sprintf("%s/api/tasks/%d/annotations?project=%s", c.BaseURL, taskID, draft.Project)
+	url := fmt.Sprintf("%s/api/tasks/%d/annotations", c.BaseURL, taskID)
 
 	// Create request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(draftJSON))
