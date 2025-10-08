@@ -9,7 +9,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"time"
 
 	"github.com/Gleipnir-Technology/fieldseeker-sync"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
@@ -18,8 +17,8 @@ import (
 )
 
 func main() {
-	justOne := false
-	flag.BoolVar(&justOne, "justone", false, "When present, only process one.")
+	count := 0
+	flag.IntVar(&count, "count", 0, "Set the max number of tasks")
 	username := flag.String("username", "", "The username of the user to convert")
 	flag.Parse()
 	if username == nil || *username == "" {
@@ -76,8 +75,8 @@ func main() {
 	completedTasks, err := sql.TaskAudioReviewCompletedBy(*username).All(ctx, database.PGInstance.BobDB)
 	log.Printf("Found %d completed tasks", len(completedTasks))
 	for i, reviewTask := range completedTasks {
-		if i > 0 && justOne {
-			log.Println("Stopping after 1")
+		if count != 0 && i >= count {
+			log.Printf("Stopping after %d tasks", count)
 			return
 		}
 		if reviewTask.Transcription.IsNull() {
