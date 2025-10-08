@@ -9,76 +9,8 @@
 		}
 {{end}}
 {{define "content"}}
-<div class="container-fluid mt-4">
-		<h1 class="mb-4">Audio Processing Tasks</h1>
-		
-		<table class="table table-striped table-hover">
-			<thead>
-				<tr>
-					<th>
-						<a href="?sort=created_at{{ if eq .SortField "created_at" }}{{ if eq .SortOrder "asc" }}&order=desc{{ end }}{{ end }}">
-							Created At
-							{{ if eq .SortField "created_at" }}
-								{{ if eq .SortOrder "asc" }}▲{{ else }}▼{{ end }}
-							{{ end }}
-						</a>
-					</th>
-					<th>
-						<a href="?sort=duration{{ if eq .SortField "duration" }}{{ if eq .SortOrder "asc" }}&order=desc{{ end }}{{ end }}">
-							Recording Length
-							{{ if eq .SortField "duration" }}
-								{{ if eq .SortOrder "asc" }}▲{{ else }}▼{{ end }}
-							{{ end }}
-						</a>
-					</th>
-					<th>
-						<a href="?sort=creator{{ if eq .SortField "creator" }}{{ if eq .SortOrder "asc" }}&order=desc{{ end }}{{ end }}">
-							Original Creator
-							{{ if eq .SortField "creator" }}
-								{{ if eq .SortOrder "asc" }}▲{{ else }}▼{{ end }}
-							{{ end }}
-						</a>
-					</th>
-					<th>
-						<a href="?sort=needs_review{{ if eq .SortField "needs_review" }}{{ if eq .SortOrder "asc" }}&order=desc{{ end }}{{ end }}">
-							Requires Further Review
-							{{ if eq .SortField "needs_review" }}
-								{{ if eq .SortOrder "asc" }}▲{{ else }}▼{{ end }}
-							{{ end }}
-						</a>
-					</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody>
-				{{- range .Rows }}
-				<tr>
-					<td>{{ timeSince .TaskCreated }}</td>
-					{{ if .AudioDuration.IsNull }}
-						<td>unknown</td>
-					{{ else }}
-						<td>{{ .AudioDuration.Value }}</td>
-					{{ end }}
-					{{ if .CreatorName.IsNull }}
-						<td>unknown</td>
-					{{ else }}
-						<td>{{ .CreatorName.Value }}</td>
-					{{ end }}
-					<td>
-						{{ if .NeedsReview }}
-							<span class="badge bg-warning">Needs Review</span>
-						{{ end }}
-					</td>
-					<td>
-						<a href="/process-audio/{{ .TaskID }}" class="btn btn-primary btn-sm">
-							Review Task
-						</a>
-					</td>
-				</tr>
-				{{- end }}
-			</tbody>
-		</table>
-	</div>
+<h1>We've moved!</h1>
+<p>Please see the new interface at <a href="https://label-studio.gleipnir.technology">Gleipnir's Label Studio Instance</a></p>
 {{end}}
 
 {{define "script"}}
