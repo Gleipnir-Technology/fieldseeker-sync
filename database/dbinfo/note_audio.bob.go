@@ -105,33 +105,6 @@ var NoteAudios = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		HasBeenReviewed: column{
-			Name:      "has_been_reviewed",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		TranscriptionInternallyEdited: column{
-			Name:      "transcription_internally_edited",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		NeedsFurtherReview: column{
-			Name:      "needs_further_review",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		DeletedBy: column{
 			Name:      "deleted_by",
 			DBType:    "integer",
@@ -196,25 +169,22 @@ var NoteAudios = Table[
 }
 
 type noteAudioColumns struct {
-	Created                       column
-	Deleted                       column
-	Duration                      column
-	Transcription                 column
-	Version                       column
-	UUID                          column
-	Creator                       column
-	TranscriptionUserEdited       column
-	IsAudioNormalized             column
-	IsTranscodedToOgg             column
-	HasBeenReviewed               column
-	TranscriptionInternallyEdited column
-	NeedsFurtherReview            column
-	DeletedBy                     column
+	Created                 column
+	Deleted                 column
+	Duration                column
+	Transcription           column
+	Version                 column
+	UUID                    column
+	Creator                 column
+	TranscriptionUserEdited column
+	IsAudioNormalized       column
+	IsTranscodedToOgg       column
+	DeletedBy               column
 }
 
 func (c noteAudioColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Deleted, c.Duration, c.Transcription, c.Version, c.UUID, c.Creator, c.TranscriptionUserEdited, c.IsAudioNormalized, c.IsTranscodedToOgg, c.HasBeenReviewed, c.TranscriptionInternallyEdited, c.NeedsFurtherReview, c.DeletedBy,
+		c.Created, c.Deleted, c.Duration, c.Transcription, c.Version, c.UUID, c.Creator, c.TranscriptionUserEdited, c.IsAudioNormalized, c.IsTranscodedToOgg, c.DeletedBy,
 	}
 }
 

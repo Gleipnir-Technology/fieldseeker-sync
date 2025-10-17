@@ -30,12 +30,9 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 			creator,
 			deleted,
 			duration,
-			has_been_reviewed,
 			is_audio_normalized,
 			is_transcoded_to_ogg,
-			needs_further_review,
 			transcription,
-			transcription_internally_edited,
 			transcription_user_edited,
 			version,
 			uuid
@@ -44,12 +41,9 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 			@creator,
 			@deleted,
 			@duration,
-			@has_been_reviewed,
 			@is_audio_normalized,
 			@is_transcoded_to_ogg,
-			@needs_further_review,
 			@transcription,
-			@transcription_internally_edited,
 			@transcription_user_edited,
 			@version,
 			@uuid)`
@@ -58,12 +52,9 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		"creator":                         userID,
 		"deleted":                         nil,
 		"duration":                        payload.Duration,
-		"has_been_reviewed":               false,
 		"is_audio_normalized":             false,
 		"is_transcoded_to_ogg":            false,
-		"needs_further_review":            false,
 		"transcription":                   payload.Transcription,
-		"transcription_internally_edited": false,
 		"transcription_user_edited":       payload.TranscriptionUserEdited,
 		"version":                         payload.Version,
 		"uuid":                            noteUUID,
@@ -162,10 +153,8 @@ func NoteAudioQuery() ([]*shared.NoteAudio, error) {
 			created,
 			creator,
 			duration,
-			has_been_reviewed,
 			is_audio_normalized,
 			is_transcoded_to_ogg,
-			needs_further_review,
 			transcription,
 			transcription_user_edited,
 			version,
@@ -195,10 +184,8 @@ func NoteAudioQueryByVersion(version int) ([]*shared.NoteAudio, error) {
 			created,
 			creator,
 			duration,
-			has_been_reviewed,
 			is_audio_normalized,
 			is_transcoded_to_ogg,
-			needs_further_review,
 			transcription,
 			transcription_user_edited,
 			version,
@@ -307,79 +294,7 @@ func NoteAudioUpdateDelete(uuid string, userID int) error {
 	return nil
 }
 
-func NoteAudioUpdateReviewed(uuid string, userID int) error {
-	args := pgx.NamedArgs{
-		"has_been_reviewed": true,
-		"user_id":           userID,
-		"uuid":              uuid,
-	}
-	query := `
-		UPDATE note_audio
-		SET has_been_reviewed=@has_been_reviewed
-		WHERE uuid=@uuid
-	`
-	row, err := PGInstance.DB.Exec(context.Background(), query, args)
-	if err != nil {
-		return fmt.Errorf("Failed to update transcription: %v\n", err)
-	}
-	log.Printf("Marked note_audio %s %s reviewed", uuid, row)
-	query = `UPDATE task_audio_review SET
-		completed_by=@user_id WHERE note_audio_uuid=@uuid`
-	row, err = PGInstance.DB.Exec(context.Background(), query, args)
-	if err != nil {
-		return fmt.Errorf("Failed to update transcription: %v\n", err)
-	}
-	log.Printf("Marked review task for %s %s completed by %s", uuid, userID, row)
 
-	return nil
-}
-
-func NoteAudioUpdateFurtherReviewed(taskID int32, userID int) error {
-	args := pgx.NamedArgs{
-		"id":      taskID,
-		"user_id": userID,
-	}
-	query := `
-		UPDATE task_audio_review SET
-		reviewed_by=@user_id
-		WHERE id=@id
-	`
-	_, err := PGInstance.DB.Exec(context.Background(), query, args)
-	if err != nil {
-		return fmt.Errorf("Failed to update further reviewed on review task: %v\n", err)
-	}
-	return nil
-}
-
-func NoteAudioUpdateNeedsFurtherReview(uuid string, userID int) error {
-	args := pgx.NamedArgs{
-		"needs_further_review": true,
-		"user_id":              userID,
-		"uuid":                 uuid,
-	}
-	query := `
-		UPDATE note_audio
-		SET needs_further_review=@needs_further_review
-		WHERE uuid=@uuid
-	`
-	row, err := PGInstance.DB.Exec(context.Background(), query, args)
-	if err != nil {
-		return fmt.Errorf("Failed to update needs further review: %v\n", err)
-	}
-	log.Printf("Marked note_audio %s %s needs further review", uuid, row)
-
-	query = `
-		UPDATE task_audio_review SET
-		completed_by=@user_id,
-		needs_review=@needs_further_review
-		WHERE note_audio_uuid=@uuid
-	`
-	row, err = PGInstance.DB.Exec(context.Background(), query, args)
-	if err != nil {
-		return fmt.Errorf("Failed to update needs further review on review task: %v\n", err)
-	}
-	return nil
-}
 func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID int) error {
 	ctx := context.Background()
 	var options pgx.TxOptions
@@ -391,9 +306,7 @@ func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID in
 	args := pgx.NamedArgs{
 		"created":                         time.Now(),
 		"creator":                         userUUID,
-		"has_been_reviewed":               true,
 		"transcription":                   transcription,
-		"transcription_internally_edited": true,
 		"uuid":                            uuid,
 	}
 	query := `
@@ -408,19 +321,16 @@ func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID in
 			)
 		)
 		INSERT INTO note_audio 
-		(created, creator, deleted, duration, has_been_reviewed, is_audio_normalized, is_transcoded_to_ogg, needs_further_review, transcription, transcription_user_edited, transcription_internally_edited, version, uuid)
+		(created, creator, deleted, duration, is_audio_normalized, is_transcoded_to_ogg, transcription, transcription_user_edited, version, uuid)
 		SELECT
 			@created,
 			@creator,
 			deleted,
 			duration,
-			@has_been_reviewed,
 			is_audio_normalized,
 			is_transcoded_to_ogg,
-			needs_further_review,
 			@transcription,
 			transcription_user_edited,
-			@transcription_internally_edited,
 			version + 1,
 			@uuid
 		FROM previous_row

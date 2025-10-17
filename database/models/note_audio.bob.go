@@ -26,20 +26,17 @@ import (
 
 // NoteAudio is an object representing the database table.
 type NoteAudio struct {
-	Created                       time.Time           `db:"created" `
-	Deleted                       null.Val[time.Time] `db:"deleted" `
-	Duration                      null.Val[float32]   `db:"duration" `
-	Transcription                 null.Val[string]    `db:"transcription" `
-	Version                       int32               `db:"version,pk" `
-	UUID                          string              `db:"uuid,pk" `
-	Creator                       int32               `db:"creator" `
-	TranscriptionUserEdited       bool                `db:"transcription_user_edited" `
-	IsAudioNormalized             bool                `db:"is_audio_normalized" `
-	IsTranscodedToOgg             bool                `db:"is_transcoded_to_ogg" `
-	HasBeenReviewed               bool                `db:"has_been_reviewed" `
-	TranscriptionInternallyEdited bool                `db:"transcription_internally_edited" `
-	NeedsFurtherReview            bool                `db:"needs_further_review" `
-	DeletedBy                     null.Val[int32]     `db:"deleted_by" `
+	Created                 time.Time           `db:"created" `
+	Deleted                 null.Val[time.Time] `db:"deleted" `
+	Duration                null.Val[float32]   `db:"duration" `
+	Transcription           null.Val[string]    `db:"transcription" `
+	Version                 int32               `db:"version,pk" `
+	UUID                    string              `db:"uuid,pk" `
+	Creator                 int32               `db:"creator" `
+	TranscriptionUserEdited bool                `db:"transcription_user_edited" `
+	IsAudioNormalized       bool                `db:"is_audio_normalized" `
+	IsTranscodedToOgg       bool                `db:"is_transcoded_to_ogg" `
+	DeletedBy               null.Val[int32]     `db:"deleted_by" `
 
 	R noteAudioR `db:"-" `
 }
@@ -65,43 +62,37 @@ type noteAudioR struct {
 func buildNoteAudioColumns(alias string) noteAudioColumns {
 	return noteAudioColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "deleted", "duration", "transcription", "version", "uuid", "creator", "transcription_user_edited", "is_audio_normalized", "is_transcoded_to_ogg", "has_been_reviewed", "transcription_internally_edited", "needs_further_review", "deleted_by",
+			"created", "deleted", "duration", "transcription", "version", "uuid", "creator", "transcription_user_edited", "is_audio_normalized", "is_transcoded_to_ogg", "deleted_by",
 		).WithParent("note_audio"),
-		tableAlias:                    alias,
-		Created:                       psql.Quote(alias, "created"),
-		Deleted:                       psql.Quote(alias, "deleted"),
-		Duration:                      psql.Quote(alias, "duration"),
-		Transcription:                 psql.Quote(alias, "transcription"),
-		Version:                       psql.Quote(alias, "version"),
-		UUID:                          psql.Quote(alias, "uuid"),
-		Creator:                       psql.Quote(alias, "creator"),
-		TranscriptionUserEdited:       psql.Quote(alias, "transcription_user_edited"),
-		IsAudioNormalized:             psql.Quote(alias, "is_audio_normalized"),
-		IsTranscodedToOgg:             psql.Quote(alias, "is_transcoded_to_ogg"),
-		HasBeenReviewed:               psql.Quote(alias, "has_been_reviewed"),
-		TranscriptionInternallyEdited: psql.Quote(alias, "transcription_internally_edited"),
-		NeedsFurtherReview:            psql.Quote(alias, "needs_further_review"),
-		DeletedBy:                     psql.Quote(alias, "deleted_by"),
+		tableAlias:              alias,
+		Created:                 psql.Quote(alias, "created"),
+		Deleted:                 psql.Quote(alias, "deleted"),
+		Duration:                psql.Quote(alias, "duration"),
+		Transcription:           psql.Quote(alias, "transcription"),
+		Version:                 psql.Quote(alias, "version"),
+		UUID:                    psql.Quote(alias, "uuid"),
+		Creator:                 psql.Quote(alias, "creator"),
+		TranscriptionUserEdited: psql.Quote(alias, "transcription_user_edited"),
+		IsAudioNormalized:       psql.Quote(alias, "is_audio_normalized"),
+		IsTranscodedToOgg:       psql.Quote(alias, "is_transcoded_to_ogg"),
+		DeletedBy:               psql.Quote(alias, "deleted_by"),
 	}
 }
 
 type noteAudioColumns struct {
 	expr.ColumnsExpr
-	tableAlias                    string
-	Created                       psql.Expression
-	Deleted                       psql.Expression
-	Duration                      psql.Expression
-	Transcription                 psql.Expression
-	Version                       psql.Expression
-	UUID                          psql.Expression
-	Creator                       psql.Expression
-	TranscriptionUserEdited       psql.Expression
-	IsAudioNormalized             psql.Expression
-	IsTranscodedToOgg             psql.Expression
-	HasBeenReviewed               psql.Expression
-	TranscriptionInternallyEdited psql.Expression
-	NeedsFurtherReview            psql.Expression
-	DeletedBy                     psql.Expression
+	tableAlias              string
+	Created                 psql.Expression
+	Deleted                 psql.Expression
+	Duration                psql.Expression
+	Transcription           psql.Expression
+	Version                 psql.Expression
+	UUID                    psql.Expression
+	Creator                 psql.Expression
+	TranscriptionUserEdited psql.Expression
+	IsAudioNormalized       psql.Expression
+	IsTranscodedToOgg       psql.Expression
+	DeletedBy               psql.Expression
 }
 
 func (c noteAudioColumns) Alias() string {
@@ -116,24 +107,21 @@ func (noteAudioColumns) AliasedAs(alias string) noteAudioColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type NoteAudioSetter struct {
-	Created                       omit.Val[time.Time]     `db:"created" `
-	Deleted                       omitnull.Val[time.Time] `db:"deleted" `
-	Duration                      omitnull.Val[float32]   `db:"duration" `
-	Transcription                 omitnull.Val[string]    `db:"transcription" `
-	Version                       omit.Val[int32]         `db:"version,pk" `
-	UUID                          omit.Val[string]        `db:"uuid,pk" `
-	Creator                       omit.Val[int32]         `db:"creator" `
-	TranscriptionUserEdited       omit.Val[bool]          `db:"transcription_user_edited" `
-	IsAudioNormalized             omit.Val[bool]          `db:"is_audio_normalized" `
-	IsTranscodedToOgg             omit.Val[bool]          `db:"is_transcoded_to_ogg" `
-	HasBeenReviewed               omit.Val[bool]          `db:"has_been_reviewed" `
-	TranscriptionInternallyEdited omit.Val[bool]          `db:"transcription_internally_edited" `
-	NeedsFurtherReview            omit.Val[bool]          `db:"needs_further_review" `
-	DeletedBy                     omitnull.Val[int32]     `db:"deleted_by" `
+	Created                 omit.Val[time.Time]     `db:"created" `
+	Deleted                 omitnull.Val[time.Time] `db:"deleted" `
+	Duration                omitnull.Val[float32]   `db:"duration" `
+	Transcription           omitnull.Val[string]    `db:"transcription" `
+	Version                 omit.Val[int32]         `db:"version,pk" `
+	UUID                    omit.Val[string]        `db:"uuid,pk" `
+	Creator                 omit.Val[int32]         `db:"creator" `
+	TranscriptionUserEdited omit.Val[bool]          `db:"transcription_user_edited" `
+	IsAudioNormalized       omit.Val[bool]          `db:"is_audio_normalized" `
+	IsTranscodedToOgg       omit.Val[bool]          `db:"is_transcoded_to_ogg" `
+	DeletedBy               omitnull.Val[int32]     `db:"deleted_by" `
 }
 
 func (s NoteAudioSetter) SetColumns() []string {
-	vals := make([]string, 0, 14)
+	vals := make([]string, 0, 11)
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
 	}
@@ -163,15 +151,6 @@ func (s NoteAudioSetter) SetColumns() []string {
 	}
 	if s.IsTranscodedToOgg.IsValue() {
 		vals = append(vals, "is_transcoded_to_ogg")
-	}
-	if s.HasBeenReviewed.IsValue() {
-		vals = append(vals, "has_been_reviewed")
-	}
-	if s.TranscriptionInternallyEdited.IsValue() {
-		vals = append(vals, "transcription_internally_edited")
-	}
-	if s.NeedsFurtherReview.IsValue() {
-		vals = append(vals, "needs_further_review")
 	}
 	if !s.DeletedBy.IsUnset() {
 		vals = append(vals, "deleted_by")
@@ -210,15 +189,6 @@ func (s NoteAudioSetter) Overwrite(t *NoteAudio) {
 	if s.IsTranscodedToOgg.IsValue() {
 		t.IsTranscodedToOgg = s.IsTranscodedToOgg.MustGet()
 	}
-	if s.HasBeenReviewed.IsValue() {
-		t.HasBeenReviewed = s.HasBeenReviewed.MustGet()
-	}
-	if s.TranscriptionInternallyEdited.IsValue() {
-		t.TranscriptionInternallyEdited = s.TranscriptionInternallyEdited.MustGet()
-	}
-	if s.NeedsFurtherReview.IsValue() {
-		t.NeedsFurtherReview = s.NeedsFurtherReview.MustGet()
-	}
 	if !s.DeletedBy.IsUnset() {
 		t.DeletedBy = s.DeletedBy.MustGetNull()
 	}
@@ -230,7 +200,7 @@ func (s *NoteAudioSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 14)
+		vals := make([]bob.Expression, 11)
 		if s.Created.IsValue() {
 			vals[0] = psql.Arg(s.Created.MustGet())
 		} else {
@@ -291,28 +261,10 @@ func (s *NoteAudioSetter) Apply(q *dialect.InsertQuery) {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if s.HasBeenReviewed.IsValue() {
-			vals[10] = psql.Arg(s.HasBeenReviewed.MustGet())
+		if !s.DeletedBy.IsUnset() {
+			vals[10] = psql.Arg(s.DeletedBy.MustGetNull())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
-		}
-
-		if s.TranscriptionInternallyEdited.IsValue() {
-			vals[11] = psql.Arg(s.TranscriptionInternallyEdited.MustGet())
-		} else {
-			vals[11] = psql.Raw("DEFAULT")
-		}
-
-		if s.NeedsFurtherReview.IsValue() {
-			vals[12] = psql.Arg(s.NeedsFurtherReview.MustGet())
-		} else {
-			vals[12] = psql.Raw("DEFAULT")
-		}
-
-		if !s.DeletedBy.IsUnset() {
-			vals[13] = psql.Arg(s.DeletedBy.MustGetNull())
-		} else {
-			vals[13] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -324,7 +276,7 @@ func (s NoteAudioSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s NoteAudioSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 14)
+	exprs := make([]bob.Expression, 0, 11)
 
 	if s.Created.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -393,27 +345,6 @@ func (s NoteAudioSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "is_transcoded_to_ogg")...),
 			psql.Arg(s.IsTranscodedToOgg),
-		}})
-	}
-
-	if s.HasBeenReviewed.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "has_been_reviewed")...),
-			psql.Arg(s.HasBeenReviewed),
-		}})
-	}
-
-	if s.TranscriptionInternallyEdited.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "transcription_internally_edited")...),
-			psql.Arg(s.TranscriptionInternallyEdited),
-		}})
-	}
-
-	if s.NeedsFurtherReview.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "needs_further_review")...),
-			psql.Arg(s.NeedsFurtherReview),
 		}})
 	}
 
@@ -1001,20 +932,17 @@ func (noteAudio0 *NoteAudio) AttachTaskAudioReviews(ctx context.Context, exec bo
 }
 
 type noteAudioWhere[Q psql.Filterable] struct {
-	Created                       psql.WhereMod[Q, time.Time]
-	Deleted                       psql.WhereNullMod[Q, time.Time]
-	Duration                      psql.WhereNullMod[Q, float32]
-	Transcription                 psql.WhereNullMod[Q, string]
-	Version                       psql.WhereMod[Q, int32]
-	UUID                          psql.WhereMod[Q, string]
-	Creator                       psql.WhereMod[Q, int32]
-	TranscriptionUserEdited       psql.WhereMod[Q, bool]
-	IsAudioNormalized             psql.WhereMod[Q, bool]
-	IsTranscodedToOgg             psql.WhereMod[Q, bool]
-	HasBeenReviewed               psql.WhereMod[Q, bool]
-	TranscriptionInternallyEdited psql.WhereMod[Q, bool]
-	NeedsFurtherReview            psql.WhereMod[Q, bool]
-	DeletedBy                     psql.WhereNullMod[Q, int32]
+	Created                 psql.WhereMod[Q, time.Time]
+	Deleted                 psql.WhereNullMod[Q, time.Time]
+	Duration                psql.WhereNullMod[Q, float32]
+	Transcription           psql.WhereNullMod[Q, string]
+	Version                 psql.WhereMod[Q, int32]
+	UUID                    psql.WhereMod[Q, string]
+	Creator                 psql.WhereMod[Q, int32]
+	TranscriptionUserEdited psql.WhereMod[Q, bool]
+	IsAudioNormalized       psql.WhereMod[Q, bool]
+	IsTranscodedToOgg       psql.WhereMod[Q, bool]
+	DeletedBy               psql.WhereNullMod[Q, int32]
 }
 
 func (noteAudioWhere[Q]) AliasedAs(alias string) noteAudioWhere[Q] {
@@ -1023,20 +951,17 @@ func (noteAudioWhere[Q]) AliasedAs(alias string) noteAudioWhere[Q] {
 
 func buildNoteAudioWhere[Q psql.Filterable](cols noteAudioColumns) noteAudioWhere[Q] {
 	return noteAudioWhere[Q]{
-		Created:                       psql.Where[Q, time.Time](cols.Created),
-		Deleted:                       psql.WhereNull[Q, time.Time](cols.Deleted),
-		Duration:                      psql.WhereNull[Q, float32](cols.Duration),
-		Transcription:                 psql.WhereNull[Q, string](cols.Transcription),
-		Version:                       psql.Where[Q, int32](cols.Version),
-		UUID:                          psql.Where[Q, string](cols.UUID),
-		Creator:                       psql.Where[Q, int32](cols.Creator),
-		TranscriptionUserEdited:       psql.Where[Q, bool](cols.TranscriptionUserEdited),
-		IsAudioNormalized:             psql.Where[Q, bool](cols.IsAudioNormalized),
-		IsTranscodedToOgg:             psql.Where[Q, bool](cols.IsTranscodedToOgg),
-		HasBeenReviewed:               psql.Where[Q, bool](cols.HasBeenReviewed),
-		TranscriptionInternallyEdited: psql.Where[Q, bool](cols.TranscriptionInternallyEdited),
-		NeedsFurtherReview:            psql.Where[Q, bool](cols.NeedsFurtherReview),
-		DeletedBy:                     psql.WhereNull[Q, int32](cols.DeletedBy),
+		Created:                 psql.Where[Q, time.Time](cols.Created),
+		Deleted:                 psql.WhereNull[Q, time.Time](cols.Deleted),
+		Duration:                psql.WhereNull[Q, float32](cols.Duration),
+		Transcription:           psql.WhereNull[Q, string](cols.Transcription),
+		Version:                 psql.Where[Q, int32](cols.Version),
+		UUID:                    psql.Where[Q, string](cols.UUID),
+		Creator:                 psql.Where[Q, int32](cols.Creator),
+		TranscriptionUserEdited: psql.Where[Q, bool](cols.TranscriptionUserEdited),
+		IsAudioNormalized:       psql.Where[Q, bool](cols.IsAudioNormalized),
+		IsTranscodedToOgg:       psql.Where[Q, bool](cols.IsTranscodedToOgg),
+		DeletedBy:               psql.WhereNull[Q, int32](cols.DeletedBy),
 	}
 }
 

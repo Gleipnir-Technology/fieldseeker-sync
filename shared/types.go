@@ -574,10 +574,8 @@ type NoteAudio struct {
 	Creator                 int        `db:"creator"`
 	Deleted                 *time.Time `db:"deleted"`
 	Duration                int        `db:"duration"`
-	HasBeenReviewed         bool       `db:"has_been_reviewed"`
 	IsAudioNormalized       bool       `db:"is_audio_normalized"`
 	IsTranscodedeToOgg      bool       `db:"is_transcoded_to_ogg"`
-	NeedsFurtherReview      bool       `db:"needs_further_review"`
 	Transcription           *string    `db:"transcription"`
 	TranscriptionUserEdited bool       `db:"transcription_user_edited"`
 	Version                 int        `db:"version"`

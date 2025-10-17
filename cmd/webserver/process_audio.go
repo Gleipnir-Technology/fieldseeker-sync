@@ -140,47 +140,6 @@ func processAudioIdDeletePost(w http.ResponseWriter, r *http.Request, u *shared.
 	http.Redirect(w, r, "/process-audio", http.StatusFound)
 }
 
-func processAudioIdReviewedPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	task := idToAudioReviewTask(w, r)
-	if task == nil {
-		return
-	}
-	err := database.NoteAudioUpdateReviewed(task.NoteAudioUUID, u.ID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, "/process-audio", http.StatusFound)
-}
-
-func processAudioIdFurtherReviewedPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	task := idToAudioReviewTask(w, r)
-	if task == nil {
-		return
-	}
-	log.Printf("Updating %s to further reviewed", task.NoteAudioUUID)
-	err := database.NoteAudioUpdateFurtherReviewed(task.ID, u.ID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, "/process-audio", http.StatusFound)
-}
-
-func processAudioIdNeedsFurtherReviewPost(w http.ResponseWriter, r *http.Request, u *shared.User) {
-	task := idToAudioReviewTask(w, r)
-	if task == nil {
-		return
-	}
-	log.Printf("Updating %s to needs further review", task.NoteAudioUUID)
-	err := database.NoteAudioUpdateNeedsFurtherReview(task.NoteAudioUUID, u.ID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, "/process-audio", http.StatusFound)
-}
-
 type byReviewedAndAge []*models.TaskAudioReview
 
 func (a byReviewedAndAge) Len() int      { return len(a) }

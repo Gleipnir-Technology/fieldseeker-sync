@@ -3371,9 +3371,6 @@ func (f *Factory) FromExistingNoteAudio(m *models.NoteAudio) *NoteAudioTemplate 
 	o.TranscriptionUserEdited = func() bool { return m.TranscriptionUserEdited }
 	o.IsAudioNormalized = func() bool { return m.IsAudioNormalized }
 	o.IsTranscodedToOgg = func() bool { return m.IsTranscodedToOgg }
-	o.HasBeenReviewed = func() bool { return m.HasBeenReviewed }
-	o.TranscriptionInternallyEdited = func() bool { return m.TranscriptionInternallyEdited }
-	o.NeedsFurtherReview = func() bool { return m.NeedsFurtherReview }
 	o.DeletedBy = func() null.Val[int32] { return m.DeletedBy }
 
 	ctx := context.Background()

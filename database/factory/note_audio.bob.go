@@ -37,20 +37,17 @@ func (mods NoteAudioModSlice) Apply(ctx context.Context, n *NoteAudioTemplate) {
 // NoteAudioTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type NoteAudioTemplate struct {
-	Created                       func() time.Time
-	Deleted                       func() null.Val[time.Time]
-	Duration                      func() null.Val[float32]
-	Transcription                 func() null.Val[string]
-	Version                       func() int32
-	UUID                          func() string
-	Creator                       func() int32
-	TranscriptionUserEdited       func() bool
-	IsAudioNormalized             func() bool
-	IsTranscodedToOgg             func() bool
-	HasBeenReviewed               func() bool
-	TranscriptionInternallyEdited func() bool
-	NeedsFurtherReview            func() bool
-	DeletedBy                     func() null.Val[int32]
+	Created                 func() time.Time
+	Deleted                 func() null.Val[time.Time]
+	Duration                func() null.Val[float32]
+	Transcription           func() null.Val[string]
+	Version                 func() int32
+	UUID                    func() string
+	Creator                 func() int32
+	TranscriptionUserEdited func() bool
+	IsAudioNormalized       func() bool
+	IsTranscodedToOgg       func() bool
+	DeletedBy               func() null.Val[int32]
 
 	r noteAudioR
 	f *Factory
@@ -178,18 +175,6 @@ func (o NoteAudioTemplate) BuildSetter() *models.NoteAudioSetter {
 		val := o.IsTranscodedToOgg()
 		m.IsTranscodedToOgg = omit.From(val)
 	}
-	if o.HasBeenReviewed != nil {
-		val := o.HasBeenReviewed()
-		m.HasBeenReviewed = omit.From(val)
-	}
-	if o.TranscriptionInternallyEdited != nil {
-		val := o.TranscriptionInternallyEdited()
-		m.TranscriptionInternallyEdited = omit.From(val)
-	}
-	if o.NeedsFurtherReview != nil {
-		val := o.NeedsFurtherReview()
-		m.NeedsFurtherReview = omit.From(val)
-	}
 	if o.DeletedBy != nil {
 		val := o.DeletedBy()
 		m.DeletedBy = omitnull.FromNull(val)
@@ -246,15 +231,6 @@ func (o NoteAudioTemplate) Build() *models.NoteAudio {
 	if o.IsTranscodedToOgg != nil {
 		m.IsTranscodedToOgg = o.IsTranscodedToOgg()
 	}
-	if o.HasBeenReviewed != nil {
-		m.HasBeenReviewed = o.HasBeenReviewed()
-	}
-	if o.TranscriptionInternallyEdited != nil {
-		m.TranscriptionInternallyEdited = o.TranscriptionInternallyEdited()
-	}
-	if o.NeedsFurtherReview != nil {
-		m.NeedsFurtherReview = o.NeedsFurtherReview()
-	}
 	if o.DeletedBy != nil {
 		m.DeletedBy = o.DeletedBy()
 	}
@@ -305,18 +281,6 @@ func ensureCreatableNoteAudio(m *models.NoteAudioSetter) {
 	if !(m.IsTranscodedToOgg.IsValue()) {
 		val := random_bool(nil)
 		m.IsTranscodedToOgg = omit.From(val)
-	}
-	if !(m.HasBeenReviewed.IsValue()) {
-		val := random_bool(nil)
-		m.HasBeenReviewed = omit.From(val)
-	}
-	if !(m.TranscriptionInternallyEdited.IsValue()) {
-		val := random_bool(nil)
-		m.TranscriptionInternallyEdited = omit.From(val)
-	}
-	if !(m.NeedsFurtherReview.IsValue()) {
-		val := random_bool(nil)
-		m.NeedsFurtherReview = omit.From(val)
 	}
 }
 
@@ -506,9 +470,6 @@ func (m noteAudioMods) RandomizeAllColumns(f *faker.Faker) NoteAudioMod {
 		NoteAudioMods.RandomTranscriptionUserEdited(f),
 		NoteAudioMods.RandomIsAudioNormalized(f),
 		NoteAudioMods.RandomIsTranscodedToOgg(f),
-		NoteAudioMods.RandomHasBeenReviewed(f),
-		NoteAudioMods.RandomTranscriptionInternallyEdited(f),
-		NoteAudioMods.RandomNeedsFurtherReview(f),
 		NoteAudioMods.RandomDeletedBy(f),
 	}
 }
@@ -884,99 +845,6 @@ func (m noteAudioMods) UnsetIsTranscodedToOgg() NoteAudioMod {
 func (m noteAudioMods) RandomIsTranscodedToOgg(f *faker.Faker) NoteAudioMod {
 	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
 		o.IsTranscodedToOgg = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m noteAudioMods) HasBeenReviewed(val bool) NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.HasBeenReviewed = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m noteAudioMods) HasBeenReviewedFunc(f func() bool) NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.HasBeenReviewed = f
-	})
-}
-
-// Clear any values for the column
-func (m noteAudioMods) UnsetHasBeenReviewed() NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.HasBeenReviewed = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m noteAudioMods) RandomHasBeenReviewed(f *faker.Faker) NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.HasBeenReviewed = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m noteAudioMods) TranscriptionInternallyEdited(val bool) NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.TranscriptionInternallyEdited = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m noteAudioMods) TranscriptionInternallyEditedFunc(f func() bool) NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.TranscriptionInternallyEdited = f
-	})
-}
-
-// Clear any values for the column
-func (m noteAudioMods) UnsetTranscriptionInternallyEdited() NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.TranscriptionInternallyEdited = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m noteAudioMods) RandomTranscriptionInternallyEdited(f *faker.Faker) NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.TranscriptionInternallyEdited = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m noteAudioMods) NeedsFurtherReview(val bool) NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.NeedsFurtherReview = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m noteAudioMods) NeedsFurtherReviewFunc(f func() bool) NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.NeedsFurtherReview = f
-	})
-}
-
-// Clear any values for the column
-func (m noteAudioMods) UnsetNeedsFurtherReview() NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.NeedsFurtherReview = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m noteAudioMods) RandomNeedsFurtherReview(f *faker.Faker) NoteAudioMod {
-	return NoteAudioModFunc(func(_ context.Context, o *NoteAudioTemplate) {
-		o.NeedsFurtherReview = func() bool {
 			return random_bool(f)
 		}
 	})
