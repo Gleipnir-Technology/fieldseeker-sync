@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	//"sort"
 	"strconv"
 	"strings"
 
@@ -64,29 +63,12 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 		return
 	}
-
-	config := fssync.ReadConfig()
-	filepath := fmt.Sprintf("%s/%s.m4a", config.UserFiles.Directory, audioUUID.String())
-
-	// Create file in configured directory
-	dst, err := os.Create(filepath)
+	err = fssync.AudioFileContentWrite(audioUUID, r.Body)
 	if err != nil {
-		log.Printf("Failed to create audio file at %s: %v\n", dst, err)
-		http.Error(w, "Unable to create file", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-
-	// Copy rest of request body to file
-	_, err = io.Copy(dst, r.Body)
-	if err != nil {
-		http.Error(w, "Unable to save file", http.StatusInternalServerError)
-		return
+		http.Error(w, "failed to write content file", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	log.Printf("Saved audio file %s.m4a\n", audioUUID)
-	fmt.Fprintf(w, "M4A uploaded successfully to %s", filepath)
 }
 
 func apiClientIos(w http.ResponseWriter, r *http.Request, u *shared.User) {
@@ -290,19 +272,22 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u *shared.User) {
 
 func audioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	extension := chi.URLParam(r, "extension")
-	uuid := chi.URLParam(r, "uuid")
-	config := fssync.ReadConfig()
+	uuid_string := chi.URLParam(r, "uuid")
+	uuid, err := uuid.Parse(uuid_string)
+	if err != nil {
+		http.Error(w, "Invalid uuid", http.StatusBadRequest)
+	}
 	filePath := "unknown"
 	contentType := "unknown"
 	if extension == "m4a" {
 		contentType = "audio/mpeg"
-		filePath = fmt.Sprintf("%s/%s-normalized.m4a", config.UserFiles.Directory, uuid)
+		filePath = fssync.AudioFileContentPathNormalized(uuid)
 	} else if extension == "mp3" {
 		contentType = "audio/mp3"
-		filePath = fmt.Sprintf("%s/%s.mp3", config.UserFiles.Directory, uuid)
+		filePath = fssync.AudioFileContentPathMp3(uuid)
 	} else if extension == "ogg" {
 		contentType = "audio/ogg"
-		filePath = fmt.Sprintf("%s/%s.ogg", config.UserFiles.Directory, uuid)
+		filePath = fssync.AudioFileContentPathOgg(uuid)
 	} else {
 		http.Error(w, fmt.Sprintf("Extension '%s' not found", extension), http.StatusNotFound)
 		return
