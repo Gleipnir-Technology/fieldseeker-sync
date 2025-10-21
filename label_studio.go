@@ -1,18 +1,65 @@
-package main
+package fssync
 
 import (
+	"context"
 	"encoding/json"
-	"flag"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/Gleipnir-Technology/fieldseeker-sync"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/database"
+	models "github.com/Gleipnir-Technology/fieldseeker-sync/database/models"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/label-studio"
 	"github.com/Gleipnir-Technology/fieldseeker-sync/minio"
-	"github.com/Gleipnir-Technology/fieldseeker-sync/shared"
+	"github.com/google/uuid"
 )
+
+type LabelStudioJob struct {
+	UUID uuid.UUID
+}
+
+var labelJobChannel chan LabelStudioJob
+
+func EnqueueLabelStudioJob(job LabelStudioJob) {
+	select {
+	case labelJobChannel <- job:
+		log.Printf("Enqueued label job for UUID: %s", job.UUID)
+	default:
+		log.Printf("Label job channel is full, dropping job for UUID: %s", job.UUID)
+	}
+}
+
+func StartLabelStudioWorker(ctx context.Context) error {
+	// Initialize the minio client
+	minioBucket := os.Getenv("S3_BUCKET")
+
+	labelStudioClient, err := createLabelStudioClient()
+	if err != nil {
+		return fmt.Errorf("Failed to create label studio client: %v", err)
+	}
+	minioClient, err := createMinioClient()
+	if err != nil {
+		return fmt.Errorf("Failed to create minio client: %v", err)
+	}
+	labelJobChannel = make(chan LabelStudioJob, 100) // Buffered channel to prevent blocking
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Println("Audio worker shutting down.")
+				return
+			case job := <-labelJobChannel:
+				log.Printf("Processing audio job for UUID: %s", job.UUID)
+				err := processLabelTask(ctx, minioClient, minioBucket, labelStudioClient, job)
+				if err != nil {
+					log.Printf("Error processing audio file %s: %v", job.UUID, err)
+				}
+			}
+		}
+	}()
+	return nil
+}
 
 func createMinioClient() (*minio.Client, error) {
 	baseUrl := os.Getenv("S3_BASE_URL")
@@ -23,29 +70,11 @@ func createMinioClient() (*minio.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Println("Created minio client")
 	return client, err
 }
 
-func main() {
-	count := 0
-	flag.IntVar(&count, "count", 0, "The count of tasks to import, used for testing.")
-	flag.Parse()
-	err := fssync.InitDB()
-	if err != nil {
-		log.Println("Failed to initialize: ", err)
-		os.Exit(1)
-	}
-	log.Println("Initialized database connection")
-
-	// Initialize the minio client
-	minioBucket := os.Getenv("S3_BUCKET")
-	minioClient, err := createMinioClient()
-	if err != nil {
-		log.Printf("Failed to initialize minio: %v", err)
-		os.Exit(2)
-	}
-	log.Println("Created minio client")
-
+func createLabelStudioClient() (*labelstudio.Client, error) {
 	// Initialize the client with your Label Studio base URL and API key
 	labelStudioApiKey := os.Getenv("LABEL_STUDIO_API_KEY")
 	labelStudioBaseUrl := os.Getenv("LABEL_STUDIO_BASE_URL")
@@ -53,52 +82,51 @@ func main() {
 	log.Println("Created label studio client")
 
 	// Get and store the access token
-	err = labelStudioClient.GetAccessToken()
+	err := labelStudioClient.GetAccessToken()
 	if err != nil {
-		log.Fatalf("Failed to get access token: %v", err)
+		return nil, errors.New(fmt.Sprintf("Failed to get access token: %v", err))
 	}
 	log.Println("Got label studio client access token")
 
+	return labelStudioClient, nil
+}
+
+func processLabelTask(ctx context.Context, minioClient *minio.Client, minioBucket string, labelStudioClient *labelstudio.Client, job LabelStudioJob) error {
+	customer := os.Getenv("CUSTOMER")
+	if customer == "" {
+		return errors.New("You must specify a CUSTOMER env var")
+	}
 	// Get the project we are going to upload to
 	project, err := findLabelStudioProject(labelStudioClient, "Nidus Speech-to-Text Transcriptions")
 	if err != nil {
-		log.Fatalf("Failed to find the label studio project")
+		return errors.New(fmt.Sprintf("Failed to find the label studio project"))
+	}
+	note, err := database.NoteAudioGetLatest(ctx, job.UUID.String())
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to get note %s", note.UUID))
 	}
 
-	customer := os.Getenv("CUSTOMER")
-	if customer == "" {
-		log.Fatalf("You must specify a CUSTOMER env var")
+	if note.Version != 1 {
+		return errors.New(fmt.Sprintf("Got version %d of %s", note.Version, note.UUID))
 	}
-	// Get all the note audios
-	allNoteAudio, err := database.NoteAudioQueryByVersion(1)
-	for i, note := range allNoteAudio {
-		if count != 0 && i >= count {
-			log.Printf("Finished %d items, ending", count)
-			return
-		}
-		if note.Version != 1 {
-			log.Fatalf("Got version %d of %s", note.Version, note.UUID)
-			return
-		}
-		task, err := findMatchingTask(labelStudioClient, project, customer, note)
-		if err != nil {
-			log.Fatalf("Failed to search for a task: %v", err)
-		}
-		// We already have a task, nothing to do.
-		if task != nil {
-			continue
-		}
-		err = createTask(labelStudioClient, project, minioClient, minioBucket, customer, note)
-		if err != nil {
-			log.Printf("Failed to create a task: %v", err)
-			continue
-		}
+	task, err := findMatchingTask(labelStudioClient, project, customer, note)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to search for a task: %v", err))
 	}
-	log.Println("Run complete.")
+	// We already have a task, nothing to do.
+	if task != nil {
+		return nil
+	}
+
+	err = createTask(labelStudioClient, project, minioClient, minioBucket, customer, note)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to create a task: %v", err))
+	}
+	return nil
 }
 
-func createTask(client *labelstudio.Client, project *labelstudio.Project, minioClient *minio.Client, bucket string, customer string, note *shared.NoteAudio) error {
-	config := fssync.ReadConfig()
+func createTask(client *labelstudio.Client, project *labelstudio.Project, minioClient *minio.Client, bucket string, customer string, note *models.NoteAudio) error {
+	config := ReadConfig()
 	audioRef := fmt.Sprintf("s3://%s/%s-normalized.m4a", bucket, note.UUID)
 	audioFile := fmt.Sprintf("%s/%s-normalized.m4a", config.UserFiles.Directory, note.UUID)
 	uploadPath := fmt.Sprintf("%s-normalized.m4a", note.UUID)
@@ -109,9 +137,9 @@ func createTask(client *labelstudio.Client, project *labelstudio.Project, minioC
 			return fmt.Errorf("Failed to upload audio: %v", err)
 		}
 	}
-	transcription := ""
-	if note.Transcription != nil {
-		transcription = *note.Transcription
+	var transcription string = ""
+	if note.Transcription.IsValue() {
+		transcription = note.Transcription.MustGet()
 	}
 	simpleTasks := []map[string]interface{}{
 		{
@@ -154,7 +182,7 @@ func findLabelStudioProject(client *labelstudio.Client, title string) (*labelstu
 	return nil, fmt.Errorf("No such project '%s'", title)
 }
 
-func findMatchingTask(client *labelstudio.Client, project *labelstudio.Project, customer string, note *shared.NoteAudio) (*labelstudio.Task, error) {
+func findMatchingTask(client *labelstudio.Client, project *labelstudio.Project, customer string, note *models.NoteAudio) (*labelstudio.Task, error) {
 	/*meta := map[string]string{
 		"customer": customer,
 		"note_uuid": note.UUID,

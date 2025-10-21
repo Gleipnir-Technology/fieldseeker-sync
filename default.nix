@@ -11,7 +11,6 @@ pkgs.buildGoModule rec {
 		"cmd/download-schema"
 		"cmd/dump"
 		"cmd/full-export"
-		"cmd/label-task"
 		"cmd/login"
 		"cmd/migrate"
 		"cmd/registration"

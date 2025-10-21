@@ -64,6 +64,7 @@ func run() error {
 	}
 
 	fssync.StartAudioWorker(context.Background())
+	fssync.StartLabelStudioWorker(context.Background())
 
 	sessionManager = scs.New()
 	sessionManager.Store = pgxstore.New(database.PGInstance.DB)
