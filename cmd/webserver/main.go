@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"io"
@@ -61,6 +62,8 @@ func run() error {
 		fmt.Printf("Failed to init database: %v", err)
 		os.Exit(1)
 	}
+
+	fssync.StartAudioWorker(context.Background())
 
 	sessionManager = scs.New()
 	sessionManager.Store = pgxstore.New(database.PGInstance.DB)
