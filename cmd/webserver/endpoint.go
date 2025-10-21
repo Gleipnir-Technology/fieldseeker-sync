@@ -282,13 +282,13 @@ func audioGet(w http.ResponseWriter, r *http.Request, u *shared.User) {
 	contentType := "unknown"
 	if extension == "m4a" {
 		contentType = "audio/mpeg"
-		filePath = fssync.AudioFileContentPathNormalized(uuid)
+		filePath = fssync.AudioFileContentPathNormalized(uuid.String())
 	} else if extension == "mp3" {
 		contentType = "audio/mp3"
-		filePath = fssync.AudioFileContentPathMp3(uuid)
+		filePath = fssync.AudioFileContentPathMp3(uuid.String())
 	} else if extension == "ogg" {
 		contentType = "audio/ogg"
-		filePath = fssync.AudioFileContentPathOgg(uuid)
+		filePath = fssync.AudioFileContentPathOgg(uuid.String())
 	} else {
 		http.Error(w, fmt.Sprintf("Extension '%s' not found", extension), http.StatusNotFound)
 		return

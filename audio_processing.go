@@ -70,14 +70,14 @@ func processAudioFile(audioUUID uuid.UUID) error {
 }
 
 func normalizeAudio(audioUUID uuid.UUID) error {
-	source := AudioFileContentPathRaw(audioUUID)
+	source := AudioFileContentPathRaw(audioUUID.String())
 	_, err := os.Stat(source)
 	if errors.Is(err, os.ErrNotExist) {
 		log.Printf("%s doesn't exist, skipping normalization", source)
 		return nil
 	}
 	log.Printf("Normalizing %s", source)
-	destination := AudioFileContentPathNormalized(audioUUID)
+	destination := AudioFileContentPathNormalized(audioUUID.String())
 	// Use "ffmpeg" directly, assuming it's in the system PATH
 	cmd := exec.Command("ffmpeg", "-i", source, "-filter:a", "loudnorm", destination)
 	out, err := cmd.CombinedOutput()
@@ -94,14 +94,14 @@ func normalizeAudio(audioUUID uuid.UUID) error {
 }
 
 func transcodeToOgg(audioUUID uuid.UUID) error {
-	source := AudioFileContentPathNormalized(audioUUID)
+	source := AudioFileContentPathNormalized(audioUUID.String())
 	_, err := os.Stat(source)
 	if errors.Is(err, os.ErrNotExist) {
 		log.Printf("%s doesn't exist, skipping OGG transcoding", source)
 		return nil
 	}
 	log.Printf("Transcoding %s to ogg", source)
-	destination := AudioFileContentPathOgg(audioUUID)
+	destination := AudioFileContentPathOgg(audioUUID.String())
 	// Use "ffmpeg" directly, assuming it's in the system PATH
 	cmd := exec.Command("ffmpeg", "-i", source, "-vn", "-acodec", "libvorbis", destination)
 	out, err := cmd.CombinedOutput()

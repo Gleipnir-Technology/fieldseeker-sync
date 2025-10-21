@@ -9,25 +9,25 @@ import (
 	"github.com/google/uuid"
 )
 
-func AudioFileContentPathRaw(audioUUID uuid.UUID) string {
+func AudioFileContentPathRaw(audioUUID string) string {
 	config := ReadConfig()
-	return fmt.Sprintf("%s/%s.m4a", config.UserFiles.Directory, audioUUID.String())
+	return fmt.Sprintf("%s/%s.m4a", config.UserFiles.Directory, audioUUID)
 }
-func AudioFileContentPathMp3(audioUUID uuid.UUID) string {
+func AudioFileContentPathMp3(audioUUID string) string {
 	config := ReadConfig()
 	return fmt.Sprintf("%s/%s.mp3", config.UserFiles.Directory, audioUUID)
 }
-func AudioFileContentPathNormalized(audioUUID uuid.UUID) string {
+func AudioFileContentPathNormalized(audioUUID string) string {
 	config := ReadConfig()
-	return fmt.Sprintf("%s/%s-normalized.m4a", config.UserFiles.Directory, audioUUID.String())
+	return fmt.Sprintf("%s/%s-normalized.m4a", config.UserFiles.Directory, audioUUID)
 }
-func AudioFileContentPathOgg(audioUUID uuid.UUID) string {
+func AudioFileContentPathOgg(audioUUID string) string {
 	config := ReadConfig()
 	return fmt.Sprintf("%s/%s.ogg", config.UserFiles.Directory, audioUUID)
 }
 func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	// Create file in configured directory
-	filepath := AudioFileContentPathRaw(audioUUID)
+	filepath := AudioFileContentPathRaw(audioUUID.String())
 	dst, err := os.Create(filepath)
 	if err != nil {
 		log.Printf("Failed to create audio file at %s: %v\n", dst, err)
