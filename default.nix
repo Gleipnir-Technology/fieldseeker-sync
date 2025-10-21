@@ -16,7 +16,7 @@ pkgs.buildGoModule rec {
 		"cmd/registration"
 		"cmd/webserver"
 	];
-	version = "0.0.29";
+	version = "0.0.30";
 	# Needs to be updated after every modification of go.mod/go.sum
-	vendorHash = "sha256-vksMzGHzZYXpR+ts80vA8IO0a2XwjCFjyrdcowNfSJU=";
+	vendorHash = "sha256-fbd1Kkq9UdDLj/lafuJ/Z+Lpykw4HJo0A4tojotk5Yk=";
 }
