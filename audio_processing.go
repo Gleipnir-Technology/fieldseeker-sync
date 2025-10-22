@@ -22,7 +22,9 @@ var audioJobChannel chan AudioJob
 
 // StartAudioWorker initializes the audio job channel and starts the worker goroutine.
 func StartAudioWorker(ctx context.Context) {
-	audioJobChannel = make(chan AudioJob, 100) // Buffered channel to prevent blocking
+	buffer := 100
+	audioJobChannel = make(chan AudioJob, buffer) // Buffered channel to prevent blocking
+	log.Printf("Started audio worker with buffer depth %d", buffer)
 	go func() {
 		for {
 			select {

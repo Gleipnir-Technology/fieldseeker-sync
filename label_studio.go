@@ -42,7 +42,9 @@ func StartLabelStudioWorker(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("Failed to create minio client: %v", err)
 	}
-	labelJobChannel = make(chan LabelStudioJob, 100) // Buffered channel to prevent blocking
+	buffer := 100
+	labelJobChannel = make(chan LabelStudioJob, buffer) // Buffered channel to prevent blocking
+	log.Printf("Started label studio worker with buffer depth %d", buffer)
 	go func() {
 		for {
 			select {
@@ -50,10 +52,10 @@ func StartLabelStudioWorker(ctx context.Context) error {
 				log.Println("Audio worker shutting down.")
 				return
 			case job := <-labelJobChannel:
-				log.Printf("Processing audio job for UUID: %s", job.UUID)
+				log.Printf("Processing label job for UUID: %s", job.UUID)
 				err := processLabelTask(ctx, minioClient, minioBucket, labelStudioClient, job)
 				if err != nil {
-					log.Printf("Error processing audio file %s: %v", job.UUID, err)
+					log.Printf("Error processing label job for audio file %s: %v", job.UUID, err)
 				}
 			}
 		}

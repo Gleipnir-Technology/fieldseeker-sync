@@ -64,7 +64,11 @@ func run() error {
 	}
 
 	fssync.StartAudioWorker(context.Background())
-	fssync.StartLabelStudioWorker(context.Background())
+	err = fssync.StartLabelStudioWorker(context.Background())
+	if err != nil {
+		fmt.Printf("Failed to create label studio processor: %v", err)
+		os.Exit(2)
+	}
 
 	sessionManager = scs.New()
 	sessionManager.Store = pgxstore.New(database.PGInstance.DB)
