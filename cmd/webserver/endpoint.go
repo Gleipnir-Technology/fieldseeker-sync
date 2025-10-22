@@ -181,6 +181,7 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 	// Create file in configured directory
 	dst, err := os.Create(filepath)
 	if err != nil {
+		log.Printf("Failed to create image file %s: %v", filepath, err)
 		http.Error(w, "Unable to create file", http.StatusInternalServerError)
 		return
 	}
