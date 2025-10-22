@@ -65,6 +65,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *shared.User)
 	}
 	err = fssync.AudioFileContentWrite(audioUUID, r.Body)
 	if err != nil {
+		log.Printf("Failed to write content file: %v", err)
 		http.Error(w, "failed to write content file", http.StatusInternalServerError)
 	}
 
