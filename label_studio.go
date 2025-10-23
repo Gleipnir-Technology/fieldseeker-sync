@@ -38,6 +38,11 @@ func StartLabelStudioWorker(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("Failed to create label studio client: %v", err)
 	}
+	// Get the project we are going to upload to
+	project, err := findLabelStudioProject(labelStudioClient, "Nidus Speech-to-Text Transcriptions")
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to find the label studio project"))
+	}
 	minioClient, err := createMinioClient()
 	if err != nil {
 		return fmt.Errorf("Failed to create minio client: %v", err)
@@ -53,7 +58,7 @@ func StartLabelStudioWorker(ctx context.Context) error {
 				return
 			case job := <-labelJobChannel:
 				log.Printf("Processing label job for UUID: %s", job.UUID)
-				err := processLabelTask(ctx, minioClient, minioBucket, labelStudioClient, job)
+				err := processLabelTask(ctx, minioClient, minioBucket, labelStudioClient, project, job)
 				if err != nil {
 					log.Printf("Error processing label job for audio file %s: %v", job.UUID, err)
 				}
@@ -93,15 +98,10 @@ func createLabelStudioClient() (*labelstudio.Client, error) {
 	return labelStudioClient, nil
 }
 
-func processLabelTask(ctx context.Context, minioClient *minio.Client, minioBucket string, labelStudioClient *labelstudio.Client, job LabelStudioJob) error {
+func processLabelTask(ctx context.Context, minioClient *minio.Client, minioBucket string, labelStudioClient *labelstudio.Client, project *labelstudio.Project, job LabelStudioJob) error {
 	customer := os.Getenv("CUSTOMER")
 	if customer == "" {
 		return errors.New("You must specify a CUSTOMER env var")
-	}
-	// Get the project we are going to upload to
-	project, err := findLabelStudioProject(labelStudioClient, "Nidus Speech-to-Text Transcriptions")
-	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to find the label studio project"))
 	}
 	note, err := database.NoteAudioGetLatest(ctx, job.UUID.String())
 	if err != nil {
