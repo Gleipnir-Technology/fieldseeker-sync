@@ -592,8 +592,9 @@ type NoteAudioPayload struct {
 }
 
 type NoteAudioBreadcrumbPayload struct {
-	Cell    H3Cell    `json:"cell"`
-	Created time.Time `json:"created"`
+	Cell             H3Cell    `json:"cell"`
+	Created          time.Time `json:"created"`
+	ManuallySelected bool      `json:"manuallySelected"`
 }
 
 type NidusNotePayload struct {

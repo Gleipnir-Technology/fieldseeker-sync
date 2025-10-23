@@ -48,16 +48,16 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 			@version,
 			@uuid)`
 	args := pgx.NamedArgs{
-		"created":                         payload.Created,
-		"creator":                         userID,
-		"deleted":                         nil,
-		"duration":                        payload.Duration,
-		"is_audio_normalized":             false,
-		"is_transcoded_to_ogg":            false,
-		"transcription":                   payload.Transcription,
-		"transcription_user_edited":       payload.TranscriptionUserEdited,
-		"version":                         payload.Version,
-		"uuid":                            noteUUID,
+		"created":                   payload.Created,
+		"creator":                   userID,
+		"deleted":                   nil,
+		"duration":                  payload.Duration,
+		"is_audio_normalized":       false,
+		"is_transcoded_to_ogg":      false,
+		"transcription":             payload.Transcription,
+		"transcription_user_edited": payload.TranscriptionUserEdited,
+		"version":                   payload.Version,
+		"uuid":                      noteUUID,
 	}
 	row, err := PGInstance.DB.Exec(context.Background(), query, args)
 	if err != nil {
@@ -71,6 +71,7 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		rows = append(rows, []interface{}{
 			b.Created,
 			b.Cell,
+			b.ManuallySelected,
 			noteUUID,
 			payload.Version,
 			i,
@@ -80,7 +81,7 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 	PGInstance.DB.CopyFrom(
 		ctx,
 		pgx.Identifier{"note_audio_breadcrumb"},
-		[]string{"created", "cell", "note_audio_uuid", "note_audio_version", "position"},
+		[]string{"created", "cell", "manually_selected", "note_audio_uuid", "note_audio_version", "position"},
 		pgx.CopyFromRows(rows),
 	)
 
@@ -294,7 +295,6 @@ func NoteAudioUpdateDelete(uuid string, userID int) error {
 	return nil
 }
 
-
 func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID int) error {
 	ctx := context.Background()
 	var options pgx.TxOptions
@@ -304,10 +304,10 @@ func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID in
 	}
 
 	args := pgx.NamedArgs{
-		"created":                         time.Now(),
-		"creator":                         userUUID,
-		"transcription":                   transcription,
-		"uuid":                            uuid,
+		"created":       time.Now(),
+		"creator":       userUUID,
+		"transcription": transcription,
+		"uuid":          uuid,
 	}
 	query := `
 		WITH previous_row AS (
