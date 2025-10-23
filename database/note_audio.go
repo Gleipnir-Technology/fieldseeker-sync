@@ -59,12 +59,12 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		"version":                   payload.Version,
 		"uuid":                      noteUUID,
 	}
-	row, err := PGInstance.DB.Exec(context.Background(), query, args)
+	_, err = PGInstance.DB.Exec(context.Background(), query, args)
 	if err != nil {
 		transaction.Rollback(ctx)
 		return fmt.Errorf("Unable to insert row into note_audio: %v", err)
 	}
-	log.Println("Saved audio note", noteUUID, row)
+	log.Printf("Saved audio note %s", noteUUID)
 
 	rows := make([][]interface{}, 0, len(payload.Breadcrumbs))
 	for i, b := range payload.Breadcrumbs {
@@ -84,34 +84,6 @@ func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload shared.Not
 		[]string{"created", "cell", "manually_selected", "note_audio_uuid", "note_audio_version", "position"},
 		pgx.CopyFromRows(rows),
 	)
-
-	query = `INSERT INTO task_audio_review (
-		completed_by,
-		created,
-		needs_review,
-		note_audio_uuid,
-		note_audio_version,
-		reviewed_by
-	) VALUES (
-		@completed_by,
-		@created,
-		@needs_review,
-		@note_audio_uuid,
-		@note_audio_version,
-		@reviewed_by)`
-	args = pgx.NamedArgs{
-		"completed_by":       nil,
-		"created":            time.Now(),
-		"needs_review":       false,
-		"note_audio_uuid":    noteUUID,
-		"note_audio_version": payload.Version,
-		"reviewed_by":        nil,
-	}
-	row, err = PGInstance.DB.Exec(context.Background(), query, args)
-	if err != nil {
-		transaction.Rollback(ctx)
-		return fmt.Errorf("Unable to insert row into task_audio_review: %v", err)
-	}
 
 	err = transaction.Commit(ctx)
 	if err != nil {
@@ -270,24 +242,11 @@ func NoteAudioUpdateDelete(uuid string, userID int) error {
 		SET deleted=@deleted, deleted_by=@deleted_by
 		WHERE uuid=@uuid
 	`
-	row, err := PGInstance.DB.Exec(context.Background(), query, args)
+	_, err = PGInstance.DB.Exec(context.Background(), query, args)
 	if err != nil {
 		return fmt.Errorf("Failed to update note_audio to deleted: %v\n", err)
 	}
 
-	query = `UPDATE task_audio_review SET
-		completed_by=@completed_by
-		WHERE note_audio_uuid=@note_audio_uuid`
-	args = pgx.NamedArgs{
-		"completed_by":    userID,
-		"note_audio_uuid": uuid,
-	}
-	row, err = PGInstance.DB.Exec(context.Background(), query, args)
-	if err != nil {
-		return fmt.Errorf("Failed to update note_audio to deleted: %v\n", err)
-	}
-
-	log.Printf("Marked task_audio_review for %s %s completed", uuid, row)
 	err = transaction.Commit(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to commit transaction: %v", err)
@@ -345,12 +304,6 @@ func NoteAudioUpdateTranscription(uuid string, transcription string, userUUID in
 		"completed_by":    userUUID,
 		"note_audio_uuid": uuid,
 	}
-	query = `UPDATE task_audio_review SET completed_by=@completed_by WHERE note_audio_uuid=@note_audio_uuid`
-	row, err = PGInstance.DB.Exec(context.Background(), query, args)
-	if err != nil {
-		return fmt.Errorf("Failed to complete audio review task: %v\n", err)
-	}
-
 	err = transaction.Commit(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to commit transaction: %v", err)
