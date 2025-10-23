@@ -3,7 +3,6 @@ package labelstudio
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -30,39 +29,11 @@ type User struct {
 
 // ListUsers fetches the list of users from the Label Studio API
 func (c *Client) ListUsers() ([]User, error) {
-	// Check if we have an access token, if not try to get it
-	if c.AccessToken == "" {
-		if err := c.GetAccessToken(); err != nil {
-			return nil, fmt.Errorf("failed to get access token: %w", err)
-		}
-	}
-
-	// Create request
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/users", c.BaseURL), nil)
+	resp, err := c.makeRequest("GET", "/api/users", nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
-	req.Header.Set("Accept", "application/json")
-
-	// Send request
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("failed to GET /api/userls: %w", err)
 	}
 	defer resp.Body.Close()
-
-	// Check for successful response
-	if resp.StatusCode != http.StatusOK {
-		// Try to read error message
-		var errorResp map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err == nil {
-			return nil, fmt.Errorf("API returned error %d: %v", resp.StatusCode, errorResp)
-		}
-		return nil, fmt.Errorf("API returned error: %s", resp.Status)
-	}
 
 	// Parse response
 	var users []User
@@ -75,39 +46,11 @@ func (c *Client) ListUsers() ([]User, error) {
 
 // GetUser fetches a specific user by ID
 func (c *Client) GetUser(userID int) (*User, error) {
-	// Check if we have an access token, if not try to get it
-	if c.AccessToken == "" {
-		if err := c.GetAccessToken(); err != nil {
-			return nil, fmt.Errorf("failed to get access token: %w", err)
-		}
-	}
-
-	// Create request
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/users/%d", c.BaseURL, userID), nil)
+	resp, err := c.makeRequest("GET", fmt.Sprintf("/api/users/%d", userID), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
-	req.Header.Set("Accept", "application/json")
-
-	// Send request
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("failed to GET /api/users/%d: %w", userID, err)
 	}
 	defer resp.Body.Close()
-
-	// Check for successful response
-	if resp.StatusCode != http.StatusOK {
-		// Try to read error message
-		var errorResp map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err == nil {
-			return nil, fmt.Errorf("API returned error %d: %v", resp.StatusCode, errorResp)
-		}
-		return nil, fmt.Errorf("API returned error: %s", resp.Status)
-	}
 
 	// Parse response
 	var user User

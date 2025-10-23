@@ -3,7 +3,6 @@ package labelstudio
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -111,34 +110,11 @@ type ReviewSettings struct {
 
 // Projects fetches the list of projects from the Label Studio API
 func (c *Client) Projects() (*ProjectsResponse, error) {
-	// Check if we have an access token, if not try to get it
-	if c.AccessToken == "" {
-		if err := c.GetAccessToken(); err != nil {
-			return nil, fmt.Errorf("failed to get access token: %w", err)
-		}
-	}
-
-	// Create request
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/projects", c.BaseURL), nil)
+	resp, err := c.makeRequest("GET", "/api/projects", nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
-	req.Header.Set("Content-Type", "application/json")
-
-	// Send request
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("Failed to GET /api/projects: %w", err)
 	}
 	defer resp.Body.Close()
-
-	// Check for successful response
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned error: %s", resp.Status)
-	}
 
 	// Parse response
 	var projects ProjectsResponse

@@ -3,8 +3,6 @@ package labelstudio
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"time"
 )
@@ -78,15 +76,9 @@ type TasksListOptions struct {
 
 // ListTasks fetches the list of tasks from the Label Studio API
 func (c *Client) ListTasks(options *TasksListOptions) (*TasksListResponse, error) {
-	// Check if we have an access token, if not try to get it
-	if c.AccessToken == "" {
-		if err := c.GetAccessToken(); err != nil {
-			return nil, fmt.Errorf("failed to get access token: %w", err)
-		}
-	}
 
 	// Build URL with query parameters
-	endpoint := fmt.Sprintf("%s/api/tasks/", c.BaseURL)
+	path := "/api/tasks/"
 	if options != nil {
 		queryParams := url.Values{}
 
@@ -130,36 +122,16 @@ func (c *Client) ListTasks(options *TasksListOptions) (*TasksListResponse, error
 
 		// Add query params to URL if we have any
 		if len(queryParams) > 0 {
-			endpoint = fmt.Sprintf("%s?%s", endpoint, queryParams.Encode())
+			path = fmt.Sprintf("%s?%s", path, queryParams.Encode())
 		}
 	}
 
 	// Create request
-	req, err := http.NewRequest("GET", endpoint, nil)
+	resp, err := c.makeRequest("GET", path, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
-	req.Header.Set("Accept", "application/json")
-
-	// Send request
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("Failed to request %s: %v", path, err)
 	}
 	defer resp.Body.Close()
-
-	// Check for successful response
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("Got status code %d and failed to read response body: %v", resp.StatusCode, err)
-		}
-		bodyString := string(bodyBytes)
-		return nil, fmt.Errorf("API returned error: %s: ", resp.Status, bodyString)
-	}
 
 	// Parse response
 	var tasksResponse TasksListResponse

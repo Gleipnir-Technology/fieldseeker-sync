@@ -1,10 +1,8 @@
 package labelstudio
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -81,13 +79,6 @@ func (d *DraftRequest) SetStartedAt(startedAt time.Time) *DraftRequest {
 
 // CreateDraft creates a new draft for a task
 func (c *Client) CreateDraft(taskID int, draft *DraftRequest) (*Draft, error) {
-	// Check if we have an access token, if not try to get it
-	if c.AccessToken == "" {
-		if err := c.GetAccessToken(); err != nil {
-			return nil, fmt.Errorf("failed to get access token: %w", err)
-		}
-	}
-
 	// Marshal the draft request to JSON
 	draftJSON, err := json.Marshal(draft)
 	if err != nil {
@@ -96,34 +87,14 @@ func (c *Client) CreateDraft(taskID int, draft *DraftRequest) (*Draft, error) {
 
 	// Create request URL with query parameter
 	//url := fmt.Sprintf("%s/api/tasks/%d/drafts?project=%s", c.BaseURL, taskID, draft.Project)
-	url := fmt.Sprintf("%s/api/tasks/%d/drafts", c.BaseURL, taskID)
+	path := fmt.Sprintf("/api/tasks/%d/drafts", taskID)
 
 	// Create request
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(draftJSON))
+	resp, err := c.makeRequest("POST", path, draftJSON)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
-	req.Header.Set("Content-Type", "application/json")
-
-	// Send request
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("failed to POST %s: %w", path, err)
 	}
 	defer resp.Body.Close()
-
-	// Check for successful response
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		// Try to read error message
-		var errorResp map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err == nil {
-			return nil, fmt.Errorf("API returned error %d: %v", resp.StatusCode, errorResp)
-		}
-		return nil, fmt.Errorf("API returned error: %s", resp.Status)
-	}
 
 	// Parse response
 	var createdDraft Draft

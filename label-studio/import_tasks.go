@@ -1,7 +1,6 @@
 package labelstudio
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -52,45 +51,21 @@ func (r *TaskImportResponse) UnmarshalJSON(data []byte) error {
 // ImportTasks imports tasks into a Label Studio project
 // tasks parameter can be any data structure that can be marshalled to JSON
 func (c *Client) ImportTasks(projectID int, tasks interface{}) (*TaskImportResponse, error) {
-	// Check if we have an access token, if not try to get it
-	if c.AccessToken == "" {
-		if err := c.GetAccessToken(); err != nil {
-			return nil, fmt.Errorf("failed to get access token: %w", err)
-		}
-	}
-
 	// Marshal the tasks to JSON
 	taskJSON, err := json.Marshal(tasks)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal tasks: %w", err)
 	}
 
-	// Create request
-	url := fmt.Sprintf("%s/api/projects/%d/import", c.BaseURL, projectID)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(taskJSON))
+	path := fmt.Sprintf("/api/projects/%d/import", projectID)
+	resp, err := c.makeRequest("POST", path, taskJSON)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
-	req.Header.Set("Content-Type", "application/json")
-
-	// Send request
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("Failed to POST %s: %v", path, err)
 	}
 	defer resp.Body.Close()
 
 	// Check for successful response
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		// Try to read error message
-		var errorResp map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err == nil {
-			return nil, fmt.Errorf("API returned error %d: %v", resp.StatusCode, errorResp)
-		}
-		return nil, fmt.Errorf("API returned error: %s", resp.Status)
 	}
 
 	// Parse response

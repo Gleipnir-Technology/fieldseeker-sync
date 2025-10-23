@@ -1,10 +1,8 @@
 package labelstudio
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 type TaskResultValue struct {
@@ -161,13 +159,6 @@ func (t *TaskUpdate) SetReviewed(isReviewed bool) *TaskUpdate {
 }
 
 func (c *Client) TaskUpdate(taskID int, update *TaskUpdate) (*Task, error) {
-	// Check if we have an access token, if not try to get it
-	if c.AccessToken == "" {
-		if err := c.GetAccessToken(); err != nil {
-			return nil, fmt.Errorf("failed to get access token: %w", err)
-		}
-	}
-
 	// Marshal the updates to JSON
 	updateJSON, err := json.Marshal(update)
 	if err != nil {
@@ -175,32 +166,12 @@ func (c *Client) TaskUpdate(taskID int, update *TaskUpdate) (*Task, error) {
 	}
 
 	// Create request
-	url := fmt.Sprintf("%s/api/tasks/%d", c.BaseURL, taskID)
-	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(updateJSON))
+	path := fmt.Sprintf("/api/tasks/%d", taskID)
+	resp, err := c.makeRequest("PATCH", path, updateJSON)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
-	req.Header.Set("Content-Type", "application/json")
-
-	// Send request
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("failed to PATCH %s: %w", path, err)
 	}
 	defer resp.Body.Close()
-
-	// Check for successful response
-	if resp.StatusCode != http.StatusOK {
-		// Try to read error message
-		var errorResp map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err == nil {
-			return nil, fmt.Errorf("API returned error %d: %v", resp.StatusCode, errorResp)
-		}
-		return nil, fmt.Errorf("API returned error: %s", resp.Status)
-	}
 
 	// Parse response
 	var updatedTask Task
