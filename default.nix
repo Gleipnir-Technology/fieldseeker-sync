@@ -7,6 +7,7 @@ pkgs.buildGoModule rec {
 	pname = "fieldseeker-sync";
 	src = ./.;
 	subPackages = [
+		"cmd/check-uploads"
 		"cmd/convert-completed-tasks"
 		"cmd/download-schema"
 		"cmd/dump"
