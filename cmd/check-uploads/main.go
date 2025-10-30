@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -39,6 +40,14 @@ func run() error {
 		log.Printf("Failed to query database: %v", err)
 		os.Exit(2)
 	}
+	statistics := map[string]int{
+		"mp3":        0,
+		"normalized": 0,
+		"ogg":        0,
+		"raw":        0,
+	}
+	raw_missing := NewSet()
+
 	for _, note := range notesAudio {
 		paths := map[string]string{
 			"mp3":        fssync.AudioFileContentPathMp3(note.UUID),
@@ -48,9 +57,23 @@ func run() error {
 		}
 		for name, path := range paths {
 			if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-				log.Printf("%s audio file %s does not exist", name, path)
+				statistics[name] = statistics[name] + 1
+				if name == "raw" {
+					raw_missing.Add(note.UUID)
+				}
 			}
 		}
+	}
+	fmt.Printf("Checked %d audio notes. %d (%f) are missing raw files.\n", len(notesAudio), statistics["raw"], statistics["raw"]/len(notesAudio))
+	if raw_missing.Size() < 30 {
+		fmt.Println("Missing raw files from:")
+		for _, uuid := range raw_missing.list {
+			fmt.Printf("\t%s\n", uuid)
+		}
+	}
+	transcoded_missing := statistics["mp3"] + statistics["normalized"] + statistics["ogg"]
+	if transcoded_missing > 0 {
+		fmt.Printf("Additionally there are %d derivative files missing", transcoded_missing)
 	}
 	return nil
 }
