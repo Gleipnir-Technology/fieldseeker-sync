@@ -41,7 +41,7 @@ func run() error {
 	}
 	for _, note := range notesAudio {
 		paths := map[string]string{
-			"mp3":        fssync.AudioFileContentPathNormalized(note.UUID),
+			"mp3":        fssync.AudioFileContentPathMp3(note.UUID),
 			"normalized": fssync.AudioFileContentPathNormalized(note.UUID),
 			"ogg":        fssync.AudioFileContentPathOgg(note.UUID),
 			"raw":        fssync.AudioFileContentPathRaw(note.UUID),
