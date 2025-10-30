@@ -1,5 +1,7 @@
 pre-commit:
   commands:
+    check-agent:
+      run: ssh-add -l
     lint:
       glob: "*.go"
       run: gofmt -w {staged_files}
